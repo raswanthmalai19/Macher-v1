@@ -1,0 +1,4 @@
+# file: /Users/raswanthmalaisamy/Downloads/AIDEA/lambda/fraud-detection/src/explanation_generator.py
+# hypothesis_version: 6.148.7
+
+[100, 500, '...', 'ScamPattern', 'cryptocurrency', 'en', 'gift card', 'requests payment', 'wire transfer']

@@ -1,0 +1,82 @@
+{
+  "pattern_id": "romance-scam-en-001",
+  "pattern_type": "Romance Scam",
+  "language": "en",
+  "description": "Caller builds romantic relationship over time then requests money for emergencies, travel, or business problems",
+  "indicators": [
+    "professing love or strong feelings quickly",
+    "requesting money for emergency or travel",
+    "claiming to be overseas or unable to meet in person",
+    "asking for financial help repeatedly",
+    "avoiding video calls or in-person meetings",
+    "claiming to be military, engineer, or doctor abroad",
+    "mentioning business deals or investments gone wrong",
+    "requesting money for medical emergencies",
+    "asking for help with customs or travel documents",
+    "promising to repay money soon or meet in person"
+  ],
+  "example_scripts": [
+    "I love you so much. I need money for a plane ticket to come see you.",
+    "I'm stuck overseas and need money for medical treatment. Please help me.",
+    "My business deal fell through. Can you lend me money until I get back on my feet?",
+    "I want to be with you forever. Just help me with this one emergency and we can finally meet.",
+    "I'm in the military stationed abroad. I need money to process my leave papers so I can come home to you.",
+    "My daughter is sick and I need money for her surgery. You're the only one I can turn to.",
+    "I have a large inheritance coming but need money to pay the lawyer fees. I'll pay you back double.",
+    "I'm an engineer on an oil rig. I need money to finish my contract so I can come be with you.",
+    "Customs is holding my luggage with valuable items. Send money to release it and I'll repay you when we meet.",
+    "I love you more than anything. This is just a temporary setback. Once you help me, we'll be together forever."
+  ],
+  "urgency_phrases": [
+    "emergency situation",
+    "need help urgently",
+    "running out of time",
+    "desperate",
+    "no one else to turn to",
+    "life or death",
+    "final chance",
+    "can't wait any longer"
+  ],
+  "financial_demands": [
+    "wire transfer",
+    "gift cards",
+    "cryptocurrency",
+    "money order",
+    "Western Union",
+    "MoneyGram",
+    "bank transfer",
+    "cash app"
+  ],
+  "red_flags": [
+    "Professing love very quickly (within days or weeks)",
+    "Always has excuses for not meeting in person",
+    "Refuses video calls or sends limited photos",
+    "Stories become increasingly dramatic and urgent",
+    "Requests money repeatedly with different excuses",
+    "Claims to be in another country or remote location",
+    "Promises to repay but never does",
+    "Uses overly romantic or scripted language"
+  ],
+  "severity": "high",
+  "common_payment_methods": ["wire transfer", "gift cards", "cryptocurrency", "money order"],
+  "target_demographics": ["lonely individuals", "recently divorced or widowed", "middle-aged and elderly", "online dating users"],
+  "seasonal_patterns": ["year-round", "increased around Valentine's Day and holidays"],
+  "psychological_tactics": [
+    "building emotional connection over time",
+    "exploiting loneliness and desire for companionship",
+    "creating elaborate backstories",
+    "using photos of attractive people",
+    "making victim feel special and loved",
+    "isolating victim from friends and family",
+    "creating dependency and obligation"
+  ],
+  "relationship_progression": [
+    "initial contact on dating site or social media",
+    "quick escalation to private communication",
+    "professing strong feelings rapidly",
+    "building trust with daily communication",
+    "first financial request (small amount)",
+    "escalating requests with urgent situations",
+    "promises to meet that never materialize"
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "pattern_id": "tech-support-scam-es-001",
+  "pattern_type": "Tech Support Scam",
+  "language": "es",
+  "description": "El llamante afirma ser de Microsoft, Apple, Google u otra compañía tecnológica reportando virus o problema de seguridad",
+  "indicators": [
+    "afirmando que la computadora tiene virus o malware",
+    "solicitando acceso remoto a la computadora",
+    "pidiendo pago por servicios de soporte técnico",
+    "usando jerga técnica para confundir a la víctima",
+    "creando sentido de urgencia sobre seguridad informática",
+    "afirmando ser de Microsoft, Apple, Google o Windows",
+    "mencionando mensajes de error o advertencias",
+    "solicitando información de tarjeta de crédito o bancaria",
+    "ofreciendo protección o garantía de por vida",
+    "amenazando con pérdida de datos o robo de identidad"
+  ],
+  "example_scripts": [
+    "Llamo del soporte técnico de Microsoft. Detectamos un virus en su computadora y necesitamos acceso remoto para arreglarlo.",
+    "Su computadora nos está enviando mensajes de error. Necesitamos conectarnos remotamente para resolver el problema.",
+    "Hemos detectado actividad sospechosa en su licencia de Windows. Pague $299 por nuestro servicio de protección.",
+    "Soy de seguridad de Apple. Su cuenta de iCloud ha sido comprometida. Necesitamos verificar su información.",
+    "Su computadora ha sido infectada con un virus peligroso. Permítanos acceso remoto inmediatamente para prevenir pérdida de datos.",
+    "Llamamos del departamento técnico de Windows. Su computadora está en riesgo y necesita atención inmediata.",
+    "Su suscripción de antivirus ha expirado. Renueve ahora por $399 o su computadora será vulnerable.",
+    "Detectamos actividad ilegal desde su dirección IP. Pague $500 para evitar acción legal y asegurar su sistema.",
+    "Soy del soporte de Google. Su cuenta será suspendida a menos que verifique su información de pago ahora.",
+    "Su computadora es parte de una red de bots. Necesitamos instalar nuestro software de seguridad inmediatamente."
+  ],
+  "urgency_phrases": [
+    "inmediatamente",
+    "ahora mismo",
+    "amenaza de seguridad urgente",
+    "error crítico",
+    "sistema en riesgo",
+    "los datos se perderán",
+    "la cuenta será suspendida",
+    "antes de que sea demasiado tarde"
+  ],
+  "financial_demands": [
+    "pago con tarjeta de crédito",
+    "tarjetas de regalo",
+    "transferencia bancaria",
+    "suscripción de soporte técnico",
+    "garantía de por vida",
+    "compra de software de seguridad",
+    "tarifa de acceso remoto",
+    "plan de protección anual"
+  ],
+  "red_flags": [
+    "Microsoft/Apple/Google nunca llaman a clientes sin previo aviso",
+    "Las compañías tecnológicas legítimas no solicitan acceso remoto sin ser solicitado",
+    "El soporte técnico real no exige pago inmediato",
+    "Las compañías no detectan virus en su computadora remotamente",
+    "Los servicios legítimos no requieren pagos con tarjetas de regalo",
+    "El soporte técnico real proporciona información de contacto verificable"
+  ],
+  "severity": "high",
+  "common_payment_methods": ["tarjeta de crédito", "tarjetas de regalo", "transferencia bancaria", "criptomoneda"],
+  "target_demographics": ["ancianos", "usuarios no técnicos", "usuarios de computadoras domésticas"],
+  "seasonal_patterns": ["todo el año", "aumenta durante actualizaciones importantes de software"]
+}

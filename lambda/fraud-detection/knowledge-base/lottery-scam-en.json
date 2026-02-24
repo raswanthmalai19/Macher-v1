@@ -1,0 +1,70 @@
+{
+  "pattern_id": "lottery-scam-en-001",
+  "pattern_type": "Lottery Scam",
+  "language": "en",
+  "description": "Caller claims victim won lottery, sweepstakes, or prize but must pay fees or taxes first to claim winnings",
+  "indicators": [
+    "claiming victim won lottery or sweepstakes",
+    "requesting payment for taxes or processing fees",
+    "asking for bank account information",
+    "creating excitement and urgency",
+    "requesting payment before receiving prize",
+    "mentioning Publishers Clearing House or other legitimate contests",
+    "claiming victim was randomly selected",
+    "requiring immediate action to claim prize",
+    "asking for personal information to verify identity",
+    "threatening prize expiration if not claimed quickly"
+  ],
+  "example_scripts": [
+    "Congratulations! You've won $1 million in the Publishers Clearing House sweepstakes. Pay $500 in taxes to claim your prize.",
+    "You're the lucky winner of our grand prize! Just send us $200 for processing fees.",
+    "We need your bank account number to deposit your $50,000 prize winnings.",
+    "You've been selected as the winner of our international lottery. Pay $1,000 in customs fees to receive your prize.",
+    "This is your final chance to claim your $100,000 prize. Send payment for taxes today or forfeit your winnings.",
+    "Congratulations! You won a new car. We just need your credit card to cover the registration fees.",
+    "You're one of three finalists for our million-dollar prize. Pay $300 to enter the final drawing.",
+    "Your name was randomly selected from our database. Claim your $25,000 prize by paying processing fees now.",
+    "You won the lottery! We need to verify your identity with your Social Security number and bank details.",
+    "Act now! Your prize expires in 24 hours. Send $500 via wire transfer to claim your $75,000 winnings."
+  ],
+  "urgency_phrases": [
+    "act now",
+    "limited time offer",
+    "expires today",
+    "final chance",
+    "claim immediately",
+    "before it's too late",
+    "time-sensitive",
+    "must respond within 24 hours"
+  ],
+  "financial_demands": [
+    "taxes or fees",
+    "processing charges",
+    "customs fees",
+    "insurance costs",
+    "wire transfer",
+    "gift cards",
+    "bank account information",
+    "credit card details"
+  ],
+  "red_flags": [
+    "Legitimate lotteries don't require payment to claim prizes",
+    "You can't win a lottery you didn't enter",
+    "Real prizes don't require upfront fees",
+    "Legitimate organizations don't ask for gift cards",
+    "Winners are notified by certified mail, not phone",
+    "Real contests don't threaten prize expiration",
+    "Legitimate lotteries deduct taxes from winnings"
+  ],
+  "severity": "medium",
+  "common_payment_methods": ["wire transfer", "gift cards", "bank account information", "credit card"],
+  "target_demographics": ["elderly", "financially struggling", "hopeful prize seekers"],
+  "seasonal_patterns": ["year-round", "increased during major lottery jackpots"],
+  "psychological_tactics": [
+    "exploiting hope and excitement",
+    "creating false sense of luck",
+    "using legitimate lottery names",
+    "building trust with official-sounding language",
+    "pressuring quick decisions"
+  ]
+}

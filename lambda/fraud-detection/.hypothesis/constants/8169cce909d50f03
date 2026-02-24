@@ -1,0 +1,4 @@
+# file: /Users/raswanthmalaisamy/Downloads/AIDEA/lambda/fraud-detection/src/context_store.py
+# hypothesis_version: 6.148.7
+
+[0.3, 0.7, 86400, 'Code', 'Error', 'Item', 'Message', 'Unknown', 'call_id', 'detected_pattern_ids', 'dynamodb', 'en', 'fraud_score', 'language', 'last_updated', 'segment_id', 'segments', 'threat_level', 'timestamp', 'transcript_text', 'ttl', 'us-east-1']

@@ -1,0 +1,2 @@
+# Property-based tests will be added here
+# These tests verify universal correctness properties across all inputs using fast-check
