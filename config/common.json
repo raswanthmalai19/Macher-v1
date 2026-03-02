@@ -1,0 +1,19 @@
+{
+  "lambda": {
+    "runtime": "nodejs20.x",
+    "architecture": "arm64"
+  },
+  "dynamodb": {
+    "billingMode": "PAY_PER_REQUEST",
+    "pointInTimeRecovery": false
+  },
+  "apiGateway": {
+    "throttling": {
+      "rateLimit": 100,
+      "burstLimit": 200
+    }
+  },
+  "monitoring": {
+    "logRetentionDays": 7
+  }
+}

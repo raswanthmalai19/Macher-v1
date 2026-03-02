@@ -1,0 +1,86 @@
+name: Drift Detection
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to check'
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - production
+
+env:
+  NODE_VERSION: '20.x'
+  AWS_REGION: us-east-1
+
+jobs:
+  detect-drift:
+    name: Detect Infrastructure Drift
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [dev, staging, production]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Detect stack drift
+        id: drift
+        run: |
+          node pipeline/deploy/DriftDetector.js ${{ matrix.environment }}
+        continue-on-error: true
+      
+      - name: Generate drift report
+        if: always()
+        run: |
+          node pipeline/deploy/DriftDetector.js report ${{ matrix.environment }}
+      
+      - name: Upload drift report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: drift-report-${{ matrix.environment }}
+          path: reports/drift-${{ matrix.environment }}.json
+          retention-days: 30
+
+  report-drift:
+    name: Report Drift Results
+    needs: detect-drift
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download drift reports
+        uses: actions/download-artifact@v4
+        with:
+          path: reports/
+      
+      - name: Send drift notification
+        run: node pipeline/notify/NotificationManager.js
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          EMAIL_RECIPIENTS: ${{ secrets.ALERT_EMAIL }}
+          NOTIFICATION_TYPE: drift
+          DRIFT_REPORTS_PATH: reports/

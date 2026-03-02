@@ -77,6 +77,14 @@ dist
 *.swo
 *~
 
+# Editor / tool directories
+.vscode/
+.kiro/
+
+# Markdown files (except README.md)
+*.md
+!README.md
+
 # Test coverage
 coverage/
 .nyc_output/

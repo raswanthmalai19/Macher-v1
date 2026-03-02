@@ -1,0 +1,276 @@
+name: CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - production
+
+env:
+  NODE_VERSION: '20.x'
+  AWS_REGION: us-east-1
+
+jobs:
+  deploy-dev:
+    name: Deploy to Dev
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'dev'
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Load configuration
+        run: node pipeline/config/ConfigurationManager.js dev
+      
+      - name: Validate Free Tier compliance
+        run: node pipeline/deploy/FreeTierValidator.js dev
+      
+      - name: Check CDK bootstrap
+        run: node pipeline/deploy/BootstrapChecker.js
+      
+      - name: Deploy CDK stack
+        run: |
+          npm run cdk:deploy -- --all --require-approval never
+        env:
+          ENVIRONMENT: dev
+      
+      - name: Run smoke tests
+        run: node pipeline/test/SmokeTestRunner.js dev
+      
+      - name: Detect drift
+        run: node pipeline/deploy/DriftDetector.js dev
+      
+      - name: Send notification
+        if: always()
+        run: node pipeline/notify/NotificationManager.js
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          DEPLOYMENT_STATUS: ${{ job.status }}
+          ENVIRONMENT: dev
+
+  smoke-test-dev:
+    name: Smoke Test Dev
+    needs: deploy-dev
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Run smoke tests
+        run: node pipeline/test/SmokeTestRunner.js dev
+        env:
+          AWS_REGION: ${{ env.AWS_REGION }}
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: smoke-test-dev
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'staging'
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Load configuration
+        run: node pipeline/config/ConfigurationManager.js staging
+      
+      - name: Validate Free Tier compliance
+        run: node pipeline/deploy/FreeTierValidator.js staging
+      
+      - name: Detect pending migrations
+        run: node pipeline/deploy/MigrationManager.js detect staging
+      
+      - name: Execute migrations
+        run: node pipeline/deploy/MigrationManager.js execute staging
+      
+      - name: Deploy CDK stack
+        run: npm run cdk:deploy -- --all --require-approval never
+        env:
+          ENVIRONMENT: staging
+      
+      - name: Run smoke tests
+        run: node pipeline/test/SmokeTestRunner.js staging
+      
+      - name: Send notification
+        if: always()
+        run: node pipeline/notify/NotificationManager.js
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          DEPLOYMENT_STATUS: ${{ job.status }}
+          ENVIRONMENT: staging
+
+  smoke-test-staging:
+    name: Smoke Test Staging
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Run smoke tests
+        run: node pipeline/test/SmokeTestRunner.js staging
+
+  approve-production:
+    name: Approve Production Deployment
+    needs: smoke-test-staging
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'production'
+    environment: production-approval
+    steps:
+      - name: Send approval notification
+        run: |
+          echo "Production deployment requires manual approval"
+          echo "Commit: ${{ github.sha }}"
+          echo "Author: ${{ github.actor }}"
+
+  deploy-production:
+    name: Deploy to Production (Blue-Green)
+    needs: approve-production
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Save deployment snapshot
+        run: node pipeline/deploy/RollbackManager.js snapshot production
+      
+      - name: Create green environment
+        run: node pipeline/deploy/BlueGreenManager.js create-green production
+      
+      - name: Deploy to green
+        run: node pipeline/deploy/BlueGreenManager.js deploy-green production
+        env:
+          ENVIRONMENT: production
+      
+      - name: Run smoke tests on green
+        run: node pipeline/test/SmokeTestRunner.js production-green
+      
+      - name: Switch traffic to green
+        run: node pipeline/deploy/BlueGreenManager.js switch-traffic production
+      
+      - name: Monitor metrics
+        run: node pipeline/deploy/BlueGreenManager.js monitor production
+        timeout-minutes: 10
+      
+      - name: Rollback on failure
+        if: failure()
+        run: node pipeline/deploy/BlueGreenManager.js rollback production
+      
+      - name: Send notification
+        if: always()
+        run: node pipeline/notify/NotificationManager.js
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          EMAIL_RECIPIENTS: ${{ secrets.ALERT_EMAIL }}
+          DEPLOYMENT_STATUS: ${{ job.status }}
+          ENVIRONMENT: production
+
+  cleanup-old-version:
+    name: Cleanup Old Blue Environment
+    needs: deploy-production
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Decommission blue environment
+        run: node pipeline/deploy/BlueGreenManager.js cleanup-blue production
+        env:
+          AWS_REGION: ${{ env.AWS_REGION }}
+
+  monitor-costs:
+    name: Monitor AWS Costs
+    needs: [deploy-dev, deploy-staging, deploy-production]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install dependencies
+        run: pip install boto3
+      
+      - name: Query costs
+        run: python pipeline/cost/cost_monitor.py
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ env.AWS_REGION }}
+      
+      - name: Send cost alert
+        if: env.COST_ALERT == 'true'
+        run: node pipeline/notify/NotificationManager.js
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          ALERT_TYPE: cost

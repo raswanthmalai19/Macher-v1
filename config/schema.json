@@ -1,0 +1,146 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://vocalshield.com/schemas/environment-config.json",
+  "title": "VocalShield Environment Configuration",
+  "description": "Configuration schema for VocalShield CI/CD pipeline environments",
+  "type": "object",
+  "required": ["environment", "aws", "lambda", "dynamodb", "apiGateway", "monitoring", "android"],
+  "properties": {
+    "environment": {
+      "type": "string",
+      "enum": ["dev", "staging", "production"],
+      "description": "Deployment environment identifier"
+    },
+    "aws": {
+      "type": "object",
+      "required": ["region", "account"],
+      "properties": {
+        "region": {
+          "type": "string",
+          "pattern": "^[a-z]{2}-[a-z]+-\\d{1}$",
+          "description": "AWS region (e.g., us-east-1)",
+          "examples": ["us-east-1", "us-west-2", "eu-west-1"]
+        },
+        "account": {
+          "type": "string",
+          "pattern": "^\\d{12}$",
+          "description": "AWS account ID (12 digits)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "lambda": {
+      "type": "object",
+      "required": ["memorySize", "timeout", "runtime", "architecture"],
+      "properties": {
+        "memorySize": {
+          "type": "integer",
+          "minimum": 128,
+          "maximum": 3008,
+          "multipleOf": 64,
+          "description": "Lambda memory size in MB (Free Tier compliant: max 3008 MB)"
+        },
+        "timeout": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 300,
+          "description": "Lambda timeout in seconds (Free Tier compliant: max 300s)"
+        },
+        "runtime": {
+          "type": "string",
+          "enum": ["nodejs20.x", "python3.12"],
+          "description": "Lambda runtime version"
+        },
+        "architecture": {
+          "type": "string",
+          "const": "arm64",
+          "description": "Lambda architecture (ARM64 for cost efficiency)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "dynamodb": {
+      "type": "object",
+      "required": ["billingMode", "pointInTimeRecovery"],
+      "properties": {
+        "billingMode": {
+          "type": "string",
+          "const": "PAY_PER_REQUEST",
+          "description": "DynamoDB billing mode (Free Tier compliant: on-demand only)"
+        },
+        "pointInTimeRecovery": {
+          "type": "boolean",
+          "description": "Enable point-in-time recovery (false for Free Tier)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "apiGateway": {
+      "type": "object",
+      "required": ["throttling"],
+      "properties": {
+        "throttling": {
+          "type": "object",
+          "required": ["rateLimit", "burstLimit"],
+          "properties": {
+            "rateLimit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000,
+              "description": "Steady-state request rate limit per second"
+            },
+            "burstLimit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5000,
+              "description": "Maximum burst request capacity"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "monitoring": {
+      "type": "object",
+      "required": ["logRetentionDays", "alarmEmail"],
+      "properties": {
+        "logRetentionDays": {
+          "type": "integer",
+          "enum": [1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653],
+          "description": "CloudWatch log retention period in days (7 days for Free Tier)"
+        },
+        "alarmEmail": {
+          "type": "string",
+          "format": "email",
+          "description": "Email address for CloudWatch alarms"
+        }
+      },
+      "additionalProperties": false
+    },
+    "android": {
+      "type": "object",
+      "required": ["versionCode", "versionName", "signingKeyAlias"],
+      "properties": {
+        "versionCode": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Android app version code (integer)"
+        },
+        "versionName": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "Android app version name (semantic version)",
+          "examples": ["1.0.0", "2.1.3"]
+        },
+        "signingKeyAlias": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Android keystore signing key alias"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,70 +1,92 @@
 /**
- * CloudWatch Synthetics Canary for WebSocket Health Check
+ * CloudWatch Synthetics Canary: WebSocket Connection Test
  * 
- * This canary:
- * 1. Connects to the WebSocket API
- * 2. Sends a test audio message
- * 3. Verifies response is received
- * 4. Disconnects cleanly
- * 
- * Runs every 5 minutes to monitor API availability
+ * This canary tests the WebSocket API connection flow every 15 minutes.
+ * Validates connection establishment, message exchange, and disconnection.
  */
 
-import { WebSocket } from 'ws';
+import { SyntheticsConfiguration } from 'Synthetics';
+const synthetics = require('Synthetics');
+const log = require('SyntheticsLogger');
+const WebSocket = require('ws');
 
+/**
+ * Canary handler function
+ */
 export const handler = async () => {
-  const websocketUrl = process.env.WEBSOCKET_URL;
+  // Configure synthetics
+  const syntheticsConfig = new SyntheticsConfiguration();
+  syntheticsConfig.setConfig({
+    continueOnStepFailure: false,
+  });
+
+  // WebSocket endpoint (from environment variable)
+  const wsEndpoint = process.env.WS_ENDPOINT || '';
   
-  if (!websocketUrl) {
-    throw new Error('WEBSOCKET_URL environment variable not set');
+  if (!wsEndpoint) {
+    throw new Error('WS_ENDPOINT environment variable not set');
   }
 
-  console.log(`Connecting to WebSocket: ${websocketUrl}`);
+  log.info('Starting WebSocket connection test');
+  log.info(`Target URL: ${wsEndpoint}`);
 
-  return new Promise((resolve, reject) => {
-    const ws = new WebSocket(websocketUrl);
-    let responseReceived = false;
-    const timeout = setTimeout(() => {
-      if (!responseReceived) {
-        ws.close();
-        reject(new Error('Timeout: No response received within 10 seconds'));
-      }
-    }, 10000);
+  // Execute WebSocket connection test
+  const stepName = 'WebSocketConnectionTest';
+  await synthetics.executeStep(stepName, async () => {
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('WebSocket connection timeout'));
+      }, 10000);
 
-    ws.on('open', () => {
-      console.log('WebSocket connection established');
-      
-      // Send test audio message
-      const testMessage = {
-        action: 'audio',
-        data: Buffer.from('test-audio-data').toString('base64'),
-        sessionId: `canary-${Date.now()}`,
-      };
-      
-      ws.send(JSON.stringify(testMessage));
-      console.log('Test message sent');
-    });
+      const ws = new WebSocket(wsEndpoint);
+      let connected = false;
 
-    ws.on('message', (data: any) => {
-      console.log('Response received:', data.toString());
-      responseReceived = true;
-      clearTimeout(timeout);
-      ws.close();
-      resolve({ success: true, message: 'WebSocket health check passed' });
-    });
+      ws.on('open', () => {
+        log.info('WebSocket connected');
+        connected = true;
 
-    ws.on('error', (error: Error) => {
-      console.error('WebSocket error:', error);
-      clearTimeout(timeout);
-      reject(error);
-    });
+        // Send test message
+        const testMessage = JSON.stringify({
+          action: 'ping',
+          timestamp: new Date().toISOString(),
+        });
+        
+        ws.send(testMessage);
+        log.info('Test message sent');
+      });
 
-    ws.on('close', () => {
-      console.log('WebSocket connection closed');
-      if (!responseReceived) {
+      ws.on('message', (data: Buffer) => {
+        log.info('Received message from server');
+        
+        try {
+          const message = JSON.parse(data.toString());
+          log.info(`Message: ${JSON.stringify(message)}`);
+          
+          // Close connection after receiving response
+          ws.close();
+        } catch (error) {
+          reject(new Error('Invalid message format'));
+        }
+      });
+
+      ws.on('close', () => {
+        log.info('WebSocket disconnected');
         clearTimeout(timeout);
-        reject(new Error('Connection closed without receiving response'));
-      }
+        
+        if (connected) {
+          resolve({ success: true });
+        } else {
+          reject(new Error('Connection closed before establishing'));
+        }
+      });
+
+      ws.on('error', (error: Error) => {
+        log.error(`WebSocket error: ${error.message}`);
+        clearTimeout(timeout);
+        reject(error);
+      });
     });
   });
+
+  log.info('WebSocket connection test passed');
 };

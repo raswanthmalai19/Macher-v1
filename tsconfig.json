@@ -33,6 +33,7 @@
     "bin/**/*",
     "lib/**/*",
     "lambda/**/*",
+    "pipeline/**/*",
     "tests/**/*"
   ],
   "exclude": [

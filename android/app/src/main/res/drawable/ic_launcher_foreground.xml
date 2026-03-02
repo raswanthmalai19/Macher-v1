@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Outer glow ring -->
+    <path
+        android:fillColor="#2000E5FF"
+        android:pathData="M54,8 C54,8 16,24 16,24 L16,60 C16,78 33,92 54,100 C75,92 92,78 92,60 L92,24 Z"/>
+
+    <!-- Shield body — deep navy fill -->
+    <path
+        android:fillColor="#0F2042"
+        android:pathData="M54,14 C54,14 22,28 22,28 L22,58 C22,74 36,88 54,96 C72,88 86,74 86,58 L86,28 Z"/>
+
+    <!-- Shield border — electric cyan -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#00E5FF"
+        android:strokeWidth="2.5"
+        android:pathData="M54,14 C54,14 22,28 22,28 L22,58 C22,74 36,88 54,96 C72,88 86,74 86,58 L86,28 Z"/>
+
+    <!-- Inner shield highlight line (top accent) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#4D00E5FF"
+        android:strokeWidth="1.5"
+        android:pathData="M54,20 C54,20 28,32 28,32 L28,58 C28,71 39,82 54,89 C69,82 80,71 80,58 L80,32 Z"/>
+
+    <!-- Letter M — bold white -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M36,72 L36,38 L43,38 L54,56 L65,38 L72,38 L72,72 L65,72 L65,52 L54,68 L43,52 L43,72 Z"/>
+
+    <!-- Cyan dot accent — bottom of shield (indicator) -->
+    <path
+        android:fillColor="#00E5FF"
+        android:pathData="M54,84 C56.2,84 58,82.2 58,80 C58,77.8 56.2,76 54,76 C51.8,76 50,77.8 50,80 C50,82.2 51.8,84 54,84 Z"/>
+
+</vector>

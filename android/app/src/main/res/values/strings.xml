@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">VocalShield</string>
-    <string name="accessibility_service_description">VocalShield monitors your phone calls in real-time to detect and alert you about potential scam calls. Audio is processed in memory only and never stored.</string>
+    <string name="app_name">MACHER</string>
+    <string name="app_tagline">AI Voice Fraud Firewall</string>
+    <string name="accessibility_service_description">MACHER monitors your phone calls in real-time using advanced AI to detect and alert you about potential scam calls. Audio is processed in memory only and never stored.</string>
     
     <!-- Permissions -->
-    <string name="permission_audio_rationale">VocalShield needs microphone access to analyze phone calls for fraud detection.</string>
-    <string name="permission_phone_rationale">VocalShield needs phone state access to detect when calls are active.</string>
-    <string name="permission_notification_rationale">VocalShield needs notification access to alert you about potential scams.</string>
+    <string name="permission_audio_rationale">MACHER needs microphone access to analyze phone calls for fraud detection.</string>
+    <string name="permission_phone_rationale">MACHER needs phone state access to detect when calls are active.</string>
+    <string name="permission_notification_rationale">MACHER needs notification access to alert you about potential scams.</string>
     
     <!-- Threat Levels -->
     <string name="threat_safe">SAFE</string>
@@ -14,23 +15,23 @@
     <string name="threat_danger">DANGER</string>
     
     <!-- Notifications -->
-    <string name="notification_channel_name">Fraud Alerts</string>
-    <string name="notification_channel_description">Real-time fraud detection alerts</string>
-    <string name="notification_caution_title">⚠️ Caution: Potential Scam</string>
-    <string name="notification_danger_title">🚨 DANGER: Scam Detected!</string>
-    <string name="notification_caution_message">Be cautious. This call may be suspicious.</string>
-    <string name="notification_danger_message">HANG UP NOW! This is likely a scam.</string>
+    <string name="notification_channel_name">MACHER Alerts</string>
+    <string name="notification_channel_description">Real-time voice fraud detection alerts</string>
+    <string name="notification_caution_title">⚠️ MACHER: Potential Scam</string>
+    <string name="notification_danger_title">🚨 MACHER: Scam Detected!</string>
+    <string name="notification_caution_message">Be cautious. This call shows suspicious patterns.</string>
+    <string name="notification_danger_message">HANG UP NOW! This is likely a scam call.</string>
     
     <!-- UI -->
     <string name="start_monitoring">START MONITORING</string>
     <string name="stop_monitoring">STOP MONITORING</string>
     <string name="connected">Connected</string>
-    <string name="connecting">Connecting...</string>
+    <string name="connecting">Connecting…</string>
     <string name="offline">Offline</string>
     <string name="connection_error">Connection Error</string>
     <string name="live_transcription">Live Transcription</string>
     <string name="call_duration">Call Duration: %1$02d:%2$02d</string>
     
     <!-- Privacy -->
-    <string name="privacy_notice">VocalShield NEVER stores your call audio. All processing happens in memory only.</string>
+    <string name="privacy_notice">MACHER never stores call audio. All processing is ephemeral.</string>
 </resources>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Deep navy base -->
+    <path
+        android:fillColor="#050D1A"
+        android:pathData="M0,0 L108,0 L108,108 L0,108 Z"/>
+
+    <!-- Cyan radial glow (top-right) -->
+    <path
+        android:fillColor="#0D00E5FF"
+        android:pathData="M108,0 A70,70 0 0 1 38,70 A70,70 0 0 1 108,0 Z"/>
+
+    <!-- Violet radial glow (bottom-left) -->
+    <path
+        android:fillColor="#0D7C4DFF"
+        android:pathData="M0,108 A70,70 0 0 1 70,38 A70,70 0 0 1 0,108 Z"/>
+
+</vector>

@@ -1,0 +1,19 @@
+{
+  "environment": "dev",
+  "aws": {
+    "region": "us-east-1",
+    "account": "123456789012"
+  },
+  "lambda": {
+    "memorySize": 512,
+    "timeout": 10
+  },
+  "monitoring": {
+    "alarmEmail": "dev-alerts@vocalshield.com"
+  },
+  "android": {
+    "versionCode": 1,
+    "versionName": "1.0.0",
+    "signingKeyAlias": "vocalshield-dev"
+  }
+}
