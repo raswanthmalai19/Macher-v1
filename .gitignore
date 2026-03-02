@@ -120,11 +120,12 @@ coverage/
 .serverless/
 
 ################################################################################
-# SOURCE DOCS (KEEP MAIN README)
+# SOURCE DOCS (KEEP IMPORTANT DOCS)
 ################################################################################
 *.md
 !README.md
 !QUICK_START.md
+!GIT_AUTO_SYNC_GUIDE.md
 !android/README.md
 
 ################################################################################
