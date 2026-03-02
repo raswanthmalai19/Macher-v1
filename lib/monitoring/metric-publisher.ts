@@ -13,7 +13,7 @@
  * Usage:
  * ```typescript
  * const publisher = new MetricPublisher({ region: 'us-east-1' });
- * await publisher.publishMetric('VocalShield/Performance', 'Latency', 150, MetricUnit.Milliseconds, { Endpoint: '/analyze' });
+ * await publisher.publishMetric('MACHER/Performance', 'Latency', 150, MetricUnit.Milliseconds, { Endpoint: '/analyze' });
  * await publisher.publishBusinessKPI('FraudDetectionRate', 0.85, { Environment: 'Production' });
  * ```
  */
@@ -106,7 +106,7 @@ export class MetricPublisher {
     dimensions: Record<string, string>
   ): Promise<void> {
     await this.publishMetric(
-      'VocalShield/BusinessKPIs',
+      'MACHER/BusinessKPIs',
       kpiName,
       value,
       MetricUnit.Count,
@@ -218,7 +218,7 @@ export class MetricPublisher {
     // Flush any remaining metrics
     if (this.metricBatch.length > 0) {
       // Group by namespace (assume all are same namespace for simplicity)
-      await this.flush('VocalShield');
+      await this.flush('MACHER');
     }
   }
 }

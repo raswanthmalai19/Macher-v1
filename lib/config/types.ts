@@ -1,5 +1,5 @@
 /**
- * Environment configuration interface for VocalShield infrastructure
+ * Environment configuration interface for MACHER infrastructure
  */
 export interface EnvironmentConfig {
   // Environment identification

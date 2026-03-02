@@ -14,7 +14,7 @@ export interface CostManagementConstructProps {
  * 
  * Creates:
  * - AWS Budget with $10/month limit and 80%/100% alerts
- * - Resource Group for all VocalShield resources (tag-based)
+ * - Resource Group for all MACHER resources (tag-based)
  */
 export class CostManagementConstruct extends Construct {
   public readonly budget: budgets.CfnBudget;
@@ -26,9 +26,9 @@ export class CostManagementConstruct extends Construct {
     const { config, notificationEmail } = props;
 
     // Create AWS Budget (Task 16.1)
-    this.budget = new budgets.CfnBudget(this, 'VocalShieldBudget', {
+    this.budget = new budgets.CfnBudget(this, 'MACHERBudget', {
       budget: {
-        budgetName: `VocalShield-Budget-${config.tags.Environment}`,
+        budgetName: `MACHER-Budget-${config.tags.Environment}`,
         budgetType: 'COST',
         timeUnit: 'MONTHLY',
         budgetLimit: {
@@ -74,9 +74,9 @@ export class CostManagementConstruct extends Construct {
     });
 
     // Create Resource Group (Task 16.2)
-    this.resourceGroup = new resourcegroups.CfnGroup(this, 'VocalShieldResourceGroup', {
-      name: `VocalShield-Resources-${config.tags.Environment}`,
-      description: 'All VocalShield infrastructure resources',
+    this.resourceGroup = new resourcegroups.CfnGroup(this, 'MACHERResourceGroup', {
+      name: `MACHER-Resources-${config.tags.Environment}`,
+      description: 'All MACHER infrastructure resources',
       resourceQuery: {
         type: 'TAG_FILTERS_1_0',
         query: JSON.stringify({

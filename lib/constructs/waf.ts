@@ -28,10 +28,10 @@ export class WafConstruct extends Construct {
 
     // Create Web ACL
     this.webAcl = new wafv2.CfnWebACL(this, 'WebSocketWAF', {
-      name: `VocalShield-WebACL-${config.tags.Environment}`,
+      name: `MACHER-WebACL-${config.tags.Environment}`,
       scope: 'REGIONAL',
       defaultAction: { allow: {} },
-      description: 'WAF protection for VocalShield WebSocket API',
+      description: 'WAF protection for MACHER WebSocket API',
       rules: [
         // Rule 1: Rate Limiting
         {
@@ -88,7 +88,7 @@ export class WafConstruct extends Construct {
       visibilityConfig: {
         sampledRequestsEnabled: true,
         cloudWatchMetricsEnabled: true,
-        metricName: `VocalShield-WebACL-${config.tags.Environment}`,
+        metricName: `MACHER-WebACL-${config.tags.Environment}`,
       },
     });
 

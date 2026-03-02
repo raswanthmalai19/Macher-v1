@@ -1,8 +1,8 @@
-# VocalShield CI/CD Pipeline
+# MACHER CI/CD Pipeline
 
 ## Overview
 
-This directory contains the complete CI/CD pipeline implementation for VocalShield, built using GitHub Actions, TypeScript, and Python. The pipeline automates testing, building, deployment, and monitoring across dev, staging, and production environments while maintaining AWS Free Tier compliance.
+This directory contains the complete CI/CD pipeline implementation for MACHER, built using GitHub Actions, TypeScript, and Python. The pipeline automates testing, building, deployment, and monitoring across dev, staging, and production environments while maintaining AWS Free Tier compliance.
 
 ## Architecture
 
@@ -233,7 +233,7 @@ node pipeline/deploy/RollbackManager.js history production
 
 1. **Check CloudFormation Events**
    ```bash
-   aws cloudformation describe-stack-events --stack-name VocalShield-<env>
+   aws cloudformation describe-stack-events --stack-name MACHER-<env>
    ```
 
 2. **View Lambda Logs**

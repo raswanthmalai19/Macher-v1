@@ -26,13 +26,13 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.VocalShield">
+        android:theme="@style/Theme.MACHER">
         
         <!-- Main Activity -->
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.VocalShield">
+            android:theme="@style/Theme.MACHER">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

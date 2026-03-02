@@ -1,7 +1,7 @@
 /**
  * Monitoring Dashboards Construct
  * 
- * Creates CloudWatch Dashboards for VocalShield monitoring:
+ * Creates CloudWatch Dashboards for MACHER monitoring:
  * - System Overview Dashboard
  * - Performance Dashboard
  * - Cost Monitoring Dashboard
@@ -44,13 +44,13 @@ export class MonitoringDashboardsConstruct extends Construct {
 
     // System Overview Dashboard
     this.systemOverviewDashboard = new cloudwatch.Dashboard(this, 'SystemOverviewDashboard', {
-      dashboardName: `VocalShield-Overview-${environment}`,
+      dashboardName: `MACHER-Overview-${environment}`,
     });
 
     // Add title widget
     this.systemOverviewDashboard.addWidgets(
       new cloudwatch.TextWidget({
-        markdown: `# VocalShield System Overview - ${environment}\n\nReal-time monitoring of all system components`,
+        markdown: `# MACHER System Overview - ${environment}\n\nReal-time monitoring of all system components`,
         width: 24,
         height: 1,
       })
@@ -101,12 +101,12 @@ export class MonitoringDashboardsConstruct extends Construct {
 
     // Performance Dashboard
     this.performanceDashboard = new cloudwatch.Dashboard(this, 'PerformanceDashboard', {
-      dashboardName: `VocalShield-Performance-${environment}`,
+      dashboardName: `MACHER-Performance-${environment}`,
     });
 
     this.performanceDashboard.addWidgets(
       new cloudwatch.TextWidget({
-        markdown: `# VocalShield Performance Metrics - ${environment}\n\nLatency and throughput monitoring`,
+        markdown: `# MACHER Performance Metrics - ${environment}\n\nLatency and throughput monitoring`,
         width: 24,
         height: 1,
       })
@@ -140,7 +140,7 @@ export class MonitoringDashboardsConstruct extends Construct {
         height: 6,
         left: [
           new cloudwatch.Metric({
-            namespace: 'VocalShield/Performance',
+            namespace: 'MACHER/Performance',
             metricName: 'ColdStarts',
             statistic: 'Sum',
             period: cdk.Duration.minutes(1),
@@ -151,12 +151,12 @@ export class MonitoringDashboardsConstruct extends Construct {
 
     // Cost Monitoring Dashboard
     this.costDashboard = new cloudwatch.Dashboard(this, 'CostDashboard', {
-      dashboardName: `VocalShield-Costs-${environment}`,
+      dashboardName: `MACHER-Costs-${environment}`,
     });
 
     this.costDashboard.addWidgets(
       new cloudwatch.TextWidget({
-        markdown: `# VocalShield Cost Monitoring - ${environment}\n\nAWS Free Tier usage tracking`,
+        markdown: `# MACHER Cost Monitoring - ${environment}\n\nAWS Free Tier usage tracking`,
         width: 24,
         height: 1,
       })
@@ -178,7 +178,7 @@ export class MonitoringDashboardsConstruct extends Construct {
         height: 6,
         left: [
           new cloudwatch.Metric({
-            namespace: 'VocalShield/FreeTier',
+            namespace: 'MACHER/FreeTier',
             metricName: `${service}Usage`,
             statistic: 'Average',
             period: cdk.Duration.minutes(5),

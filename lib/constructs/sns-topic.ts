@@ -9,7 +9,7 @@ export interface SnsTopicConstructProps {
 }
 
 /**
- * Construct for VocalShield SNS Topic (Family Loop Notifications)
+ * Construct for MACHER SNS Topic (Family Loop Notifications)
  * 
  * Creates an SNS topic for delivering fraud detection notifications to family members.
  * 
@@ -31,8 +31,8 @@ export class SnsTopicConstruct extends Construct {
 
     // Create SNS topic for Family Loop notifications (Task 10.1)
     this.familyLoopTopic = new sns.Topic(this, 'FamilyLoopTopic', {
-      topicName: `VocalShield-FamilyLoop-${config.tags.Environment}`,
-      displayName: 'VocalShield Fraud Alerts',
+      topicName: `MACHER-FamilyLoop-${config.tags.Environment}`,
+      displayName: 'MACHER Fraud Alerts',
       fifo: false, // Standard topic for cost optimization
     });
 

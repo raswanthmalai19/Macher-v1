@@ -42,14 +42,14 @@ export class SlackWebhookLambdaConstruct extends Construct {
 
     // Create Dead Letter Queue for failed Lambda invocations (Task 9.2)
     this.deadLetterQueue = new sqs.Queue(this, 'SlackWebhookDLQ', {
-      queueName: `VocalShield-SlackWebhook-DLQ-${config.tags.Environment}`,
+      queueName: `MACHER-SlackWebhook-DLQ-${config.tags.Environment}`,
       retentionPeriod: cdk.Duration.days(14), // Retain failed messages for 14 days
       encryption: sqs.QueueEncryption.SQS_MANAGED,
     });
 
     // Create Slack Webhook Lambda function (Task 9.1)
     this.slackWebhookFunction = new lambda.Function(this, 'SlackWebhookFunction', {
-      functionName: `VocalShield-SlackWebhook-${config.tags.Environment}`,
+      functionName: `MACHER-SlackWebhook-${config.tags.Environment}`,
       runtime: lambda.Runtime.NODEJS_20_X,
       architecture: lambda.Architecture.ARM_64,
       handler: 'index.handler',
@@ -58,7 +58,7 @@ export class SlackWebhookLambdaConstruct extends Construct {
       timeout: cdk.Duration.seconds(10),
       tracing: lambda.Tracing.ACTIVE,
       environment: {
-        SLACK_WEBHOOK_SECRET_NAME: `vocalshield/slack-webhook-url`,
+        SLACK_WEBHOOK_SECRET_NAME: `macher/slack-webhook-url`,
         ENVIRONMENT: config.tags.Environment,
       },
       logRetention: logs.RetentionDays.ONE_WEEK,
@@ -72,7 +72,7 @@ export class SlackWebhookLambdaConstruct extends Construct {
         effect: iam.Effect.ALLOW,
         actions: ['secretsmanager:GetSecretValue'],
         resources: [
-          `arn:aws:secretsmanager:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:secret:vocalshield/slack-webhook-url-*`,
+          `arn:aws:secretsmanager:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:secret:macher/slack-webhook-url-*`,
         ],
       })
     );
@@ -107,13 +107,13 @@ export class SlackWebhookLambdaConstruct extends Construct {
     new cdk.CfnOutput(this, 'SlackWebhookFunctionArn', {
       value: this.slackWebhookFunction.functionArn,
       description: 'Slack Webhook Lambda Function ARN',
-      exportName: `${config.tags.Environment}-VocalShield-SlackWebhookFunction`,
+      exportName: `${config.tags.Environment}-MACHER-SlackWebhookFunction`,
     });
 
     new cdk.CfnOutput(this, 'SlackWebhookDLQUrl', {
       value: this.deadLetterQueue.queueUrl,
       description: 'Slack Webhook Dead Letter Queue URL',
-      exportName: `${config.tags.Environment}-VocalShield-SlackWebhookDLQ`,
+      exportName: `${config.tags.Environment}-MACHER-SlackWebhookDLQ`,
     });
 
     new cdk.CfnOutput(this, 'SlackWebhookDLQArn', {

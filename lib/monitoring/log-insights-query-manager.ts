@@ -108,7 +108,7 @@ export class LogInsightsQueryManager {
     this.savedQueries.set('error-analysis', {
       name: 'error-analysis',
       description: 'Analyze errors by type and component',
-      logGroupNames: ['/aws/lambda/vocalshield'],
+      logGroupNames: ['/aws/lambda/macher'],
       queryString: `
         fields @timestamp, component, error.type, error.message
         | filter level = "ERROR"
@@ -121,7 +121,7 @@ export class LogInsightsQueryManager {
     this.savedQueries.set('latency-analysis', {
       name: 'latency-analysis',
       description: 'Calculate P50/P90/P99 latency by endpoint',
-      logGroupNames: ['/aws/lambda/vocalshield'],
+      logGroupNames: ['/aws/lambda/macher'],
       queryString: `
         fields @timestamp, operation, duration
         | filter duration > 0
@@ -134,7 +134,7 @@ export class LogInsightsQueryManager {
     this.savedQueries.set('user-activity', {
       name: 'user-activity',
       description: 'Analyze request counts by user',
-      logGroupNames: ['/aws/lambda/vocalshield'],
+      logGroupNames: ['/aws/lambda/macher'],
       queryString: `
         fields @timestamp, userId, operation
         | filter userId != ""
@@ -148,7 +148,7 @@ export class LogInsightsQueryManager {
     this.savedQueries.set('security-events', {
       name: 'security-events',
       description: 'Analyze failed authentication attempts',
-      logGroupNames: ['/aws/lambda/vocalshield'],
+      logGroupNames: ['/aws/lambda/macher'],
       queryString: `
         fields @timestamp, userId, metadata.reason, metadata.sourceIp
         | filter operation = "authenticate" and level = "ERROR"

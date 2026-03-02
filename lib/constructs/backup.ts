@@ -29,14 +29,14 @@ export class BackupConstruct extends Construct {
     const { config, connectionsTable, metadataTable } = props;
 
     // Create Backup Vault
-    this.backupVault = new backup.BackupVault(this, 'VocalShieldBackupVault', {
-      backupVaultName: `VocalShield-Vault-${config.tags.Environment}`,
+    this.backupVault = new backup.BackupVault(this, 'MACHERBackupVault', {
+      backupVaultName: `MACHER-Vault-${config.tags.Environment}`,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
     // Create Backup Plan
-    this.backupPlan = new backup.BackupPlan(this, 'VocalShieldBackupPlan', {
-      backupPlanName: `VocalShield-DailyBackup-${config.tags.Environment}`,
+    this.backupPlan = new backup.BackupPlan(this, 'MACHERBackupPlan', {
+      backupPlanName: `MACHER-DailyBackup-${config.tags.Environment}`,
       backupVault: this.backupVault,
       backupPlanRules: [
         new backup.BackupPlanRule({

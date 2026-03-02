@@ -31,7 +31,7 @@ export class LogsInsightsQueriesConstruct extends Construct {
 
     // Query 1: Fraud Detection Rate
     this.fraudDetectionRateQuery = new logs.CfnQueryDefinition(this, 'FraudDetectionRateQuery', {
-      name: `VocalShield-FraudDetectionRate-${config.tags.Environment}`,
+      name: `MACHER-FraudDetectionRate-${config.tags.Environment}`,
       queryString: `
 fields @timestamp, sessionId, fraudScore
 | filter fraudDetected = true
@@ -43,7 +43,7 @@ fields @timestamp, sessionId, fraudScore
 
     // Query 2: Processing Latency P99
     this.processingLatencyQuery = new logs.CfnQueryDefinition(this, 'ProcessingLatencyQuery', {
-      name: `VocalShield-ProcessingLatencyP99-${config.tags.Environment}`,
+      name: `MACHER-ProcessingLatencyP99-${config.tags.Environment}`,
       queryString: `
 fields @timestamp, processingDuration, sessionId
 | filter processingDuration > 0
@@ -61,7 +61,7 @@ fields @timestamp, processingDuration, sessionId
 
     // Query 3: Error Analysis
     this.errorAnalysisQuery = new logs.CfnQueryDefinition(this, 'ErrorAnalysisQuery', {
-      name: `VocalShield-ErrorAnalysis-${config.tags.Environment}`,
+      name: `MACHER-ErrorAnalysis-${config.tags.Environment}`,
       queryString: `
 fields @timestamp, @message, error.name, error.message, sessionId, connectionId
 | filter level = "ERROR"
@@ -73,7 +73,7 @@ fields @timestamp, @message, error.name, error.message, sessionId, connectionId
 
     // Query 4: Top Sessions by Processing Time
     this.topSessionsQuery = new logs.CfnQueryDefinition(this, 'TopSessionsQuery', {
-      name: `VocalShield-TopSessions-${config.tags.Environment}`,
+      name: `MACHER-TopSessions-${config.tags.Environment}`,
       queryString: `
 fields @timestamp, sessionId, processingDuration, fraudScore
 | filter processingDuration > 0

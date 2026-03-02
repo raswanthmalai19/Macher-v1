@@ -1,5 +1,5 @@
 /**
- * Shared types and interfaces for VocalShield Monitoring and Observability
+ * Shared types and interfaces for MACHER Monitoring and Observability
  * 
  * This file defines the core types used across all monitoring components.
  */

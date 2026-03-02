@@ -1,10 +1,10 @@
-# VocalShield AI-Powered Fraud Detection
+# MACHER AI-Powered Fraud Detection
 
 Real-time phone call fraud detection using Amazon Bedrock Agents with Claude 3.5 Sonnet.
 
 ## Overview
 
-The VocalShield fraud detection system analyzes phone call transcripts in real-time to identify scam patterns, urgency tactics, and financial demands. It uses Amazon Bedrock Agents connected to a Knowledge Base of known scam patterns, with PII protection via Bedrock Guardrails.
+The MACHER fraud detection system analyzes phone call transcripts in real-time to identify scam patterns, urgency tactics, and financial demands. It uses Amazon Bedrock Agents connected to a Knowledge Base of known scam patterns, with PII protection via Bedrock Guardrails.
 
 ### Key Features
 
@@ -49,8 +49,8 @@ Transcript → Guardrails (PII Redaction) → Bedrock Agent → Analysis Result
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/your-org/vocalshield.git
-cd vocalshield/lambda/fraud-detection
+git clone https://github.com/your-org/macher.git
+cd macher/lambda/fraud-detection
 ```
 
 ### 2. Install Python Dependencies
@@ -102,7 +102,7 @@ This will:
 
 **Wait for the ingestion job to complete** (5-10 minutes). Check status in AWS Console:
 - Navigate to Amazon Bedrock → Knowledge Bases
-- Select "VocalShield-ScamPatterns"
+- Select "MACHER-ScamPatterns"
 - Check "Data sources" tab for ingestion status
 
 **Save the Knowledge Base ID** from the output.
@@ -153,9 +153,9 @@ cdk bootstrap aws://<account-id>/us-east-1
 cdk deploy --app "python3 app.py"
 ```
 
-#### Option B: TypeScript CDK (Full VocalShield Stack)
+#### Option B: TypeScript CDK (Full MACHER Stack)
 
-Deploy as part of the complete VocalShield infrastructure:
+Deploy as part of the complete MACHER infrastructure:
 
 ```bash
 # Navigate to project root
@@ -509,9 +509,9 @@ MIT License - see LICENSE file for details
 
 ## Support
 
-- GitHub Issues: https://github.com/your-org/vocalshield/issues
-- Documentation: https://docs.vocalshield.com
-- Email: support@vocalshield.com
+- GitHub Issues: https://github.com/your-org/macher/issues
+- Documentation: https://docs.macher.com
+- Email: support@macher.com
 
 ## Acknowledgments
 

@@ -43,7 +43,7 @@ export class PercentileCalculator {
 
   constructor(config: PercentileCalculatorConfig = {}) {
     this.metricPublisher = config.metricPublisher || new MetricPublisher();
-    this.namespace = config.namespace || 'VocalShield/Performance';
+    this.namespace = config.namespace || 'MACHER/Performance';
     this.publishInterval = config.publishInterval || 60000; // 1 minute default
   }
 

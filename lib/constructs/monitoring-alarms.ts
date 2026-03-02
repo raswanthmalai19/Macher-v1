@@ -1,7 +1,7 @@
 /**
  * Monitoring Alarms Construct
  * 
- * Creates CloudWatch Alarms for VocalShield monitoring:
+ * Creates CloudWatch Alarms for MACHER monitoring:
  * - Lambda error rate alarms
  * - API Gateway error alarms
  * - DynamoDB throttle alarms
@@ -49,7 +49,7 @@ export class MonitoringAlarmsConstruct extends Construct {
     Object.entries(lambdaFunctions).forEach(([name, fn]) => {
       if (fn) {
         const errorAlarm = new cloudwatch.Alarm(this, `${name}ErrorAlarm`, {
-          alarmName: `VocalShield-${environment}-Lambda-${name}-Errors`,
+          alarmName: `MACHER-${environment}-Lambda-${name}-Errors`,
           alarmDescription: `Lambda function ${name} error rate exceeds 5%`,
           metric: fn.metricErrors({
             statistic: 'Sum',
@@ -66,7 +66,7 @@ export class MonitoringAlarmsConstruct extends Construct {
 
         // Lambda throttle alarm (warning)
         const throttleAlarm = new cloudwatch.Alarm(this, `${name}ThrottleAlarm`, {
-          alarmName: `VocalShield-${environment}-Lambda-${name}-Throttles`,
+          alarmName: `MACHER-${environment}-Lambda-${name}-Throttles`,
           alarmDescription: `Lambda function ${name} is being throttled`,
           metric: fn.metricThrottles({
             statistic: 'Sum',
@@ -88,7 +88,7 @@ export class MonitoringAlarmsConstruct extends Construct {
       Object.entries(dynamoDbTables).forEach(([name, table]) => {
         if (table) {
           const throttleAlarm = new cloudwatch.Alarm(this, `${name}ThrottleAlarm`, {
-            alarmName: `VocalShield-${environment}-DynamoDB-${name}-Throttles`,
+            alarmName: `MACHER-${environment}-DynamoDB-${name}-Throttles`,
             alarmDescription: `DynamoDB table ${name} is experiencing throttling`,
             metric: table.metricUserErrors({
               statistic: 'Sum',
@@ -118,10 +118,10 @@ export class MonitoringAlarmsConstruct extends Construct {
     freeTierServices.forEach(service => {
       // 80% warning
       const warningAlarm = new cloudwatch.Alarm(this, `${service.name}FreeTierWarning`, {
-        alarmName: `VocalShield-${environment}-FreeTier-${service.name}-Warning`,
+        alarmName: `MACHER-${environment}-FreeTier-${service.name}-Warning`,
         alarmDescription: `${service.displayName} Free Tier usage exceeds 80%`,
         metric: new cloudwatch.Metric({
-          namespace: 'VocalShield/FreeTier',
+          namespace: 'MACHER/FreeTier',
           metricName: `${service.name}Usage`,
           statistic: 'Average',
           period: cdk.Duration.minutes(5),
@@ -140,10 +140,10 @@ export class MonitoringAlarmsConstruct extends Construct {
 
       // 95% critical
       const criticalAlarm = new cloudwatch.Alarm(this, `${service.name}FreeTierCritical`, {
-        alarmName: `VocalShield-${environment}-FreeTier-${service.name}-Critical`,
+        alarmName: `MACHER-${environment}-FreeTier-${service.name}-Critical`,
         alarmDescription: `${service.displayName} Free Tier usage exceeds 95%`,
         metric: new cloudwatch.Metric({
-          namespace: 'VocalShield/FreeTier',
+          namespace: 'MACHER/FreeTier',
           metricName: `${service.name}Usage`,
           statistic: 'Average',
           period: cdk.Duration.minutes(5),
@@ -163,10 +163,10 @@ export class MonitoringAlarmsConstruct extends Construct {
 
     // Security brute force alarm (critical)
     const bruteForceAlarm = new cloudwatch.Alarm(this, 'BruteForceAlarm', {
-      alarmName: `VocalShield-${environment}-Security-BruteForce`,
+      alarmName: `MACHER-${environment}-Security-BruteForce`,
       alarmDescription: 'Potential brute force attack detected (>5 failed auth attempts in 5 minutes)',
       metric: new cloudwatch.Metric({
-        namespace: 'VocalShield/Security',
+        namespace: 'MACHER/Security',
         metricName: 'FailedAuthAttempts',
         statistic: 'Sum',
         period: cdk.Duration.minutes(5),
@@ -186,7 +186,7 @@ export class MonitoringAlarmsConstruct extends Construct {
     // High latency alarm for audio processor (warning)
     if (lambdaFunctions.audioProcessor) {
       const latencyAlarm = new cloudwatch.Alarm(this, 'AudioProcessorLatencyAlarm', {
-        alarmName: `VocalShield-${environment}-AudioProcessor-HighLatency`,
+        alarmName: `MACHER-${environment}-AudioProcessor-HighLatency`,
         alarmDescription: 'Audio processor P99 latency exceeds 3000ms',
         metric: lambdaFunctions.audioProcessor.metricDuration({
           statistic: 'p99',
@@ -204,7 +204,7 @@ export class MonitoringAlarmsConstruct extends Construct {
 
     // Add tags to all alarms
     this.alarms.forEach(alarm => {
-      cdk.Tags.of(alarm).add('Project', 'VocalShield');
+      cdk.Tags.of(alarm).add('Project', 'MACHER');
       cdk.Tags.of(alarm).add('Environment', environment);
     });
 

@@ -1,8 +1,8 @@
 /**
- * VocalShield Monitoring and Observability
+ * MACHER Monitoring and Observability
  * 
  * This module provides comprehensive monitoring and observability utilities
- * for the VocalShield application, including:
+ * for the MACHER application, including:
  * - Structured logging
  * - Custom metrics publishing
  * - Distributed tracing with X-Ray

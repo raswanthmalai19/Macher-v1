@@ -16,7 +16,7 @@ export interface CloudWatchAlarmsConstructProps {
 }
 
 /**
- * Construct for VocalShield CloudWatch Alarms
+ * Construct for MACHER CloudWatch Alarms
  * 
  * Creates alarms for:
  * - Billing: Alert when estimated charges exceed $5
@@ -42,13 +42,13 @@ export class CloudWatchAlarmsConstruct extends Construct {
 
     // Create SNS topic for alarm notifications
     this.alarmTopic = new sns.Topic(this, 'AlarmTopic', {
-      topicName: `VocalShield-Alarms-${config.tags.Environment}`,
-      displayName: 'VocalShield CloudWatch Alarms',
+      topicName: `MACHER-Alarms-${config.tags.Environment}`,
+      displayName: 'MACHER CloudWatch Alarms',
     });
 
     // Create billing alarm: threshold $5, period 6 hours
     this.billingAlarm = new cloudwatch.Alarm(this, 'BillingAlarm', {
-      alarmName: `VocalShield-BillingAlert-${config.tags.Environment}`,
+      alarmName: `MACHER-BillingAlert-${config.tags.Environment}`,
       alarmDescription: 'Alert when estimated AWS charges exceed $5',
       metric: new cloudwatch.Metric({
         namespace: 'AWS/Billing',
@@ -77,7 +77,7 @@ export class CloudWatchAlarmsConstruct extends Construct {
     });
 
     this.errorRateAlarm = new cloudwatch.Alarm(this, 'ErrorRateAlarm', {
-      alarmName: `VocalShield-ErrorRate-${config.tags.Environment}`,
+      alarmName: `MACHER-ErrorRate-${config.tags.Environment}`,
       alarmDescription: 'Alert when Lambda error count exceeds 10 in 5 minutes',
       metric: errorMetric,
       threshold: 10,
@@ -89,7 +89,7 @@ export class CloudWatchAlarmsConstruct extends Construct {
 
     // Create connection limit alarm: 900 concurrent connections (approaching Free Tier limit of 1000)
     this.connectionLimitAlarm = new cloudwatch.Alarm(this, 'ConnectionLimitAlarm', {
-      alarmName: `VocalShield-ConnectionLimit-${config.tags.Environment}`,
+      alarmName: `MACHER-ConnectionLimit-${config.tags.Environment}`,
       alarmDescription: 'Alert when concurrent connections approach Free Tier limit',
       metric: connectHandler.metricInvocations({
         statistic: 'Sum',
@@ -104,7 +104,7 @@ export class CloudWatchAlarmsConstruct extends Construct {
 
     // Create DLQ alarm: messages in dead-letter queue
     this.dlqAlarm = new cloudwatch.Alarm(this, 'DlqAlarm', {
-      alarmName: `VocalShield-DLQ-${config.tags.Environment}`,
+      alarmName: `MACHER-DLQ-${config.tags.Environment}`,
       alarmDescription: 'Alert when messages appear in dead-letter queue',
       metric: audioQueueDlq.metricApproximateNumberOfMessagesVisible({
         statistic: 'Sum',
@@ -128,7 +128,7 @@ export class CloudWatchAlarmsConstruct extends Construct {
     new cdk.CfnOutput(this, 'AlarmTopicArn', {
       value: this.alarmTopic.topicArn,
       description: 'SNS Topic ARN for CloudWatch alarm notifications',
-      exportName: `${config.tags.Environment}-VocalShield-AlarmTopic`,
+      exportName: `${config.tags.Environment}-MACHER-AlarmTopic`,
     });
   }
 }

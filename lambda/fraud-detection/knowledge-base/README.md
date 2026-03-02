@@ -1,6 +1,6 @@
-# VocalShield Scam Pattern Knowledge Base
+# MACHER Scam Pattern Knowledge Base
 
-This directory contains comprehensive scam pattern documents for the VocalShield fraud detection system. These JSON documents are used by Amazon Bedrock Knowledge Base to identify and classify fraudulent phone calls.
+This directory contains comprehensive scam pattern documents for the MACHER fraud detection system. These JSON documents are used by Amazon Bedrock Knowledge Base to identify and classify fraudulent phone calls.
 
 ## Pattern Categories
 
@@ -100,7 +100,7 @@ Each scam pattern document follows this JSON schema:
 
 ## Multi-Language Support
 
-The knowledge base supports the following languages as specified in the VocalShield requirements:
+The knowledge base supports the following languages as specified in the MACHER requirements:
 
 - **English (en)**: All 5 scam types
 - **Spanish (es)**: All 5 scam types
@@ -141,7 +141,7 @@ All example scripts in these documents:
 - Do NOT contain real PII (names, phone numbers, addresses)
 - Use generic placeholders for demonstration
 - Are designed for pattern matching, not data collection
-- Comply with VocalShield's privacy-first principles
+- Comply with MACHER's privacy-first principles
 
 ## References
 
@@ -160,4 +160,4 @@ These patterns should be reviewed and updated:
 
 **Last Updated**: 2024
 **Version**: 1.0
-**Maintained by**: VocalShield Development Team
+**Maintained by**: MACHER Development Team

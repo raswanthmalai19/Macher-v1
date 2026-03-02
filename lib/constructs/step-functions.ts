@@ -35,7 +35,7 @@ export class StepFunctionsConstruct extends Construct {
 
     // Create CloudWatch Log Group for Step Functions execution logs
     this.logGroup = new logs.LogGroup(this, 'StepFunctionsLogGroup', {
-      logGroupName: `/aws/stepfunctions/vocalshield-fraud-investigation-${config.tags.Environment}`,
+      logGroupName: `/aws/stepfunctions/macher-fraud-investigation-${config.tags.Environment}`,
       retention: logs.RetentionDays.ONE_WEEK,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
@@ -81,7 +81,7 @@ export class StepFunctionsConstruct extends Construct {
       topic: familyLoopTopic,
       message: sfn.TaskInput.fromObject({
         'default': sfn.JsonPath.format(
-          'VocalShield Fraud Alert\n\nSession: {}\nFraud Score: {}\nSeverity: {}\nAction Required: {}\nTimestamp: {}',
+          'MACHER Fraud Alert\n\nSession: {}\nFraud Score: {}\nSeverity: {}\nAction Required: {}\nTimestamp: {}',
           sfn.JsonPath.stringAt('$.sessionId'),
           sfn.JsonPath.stringAt('$.fraudScore'),
           sfn.JsonPath.stringAt('$.escalation.severity'),
@@ -121,7 +121,7 @@ export class StepFunctionsConstruct extends Construct {
 
     // Create Express State Machine for high-volume processing
     this.fraudInvestigationWorkflow = new sfn.StateMachine(this, 'FraudInvestigationWorkflow', {
-      stateMachineName: `VocalShield-FraudInvestigation-${config.tags.Environment}`,
+      stateMachineName: `MACHER-FraudInvestigation-${config.tags.Environment}`,
       definition,
       stateMachineType: sfn.StateMachineType.EXPRESS,
       logs: {

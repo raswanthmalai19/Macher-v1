@@ -5,7 +5,7 @@ export const devConfig: EnvironmentConfig = {
   region: 'us-east-1',
   
   // Stack configuration
-  stackName: 'VocalShield-dev',
+  stackName: 'MACHER-dev',
   
   // VPC configuration
   vpcCidr: '10.0.0.0/16',
@@ -62,9 +62,9 @@ export const devConfig: EnvironmentConfig = {
   
   // Tags
   tags: {
-    Project: 'VocalShield',
+    Project: 'MACHER',
     Environment: 'dev',
     ManagedBy: 'CDK',
-    CostCenter: 'VocalShield-Infrastructure'
+    CostCenter: 'MACHER-Infrastructure'
   }
 };

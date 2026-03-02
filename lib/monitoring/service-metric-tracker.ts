@@ -103,7 +103,7 @@ export class ServiceMetricTracker {
 
       // Publish processing time
       await this.metricPublisher.publishMetric(
-        'VocalShield/Services',
+        'MACHER/Services',
         'TranscribeProcessingTime',
         processingTimeMs,
         MetricUnit.Milliseconds,
@@ -113,7 +113,7 @@ export class ServiceMetricTracker {
 
       // Publish audio duration
       await this.metricPublisher.publishMetric(
-        'VocalShield/Services',
+        'MACHER/Services',
         'TranscribeAudioDuration',
         audioDurationMs,
         MetricUnit.Milliseconds,
@@ -126,7 +126,7 @@ export class ServiceMetricTracker {
       const processingTimePerSecond = processingTimeMs / audioDurationSeconds;
       
       await this.metricPublisher.publishMetric(
-        'VocalShield/Services',
+        'MACHER/Services',
         'TranscribeEfficiencyRatio',
         processingTimePerSecond,
         MetricUnit.Milliseconds,
@@ -197,7 +197,7 @@ export class ServiceMetricTracker {
 
       // Publish response time
       await this.metricPublisher.publishMetric(
-        'VocalShield/Services',
+        'MACHER/Services',
         'BedrockResponseTime',
         responseTimeMs,
         MetricUnit.Milliseconds,
@@ -207,7 +207,7 @@ export class ServiceMetricTracker {
 
       // Publish input tokens
       await this.metricPublisher.publishMetric(
-        'VocalShield/Services',
+        'MACHER/Services',
         'BedrockInputTokens',
         inputTokens,
         MetricUnit.Count,
@@ -217,7 +217,7 @@ export class ServiceMetricTracker {
 
       // Publish output tokens
       await this.metricPublisher.publishMetric(
-        'VocalShield/Services',
+        'MACHER/Services',
         'BedrockOutputTokens',
         outputTokens,
         MetricUnit.Count,
@@ -227,7 +227,7 @@ export class ServiceMetricTracker {
 
       // Publish total tokens
       await this.metricPublisher.publishMetric(
-        'VocalShield/Services',
+        'MACHER/Services',
         'BedrockTotalTokens',
         totalTokens,
         MetricUnit.Count,

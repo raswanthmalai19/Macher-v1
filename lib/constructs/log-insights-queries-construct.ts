@@ -32,7 +32,7 @@ export class LogInsightsQueriesConstruct extends Construct {
     // Error Analysis Query
     this.queries.push(
       new CfnQueryDefinition(this, 'ErrorAnalysisQuery', {
-        name: 'VocalShield-ErrorAnalysis',
+        name: 'MACHER-ErrorAnalysis',
         queryString: `
 fields @timestamp, component, error.type, error.message
 | filter level = "ERROR"
@@ -46,7 +46,7 @@ fields @timestamp, component, error.type, error.message
     // Latency Analysis Query
     this.queries.push(
       new CfnQueryDefinition(this, 'LatencyAnalysisQuery', {
-        name: 'VocalShield-LatencyAnalysis',
+        name: 'MACHER-LatencyAnalysis',
         queryString: `
 fields @timestamp, operation, duration
 | filter duration > 0
@@ -60,7 +60,7 @@ fields @timestamp, operation, duration
     // User Activity Query
     this.queries.push(
       new CfnQueryDefinition(this, 'UserActivityQuery', {
-        name: 'VocalShield-UserActivity',
+        name: 'MACHER-UserActivity',
         queryString: `
 fields @timestamp, userId, operation
 | filter userId != ""
@@ -75,7 +75,7 @@ fields @timestamp, userId, operation
     // Security Events Query
     this.queries.push(
       new CfnQueryDefinition(this, 'SecurityEventsQuery', {
-        name: 'VocalShield-SecurityEvents',
+        name: 'MACHER-SecurityEvents',
         queryString: `
 fields @timestamp, userId, metadata.reason, metadata.sourceIp
 | filter operation = "authenticate" and level = "ERROR"
@@ -89,7 +89,7 @@ fields @timestamp, userId, metadata.reason, metadata.sourceIp
     // Cold Start Analysis Query
     this.queries.push(
       new CfnQueryDefinition(this, 'ColdStartQuery', {
-        name: 'VocalShield-ColdStartAnalysis',
+        name: 'MACHER-ColdStartAnalysis',
         queryString: `
 fields @timestamp, component, duration, metadata.coldStart
 | filter metadata.coldStart = true
@@ -103,7 +103,7 @@ fields @timestamp, component, duration, metadata.coldStart
     // High Latency Requests Query
     this.queries.push(
       new CfnQueryDefinition(this, 'HighLatencyQuery', {
-        name: 'VocalShield-HighLatencyRequests',
+        name: 'MACHER-HighLatencyRequests',
         queryString: `
 fields @timestamp, operation, duration, requestId
 | filter duration > 2000
@@ -117,7 +117,7 @@ fields @timestamp, operation, duration, requestId
     // Free Tier Usage Query
     this.queries.push(
       new CfnQueryDefinition(this, 'FreeTierUsageQuery', {
-        name: 'VocalShield-FreeTierUsage',
+        name: 'MACHER-FreeTierUsage',
         queryString: `
 fields @timestamp, metadata.service, metadata.usagePercentage
 | filter operation = "trackFreeTierUsage"
@@ -131,7 +131,7 @@ fields @timestamp, metadata.service, metadata.usagePercentage
     // Request Volume by Endpoint Query
     this.queries.push(
       new CfnQueryDefinition(this, 'RequestVolumeQuery', {
-        name: 'VocalShield-RequestVolume',
+        name: 'MACHER-RequestVolume',
         queryString: `
 fields @timestamp, operation
 | stats count() as requestCount by operation, bin(1h) as hour

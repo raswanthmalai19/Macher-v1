@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "VocalShield"
+rootProject.name = "MACHER"
 include(":app")

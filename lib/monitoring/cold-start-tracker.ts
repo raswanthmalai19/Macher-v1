@@ -57,7 +57,7 @@ export class ColdStartTracker {
 
   constructor(config: ColdStartTrackerConfig = {}) {
     this.metricPublisher = config.metricPublisher || new MetricPublisher();
-    this.namespace = config.namespace || 'VocalShield/Performance';
+    this.namespace = config.namespace || 'MACHER/Performance';
     
     // Record initialization time (module load time)
     this.initializationTime = Date.now();

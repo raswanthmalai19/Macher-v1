@@ -212,7 +212,7 @@ export class CanarySuccessTracker {
 
     // Publish success rate
     await this.metricPublisher.publishMetric(
-      'VocalShield/Canaries',
+      'MACHER/Canaries',
       'SuccessRate',
       successRate.successRate,
       MetricUnit.Percent,
@@ -221,7 +221,7 @@ export class CanarySuccessTracker {
 
     // Publish availability percentage
     await this.metricPublisher.publishMetric(
-      'VocalShield/Canaries',
+      'MACHER/Canaries',
       'Availability',
       successRate.availabilityPercentage,
       MetricUnit.Percent,
@@ -230,7 +230,7 @@ export class CanarySuccessTracker {
 
     // Publish execution counts
     await this.metricPublisher.publishMetric(
-      'VocalShield/Canaries',
+      'MACHER/Canaries',
       'TotalExecutions',
       successRate.totalExecutions,
       MetricUnit.Count,
@@ -238,7 +238,7 @@ export class CanarySuccessTracker {
     );
 
     await this.metricPublisher.publishMetric(
-      'VocalShield/Canaries',
+      'MACHER/Canaries',
       'FailureCount',
       successRate.failureCount,
       MetricUnit.Count,
@@ -246,7 +246,7 @@ export class CanarySuccessTracker {
     );
 
     // Flush metrics
-    await this.metricPublisher.flush('VocalShield/Canaries');
+    await this.metricPublisher.flush('MACHER/Canaries');
   }
 
   /**
@@ -264,7 +264,7 @@ export class CanarySuccessTracker {
 
     // Publish execution result
     await this.metricPublisher.publishMetric(
-      'VocalShield/Canaries',
+      'MACHER/Canaries',
       'ExecutionResult',
       result.success ? 1 : 0,
       MetricUnit.Count,
@@ -273,7 +273,7 @@ export class CanarySuccessTracker {
 
     // Publish duration
     await this.metricPublisher.publishMetric(
-      'VocalShield/Canaries',
+      'MACHER/Canaries',
       'ExecutionDuration',
       result.duration,
       MetricUnit.Milliseconds,
@@ -291,7 +291,7 @@ export class CanarySuccessTracker {
       });
     }
 
-    await this.metricPublisher.flush('VocalShield/Canaries');
+    await this.metricPublisher.flush('MACHER/Canaries');
   }
 }
 

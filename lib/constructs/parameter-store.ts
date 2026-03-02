@@ -14,10 +14,10 @@ export interface ParameterStoreConstructProps {
 }
 
 /**
- * Parameter Store construct for VocalShield
+ * Parameter Store construct for MACHER
  * 
  * Creates hierarchical parameters following the pattern:
- * /vocalshield/{env}/{component}/{param}
+ * /macher/{env}/{component}/{param}
  * 
  * Parameters are used for non-sensitive configuration that can be
  * changed without redeploying the infrastructure.
@@ -57,7 +57,7 @@ export class ParameterStoreConstruct extends Construct {
 
     // Create fraud threshold parameter
     this.fraudThresholdParameter = new ssm.StringParameter(this, 'FraudThresholdParameter', {
-      parameterName: `/vocalshield/${environment}/audio-processor/fraud-threshold`,
+      parameterName: `/macher/${environment}/audio-processor/fraud-threshold`,
       description: 'Fraud detection threshold score (0-100). Scores above this trigger alerts.',
       stringValue: '70',
       tier: ssm.ParameterTier.STANDARD,
@@ -65,7 +65,7 @@ export class ParameterStoreConstruct extends Construct {
 
     // Create max processing time parameter
     this.maxProcessingTimeParameter = new ssm.StringParameter(this, 'MaxProcessingTimeParameter', {
-      parameterName: `/vocalshield/${environment}/audio-processor/max-processing-time`,
+      parameterName: `/macher/${environment}/audio-processor/max-processing-time`,
       description: 'Maximum audio processing time in milliseconds',
       stringValue: '3000',
       tier: ssm.ParameterTier.STANDARD,
@@ -73,7 +73,7 @@ export class ParameterStoreConstruct extends Construct {
 
     // Create notifications enabled parameter
     this.notificationsEnabledParameter = new ssm.StringParameter(this, 'NotificationsEnabledParameter', {
-      parameterName: `/vocalshield/${environment}/notifications/enabled`,
+      parameterName: `/macher/${environment}/notifications/enabled`,
       description: 'Whether Family Loop notifications are enabled',
       stringValue: 'true',
       tier: ssm.ParameterTier.STANDARD,
@@ -81,7 +81,7 @@ export class ParameterStoreConstruct extends Construct {
 
     // Create wavelength enabled parameter
     this.wavelengthEnabledParameter = new ssm.StringParameter(this, 'WavelengthEnabledParameter', {
-      parameterName: `/vocalshield/${environment}/features/wavelength-enabled`,
+      parameterName: `/macher/${environment}/features/wavelength-enabled`,
       description: 'Whether AWS Wavelength Zone integration is enabled',
       stringValue: 'false',
       tier: ssm.ParameterTier.STANDARD,
@@ -111,10 +111,10 @@ export class ParameterStoreConstruct extends Construct {
     ];
 
     parameters.forEach(parameter => {
-      cdk.Tags.of(parameter).add('Project', 'VocalShield');
+      cdk.Tags.of(parameter).add('Project', 'MACHER');
       cdk.Tags.of(parameter).add('Environment', environment);
       cdk.Tags.of(parameter).add('ManagedBy', 'CDK');
-      cdk.Tags.of(parameter).add('CostCenter', 'VocalShield-Infrastructure');
+      cdk.Tags.of(parameter).add('CostCenter', 'MACHER-Infrastructure');
     });
   }
 
@@ -122,7 +122,7 @@ export class ParameterStoreConstruct extends Construct {
    * Grant read access to all parameters for a Lambda function
    */
   public grantRead(grantee: iam.IGrantable): iam.Grant {
-    // Grant read access to all parameters under /vocalshield/{environment}/*
+    // Grant read access to all parameters under /macher/{environment}/*
     return iam.Grant.addToPrincipal({
       grantee,
       actions: ['ssm:GetParameter', 'ssm:GetParameters'],

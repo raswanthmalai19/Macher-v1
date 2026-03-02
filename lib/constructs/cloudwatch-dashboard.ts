@@ -21,7 +21,7 @@ export interface CloudWatchDashboardConstructProps {
 }
 
 /**
- * Construct for VocalShield CloudWatch Dashboard
+ * Construct for MACHER CloudWatch Dashboard
  * 
  * Creates a comprehensive monitoring dashboard with widgets for:
  * - WebSocket connection metrics
@@ -43,8 +43,8 @@ export class CloudWatchDashboardConstruct extends Construct {
             connectionsTable, metadataTable, familyLoopTopic, audioQueue } = props;
 
     // Create CloudWatch Dashboard
-    this.dashboard = new cloudwatch.Dashboard(this, 'VocalShieldDashboard', {
-      dashboardName: `VocalShield-${config.tags.Environment}`,
+    this.dashboard = new cloudwatch.Dashboard(this, 'MACHERDashboard', {
+      dashboardName: `MACHER-${config.tags.Environment}`,
       periodOverride: cloudwatch.PeriodOverride.AUTO,
     });
 
@@ -180,7 +180,7 @@ export class CloudWatchDashboardConstruct extends Construct {
         title: 'Estimated Monthly Cost',
         metrics: [
           new cloudwatch.Metric({
-            namespace: 'VocalShield',
+            namespace: 'MACHER',
             metricName: 'EstimatedMonthlyCost',
             dimensionsMap: {
               Environment: config.tags.Environment,

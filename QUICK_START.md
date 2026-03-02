@@ -1,4 +1,4 @@
-# VocalShield Infrastructure - Quick Start Guide
+# MACHER Infrastructure - Quick Start Guide
 
 **Get your infrastructure deployed in 5 minutes!**
 
@@ -50,7 +50,7 @@ This will:
 ```bash
 # Update API keys
 aws secretsmanager put-secret-value \
-  --secret-id vocalshield/dev/api-keys \
+  --secret-id macher/dev/api-keys \
   --secret-string '{"mlServiceApiKey":"YOUR_REAL_KEY"}'
 ```
 
@@ -68,7 +68,7 @@ aws secretsmanager put-secret-value \
 
 ```bash
 aws cloudformation describe-stacks \
-  --stack-name VocalShield-dev \
+  --stack-name MACHER-dev \
   --query 'Stacks[0].Outputs'
 ```
 
@@ -79,7 +79,7 @@ aws cloudformation describe-stacks \
 ```bash
 # Get dashboard URL from outputs
 aws cloudformation describe-stacks \
-  --stack-name VocalShield-dev \
+  --stack-name MACHER-dev \
   --query 'Stacks[0].Outputs[?OutputKey==`DashboardUrl`].OutputValue' \
   --output text
 ```
@@ -88,16 +88,16 @@ aws cloudformation describe-stacks \
 
 ```bash
 # Audio Processor logs
-aws logs tail /aws/lambda/VocalShield-AudioProcessor --follow
+aws logs tail /aws/lambda/MACHER-AudioProcessor --follow
 
 # Connect Handler logs
-aws logs tail /aws/lambda/VocalShield-ConnectHandler --follow
+aws logs tail /aws/lambda/MACHER-ConnectHandler --follow
 ```
 
 ### Check Alarms
 
 ```bash
-aws cloudwatch describe-alarms --alarm-name-prefix VocalShield
+aws cloudwatch describe-alarms --alarm-name-prefix MACHER
 ```
 
 ## Test WebSocket Connection
@@ -108,7 +108,7 @@ npm install -g wscat
 
 # Get WebSocket endpoint
 WS_ENDPOINT=$(aws cloudformation describe-stacks \
-  --stack-name VocalShield-dev \
+  --stack-name MACHER-dev \
   --query 'Stacks[0].Outputs[?OutputKey==`WebSocketApiEndpoint`].OutputValue' \
   --output text)
 
@@ -138,7 +138,7 @@ aws ce get-cost-and-usage \
 ### Rollback Deployment
 
 ```bash
-aws cloudformation rollback-stack --stack-name VocalShield-dev
+aws cloudformation rollback-stack --stack-name MACHER-dev
 ```
 
 ### Destroy Infrastructure
@@ -156,28 +156,28 @@ cdk destroy -c environment=dev
 ```bash
 # Check CloudFormation events
 aws cloudformation describe-stack-events \
-  --stack-name VocalShield-dev \
+  --stack-name MACHER-dev \
   --max-items 20
 
 # Check Lambda logs
-aws logs tail /aws/lambda/VocalShield-AudioProcessor --since 1h
+aws logs tail /aws/lambda/MACHER-AudioProcessor --since 1h
 ```
 
 ### WebSocket Connection Issues?
 
 ```bash
 # Check API Gateway
-aws apigatewayv2 get-apis --query 'Items[?Name==`VocalShield-WebSocket`]'
+aws apigatewayv2 get-apis --query 'Items[?Name==`MACHER-WebSocket`]'
 
 # Check Lambda permissions
-aws lambda get-policy --function-name VocalShield-AudioProcessor
+aws lambda get-policy --function-name MACHER-AudioProcessor
 ```
 
 ### High Costs?
 
 ```bash
 # Check billing alarm
-aws cloudwatch describe-alarms --alarm-names VocalShield-BillingAlarm
+aws cloudwatch describe-alarms --alarm-names MACHER-BillingAlarm
 
 # View cost breakdown
 aws ce get-cost-and-usage \
@@ -215,6 +215,6 @@ aws ce get-cost-and-usage \
 
 ---
 
-🛡️ **VocalShield - Your AI Bodyguard Against Scam Calls**
+🛡️ **MACHER - Your AI Bodyguard Against Scam Calls**
 
 **Ready to deploy?** Run `./scripts/deploy.sh dev` now!

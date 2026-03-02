@@ -1,7 +1,7 @@
 /**
- * VocalShield Monitoring Stack
+ * MACHER Monitoring Stack
  * 
- * Complete monitoring and observability infrastructure for VocalShield.
+ * Complete monitoring and observability infrastructure for MACHER.
  * Integrates all monitoring components: dashboards, alarms, canaries, anomaly detection.
  */
 
@@ -49,7 +49,7 @@ export interface MonitoringStackProps extends StackProps {
 }
 
 /**
- * Monitoring Stack for VocalShield
+ * Monitoring Stack for MACHER
  */
 export class MonitoringStack extends Stack {
   public readonly criticalAlarmTopic: sns.Topic;
@@ -62,15 +62,15 @@ export class MonitoringStack extends Stack {
     super(scope, id, props);
 
     // Create log group for all Lambda functions
-    this.logGroup = new logs.LogGroup(this, 'VocalShieldLogs', {
-      logGroupName: '/aws/lambda/vocalshield',
+    this.logGroup = new logs.LogGroup(this, 'MACHERLogs', {
+      logGroupName: '/aws/lambda/macher',
       retention: logs.RetentionDays.ONE_WEEK, // Free Tier compliant
       removalPolicy: RemovalPolicy.RETAIN,
     });
 
     // Create S3 bucket for artifacts (canary results, archived logs)
     this.artifactsBucket = new s3.Bucket(this, 'MonitoringArtifacts', {
-      bucketName: 'vocalshield-monitoring-artifacts',
+      bucketName: 'macher-monitoring-artifacts',
       encryption: s3.BucketEncryption.S3_MANAGED,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: RemovalPolicy.RETAIN,
@@ -90,18 +90,18 @@ export class MonitoringStack extends Stack {
 
     // Create SNS topics for different alarm severities
     this.criticalAlarmTopic = new sns.Topic(this, 'CriticalAlarms', {
-      topicName: 'VocalShield-Critical-Alerts',
-      displayName: 'VocalShield Critical Alerts',
+      topicName: 'MACHER-Critical-Alerts',
+      displayName: 'MACHER Critical Alerts',
     });
 
     this.warningAlarmTopic = new sns.Topic(this, 'WarningAlarms', {
-      topicName: 'VocalShield-Warning-Alerts',
-      displayName: 'VocalShield Warning Alerts',
+      topicName: 'MACHER-Warning-Alerts',
+      displayName: 'MACHER Warning Alerts',
     });
 
     this.infoAlarmTopic = new sns.Topic(this, 'InfoAlarms', {
-      topicName: 'VocalShield-Info-Alerts',
-      displayName: 'VocalShield Info Alerts',
+      topicName: 'MACHER-Info-Alerts',
+      displayName: 'MACHER Info Alerts',
     });
 
     // Subscribe email addresses to alarm topics
@@ -138,7 +138,7 @@ export class MonitoringStack extends Stack {
     // Deploy Anomaly Detection
     const anomalyDetection = new AnomalyDetectionConstruct(this, 'AnomalyDetection', {
       lambdaFunctionNames: props.lambdaFunctions.map((fn) => fn.functionName),
-      apiGatewayName: 'VocalShield-API',
+      apiGatewayName: 'MACHER-API',
       standardDeviations: 3,
       alarmTopicArn: this.warningAlarmTopic.topicArn,
     });

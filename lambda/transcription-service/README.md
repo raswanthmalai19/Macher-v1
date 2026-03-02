@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Real-Time Audio Transcription Service provides streaming audio-to-text conversion for VocalShield's fraud detection system. It leverages Amazon Transcribe Streaming API to achieve low-latency (<500ms) transcription of phone call audio with multi-language support.
+The Real-Time Audio Transcription Service provides streaming audio-to-text conversion for MACHER's fraud detection system. It leverages Amazon Transcribe Streaming API to achieve low-latency (<500ms) transcription of phone call audio with multi-language support.
 
 ## Architecture
 
@@ -278,5 +278,5 @@ The transcription service is deployed as an AWS Lambda function with:
 ## References
 
 - [Amazon Transcribe Streaming API Documentation](https://docs.aws.amazon.com/transcribe/latest/dg/streaming.html)
-- [VocalShield Requirements Document](.kiro/specs/real-time-audio-transcription/requirements.md)
-- [VocalShield Design Document](.kiro/specs/real-time-audio-transcription/design.md)
+- [MACHER Requirements Document](.kiro/specs/real-time-audio-transcription/requirements.md)
+- [MACHER Design Document](.kiro/specs/real-time-audio-transcription/design.md)

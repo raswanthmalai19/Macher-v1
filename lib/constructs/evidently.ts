@@ -25,9 +25,9 @@ export class EvidentlyConstruct extends Construct {
     const { config } = props;
 
     // Create Evidently Project
-    this.project = new evidently.CfnProject(this, 'VocalShieldExperiments', {
-      name: `vocalshield-experiments-${config.tags.Environment}`,
-      description: 'Feature flags and A/B testing for VocalShield',
+    this.project = new evidently.CfnProject(this, 'MACHERExperiments', {
+      name: `macher-experiments-${config.tags.Environment}`,
+      description: 'Feature flags and A/B testing for MACHER',
     });
 
     // Create Feature Flag: new-fraud-algorithm

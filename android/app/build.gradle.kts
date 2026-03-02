@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.vocalshield.android"
+    namespace = "com.macher.android"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.vocalshield.android"
+        applicationId = "com.macher.android"
         minSdk = 26  // Android 8.0 - Requirement 15.1
         targetSdk = 34
         versionCode = 1

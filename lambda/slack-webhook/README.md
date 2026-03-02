@@ -25,7 +25,7 @@ This Lambda function is triggered by SNS Topic subscriptions and formats CloudWa
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `SLACK_WEBHOOK_SECRET_NAME` | Name of secret in Secrets Manager containing webhook URL | No (defaults to `vocalshield/slack-webhook-url`) |
+| `SLACK_WEBHOOK_SECRET_NAME` | Name of secret in Secrets Manager containing webhook URL | No (defaults to `macher/slack-webhook-url`) |
 
 ## Secrets Manager Configuration
 
@@ -72,7 +72,7 @@ The function automatically determines severity based on alarm name:
 ## Slack Message Format
 
 ```
-🚨 VocalShield Alert: Critical-Lambda-Errors
+🚨 MACHER Alert: Critical-Lambda-Errors
 
 Attachment:
   Title: 🚨 Critical-Lambda-Errors
@@ -85,7 +85,7 @@ Attachment:
     - Threshold: GreaterThanThreshold 5
     - Region: us-east-1
     - Dimensions: FunctionName: MyFunction
-  Footer: VocalShield Monitoring | View in CloudWatch
+  Footer: MACHER Monitoring | View in CloudWatch
   Timestamp: 2024-01-01T00:00:00.000Z
 ```
 
@@ -124,7 +124,7 @@ All operations are logged with structured JSON:
       "Action": [
         "secretsmanager:GetSecretValue"
       ],
-      "Resource": "arn:aws:secretsmanager:*:*:secret:vocalshield/slack-webhook-url-*"
+      "Resource": "arn:aws:secretsmanager:*:*:secret:macher/slack-webhook-url-*"
     },
     {
       "Effect": "Allow",
@@ -186,7 +186,7 @@ npm test
 
 ## Deployment
 
-This Lambda function is deployed via AWS CDK as part of the VocalShield monitoring infrastructure.
+This Lambda function is deployed via AWS CDK as part of the MACHER monitoring infrastructure.
 
 ### CDK Configuration
 ```typescript
@@ -198,7 +198,7 @@ const slackWebhookLambda = new lambda.Function(this, 'SlackWebhookLambda', {
   timeout: Duration.seconds(10),
   memorySize: 512,
   environment: {
-    SLACK_WEBHOOK_SECRET_NAME: 'vocalshield/slack-webhook-url',
+    SLACK_WEBHOOK_SECRET_NAME: 'macher/slack-webhook-url',
   },
   tracing: lambda.Tracing.ACTIVE,
   deadLetterQueue: dlq,

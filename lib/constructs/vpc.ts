@@ -4,7 +4,7 @@ import { Construct } from 'constructs';
 import { EnvironmentConfig } from '../config/types';
 
 /**
- * VPC Construct for VocalShield
+ * VPC Construct for MACHER
  * 
  * Creates a VPC with public and private subnets, designed for future
  * Wavelength Zone integration. The VPC includes:
@@ -28,7 +28,7 @@ export class VpcConstruct extends Construct {
     // Create VPC with specified CIDR block
     // Note: We explicitly define subnets to control CIDR allocation
     // and reserve space for future Wavelength Zone subnet
-    this.vpc = new ec2.Vpc(this, 'VocalShieldVpc', {
+    this.vpc = new ec2.Vpc(this, 'MACHERVpc', {
       ipAddresses: ec2.IpAddresses.cidr(config.vpcCidr),
       maxAzs: config.maxAzs,
       natGateways: 0, // No NAT Gateway to avoid costs

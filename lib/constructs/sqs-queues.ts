@@ -8,7 +8,7 @@ export interface SqsQueuesConstructProps {
 }
 
 /**
- * Construct for VocalShield SQS Queues
+ * Construct for MACHER SQS Queues
  * 
  * Creates SQS queues for:
  * - Audio processing queue: Receives audio data from WebSocket API for async processing
@@ -33,13 +33,13 @@ export class SqsQueuesConstruct extends Construct {
 
     // Create dead-letter queue for failed audio processing
     this.audioQueueDLQ = new sqs.Queue(this, 'AudioQueueDLQ', {
-      queueName: `VocalShield-AudioQueue-DLQ-${config.tags.Environment}`,
+      queueName: `MACHER-AudioQueue-DLQ-${config.tags.Environment}`,
       retentionPeriod: cdk.Duration.days(14), // Keep failed messages for 14 days
     });
 
     // Create audio processing queue
     this.audioQueue = new sqs.Queue(this, 'AudioQueue', {
-      queueName: `VocalShield-AudioQueue-${config.tags.Environment}`,
+      queueName: `MACHER-AudioQueue-${config.tags.Environment}`,
       visibilityTimeout: cdk.Duration.seconds(30), // Match Lambda timeout
       retentionPeriod: cdk.Duration.days(4), // Keep messages for 4 days
       deadLetterQueue: {
@@ -56,13 +56,13 @@ export class SqsQueuesConstruct extends Construct {
     new cdk.CfnOutput(this, 'AudioQueueUrl', {
       value: this.audioQueue.queueUrl,
       description: 'Audio processing queue URL',
-      exportName: `VocalShield-AudioQueueUrl-${config.tags.Environment}`,
+      exportName: `MACHER-AudioQueueUrl-${config.tags.Environment}`,
     });
 
     new cdk.CfnOutput(this, 'AudioQueueArn', {
       value: this.audioQueue.queueArn,
       description: 'Audio processing queue ARN',
-      exportName: `VocalShield-AudioQueueArn-${config.tags.Environment}`,
+      exportName: `MACHER-AudioQueueArn-${config.tags.Environment}`,
     });
   }
 }

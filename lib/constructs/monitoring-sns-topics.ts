@@ -39,22 +39,22 @@ export class MonitoringSnsTopicsConstruct extends Construct {
 
     // Critical alerts topic
     this.criticalAlertsTopic = new sns.Topic(this, 'CriticalAlertsTopic', {
-      topicName: `VocalShield-${config.tags.Environment}-Critical-Alerts`,
-      displayName: 'VocalShield Critical Alerts',
+      topicName: `MACHER-${config.tags.Environment}-Critical-Alerts`,
+      displayName: 'MACHER Critical Alerts',
       fifo: false,
     });
 
     // Warning alerts topic
     this.warningAlertsTopic = new sns.Topic(this, 'WarningAlertsTopic', {
-      topicName: `VocalShield-${config.tags.Environment}-Warning-Alerts`,
-      displayName: 'VocalShield Warning Alerts',
+      topicName: `MACHER-${config.tags.Environment}-Warning-Alerts`,
+      displayName: 'MACHER Warning Alerts',
       fifo: false,
     });
 
     // Info alerts topic
     this.infoAlertsTopic = new sns.Topic(this, 'InfoAlertsTopic', {
-      topicName: `VocalShield-${config.tags.Environment}-Info-Alerts`,
-      displayName: 'VocalShield Info Alerts',
+      topicName: `MACHER-${config.tags.Environment}-Info-Alerts`,
+      displayName: 'MACHER Info Alerts',
       fifo: false,
     });
 
@@ -102,19 +102,19 @@ export class MonitoringSnsTopicsConstruct extends Construct {
     new cdk.CfnOutput(this, 'CriticalAlertsTopicArn', {
       value: this.criticalAlertsTopic.topicArn,
       description: 'SNS Topic ARN for critical alerts',
-      exportName: `${config.tags.Environment}-VocalShield-CriticalAlertsTopic`,
+      exportName: `${config.tags.Environment}-MACHER-CriticalAlertsTopic`,
     });
 
     new cdk.CfnOutput(this, 'WarningAlertsTopicArn', {
       value: this.warningAlertsTopic.topicArn,
       description: 'SNS Topic ARN for warning alerts',
-      exportName: `${config.tags.Environment}-VocalShield-WarningAlertsTopic`,
+      exportName: `${config.tags.Environment}-MACHER-WarningAlertsTopic`,
     });
 
     new cdk.CfnOutput(this, 'InfoAlertsTopicArn', {
       value: this.infoAlertsTopic.topicArn,
       description: 'SNS Topic ARN for info alerts',
-      exportName: `${config.tags.Environment}-VocalShield-InfoAlertsTopic`,
+      exportName: `${config.tags.Environment}-MACHER-InfoAlertsTopic`,
     });
   }
 }

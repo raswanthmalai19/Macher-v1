@@ -4,7 +4,7 @@ import { Construct } from 'constructs';
 import { EnvironmentConfig } from '../config/types';
 
 /**
- * DynamoDB Tables Construct for VocalShield
+ * DynamoDB Tables Construct for MACHER
  * 
  * Creates DynamoDB tables for storing WebSocket connection metadata
  * and session processing metadata. Both tables use on-demand billing

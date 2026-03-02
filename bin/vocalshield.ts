@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
-import { VocalShieldStack } from '../lib/vocalshield-stack';
+import { MACHERStack } from '../lib/macher-stack';
 import { getConfig } from '../lib/config';
 
 const app = new cdk.App();
@@ -14,13 +14,13 @@ const config = getConfig(environment);
 const account = app.node.tryGetContext('accountId') || process.env.CDK_DEFAULT_ACCOUNT;
 const region = config.region || process.env.CDK_DEFAULT_REGION;
 
-// Create the VocalShield stack
-new VocalShieldStack(app, config.stackName, config, {
+// Create the MACHER stack
+new MACHERStack(app, config.stackName, config, {
   env: {
     account,
     region
   },
-  description: `VocalShield Infrastructure Foundation - ${config.environment} environment`,
+  description: `MACHER Infrastructure Foundation - ${config.environment} environment`,
   
   // Stack termination protection for production
   terminationProtection: config.environment === 'production',

@@ -1,8 +1,8 @@
-# VocalShield Android Client
+# MACHER Android Client
 
 **Your AI Bodyguard Against Scam Calls**
 
-VocalShield is a privacy-first Android application that provides real-time fraud detection during phone calls. The app captures call audio using Android Accessibility Services, streams it to AWS backend for analysis, and displays fraud alerts with visual and haptic feedback.
+MACHER is a privacy-first Android application that provides real-time fraud detection during phone calls. The app captures call audio using Android Accessibility Services, streams it to AWS backend for analysis, and displays fraud alerts with visual and haptic feedback.
 
 ## Core Values
 

@@ -1,8 +1,8 @@
 {
-  "name": "vocalshield-infrastructure",
+  "name": "macher-infrastructure",
   "version": "1.0.0",
-  "description": "AWS Infrastructure Foundation for VocalShield - Real-time conversation firewall",
-  "main": "lib/vocalshield-stack.js",
+  "description": "AWS Infrastructure Foundation for MACHER - Real-time conversation firewall",
+  "main": "lib/macher-stack.js",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
@@ -23,10 +23,10 @@
     "aws",
     "cdk",
     "infrastructure",
-    "vocalshield",
+    "macher",
     "fraud-detection"
   ],
-  "author": "VocalShield Team",
+  "author": "MACHER Team",
   "license": "MIT",
   "devDependencies": {
     "@aws-sdk/client-cloudwatch": "^3.990.0",

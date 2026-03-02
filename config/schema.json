@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://vocalshield.com/schemas/environment-config.json",
-  "title": "VocalShield Environment Configuration",
-  "description": "Configuration schema for VocalShield CI/CD pipeline environments",
+  "$id": "https://macher.com/schemas/environment-config.json",
+  "title": "MACHER Environment Configuration",
+  "description": "Configuration schema for MACHER CI/CD pipeline environments",
   "type": "object",
   "required": ["environment", "aws", "lambda", "dynamodb", "apiGateway", "monitoring", "android"],
   "properties": {

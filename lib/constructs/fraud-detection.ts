@@ -42,7 +42,7 @@ export class FraudDetectionConstruct extends Construct {
 
     // Create DynamoDB table for conversation context storage
     this.contextTable = new dynamodb.Table(this, 'ContextTable', {
-      tableName: `VocalShield-FraudContext-${config.tags.Environment}`,
+      tableName: `MACHER-FraudContext-${config.tags.Environment}`,
       partitionKey: {
         name: 'call_id',
         type: dynamodb.AttributeType.STRING,
@@ -58,7 +58,7 @@ export class FraudDetectionConstruct extends Construct {
 
     // Create Lambda function for fraud analysis
     this.analysisFunction = new lambda.Function(this, 'AnalysisFunction', {
-      functionName: `VocalShield-FraudAnalysis-${config.tags.Environment}`,
+      functionName: `MACHER-FraudAnalysis-${config.tags.Environment}`,
       runtime: lambda.Runtime.PYTHON_3_12,
       architecture: lambda.Architecture.ARM_64,
       handler: 'lambda_handler.handler',
@@ -104,7 +104,7 @@ export class FraudDetectionConstruct extends Construct {
 
     // Create REST API Gateway
     this.api = new apigateway.RestApi(this, 'FraudDetectionApi', {
-      restApiName: `VocalShield-FraudDetection-${config.tags.Environment}`,
+      restApiName: `MACHER-FraudDetection-${config.tags.Environment}`,
       description: 'API for real-time fraud detection analysis',
       deployOptions: {
         stageName: config.tags.Environment,
@@ -155,7 +155,7 @@ export class FraudDetectionConstruct extends Construct {
 
     // Alarm for high error rate
     const errorAlarm = new cloudwatch.Alarm(this, 'AnalysisErrorAlarm', {
-      alarmName: `VocalShield-FraudAnalysis-Errors-${config.tags.Environment}`,
+      alarmName: `MACHER-FraudAnalysis-Errors-${config.tags.Environment}`,
       alarmDescription: 'Fraud analysis Lambda error rate exceeds 5%',
       metric: this.analysisFunction.metricErrors({
         statistic: 'Sum',
@@ -169,7 +169,7 @@ export class FraudDetectionConstruct extends Construct {
 
     // Alarm for high latency
     const latencyAlarm = new cloudwatch.Alarm(this, 'AnalysisLatencyAlarm', {
-      alarmName: `VocalShield-FraudAnalysis-Latency-${config.tags.Environment}`,
+      alarmName: `MACHER-FraudAnalysis-Latency-${config.tags.Environment}`,
       alarmDescription: 'Fraud analysis P99 latency exceeds 2 seconds',
       metric: this.analysisFunction.metricDuration({
         statistic: 'p99',
@@ -183,7 +183,7 @@ export class FraudDetectionConstruct extends Construct {
 
     // Alarm for API Gateway 5xx errors
     const apiErrorAlarm = new cloudwatch.Alarm(this, 'ApiErrorAlarm', {
-      alarmName: `VocalShield-FraudApi-5xxErrors-${config.tags.Environment}`,
+      alarmName: `MACHER-FraudApi-5xxErrors-${config.tags.Environment}`,
       alarmDescription: 'Fraud detection API 5xx error rate exceeds threshold',
       metric: this.api.metricServerError({
         statistic: 'Sum',
@@ -198,7 +198,7 @@ export class FraudDetectionConstruct extends Construct {
     // Alarm for high daily cost (estimated based on invocations)
     // Note: This is an approximation. For accurate cost tracking, use AWS Cost Explorer
     const costAlarm = new cloudwatch.Alarm(this, 'AnalysisCostAlarm', {
-      alarmName: `VocalShield-FraudAnalysis-Cost-${config.tags.Environment}`,
+      alarmName: `MACHER-FraudAnalysis-Cost-${config.tags.Environment}`,
       alarmDescription: 'Fraud analysis estimated daily cost exceeds $50',
       metric: this.analysisFunction.metricInvocations({
         statistic: 'Sum',

@@ -1,7 +1,7 @@
 /**
  * ErrorTracker - Comprehensive error tracking and categorization
  * 
- * This class handles error tracking across all VocalShield components,
+ * This class handles error tracking across all MACHER components,
  * categorizing errors by type, logging with full context, and publishing
  * error metrics to CloudWatch.
  * 
@@ -288,7 +288,7 @@ export class ErrorTracker {
     try {
       // Publish error count metric with category and component dimensions
       await this.metricPublisher.publishMetric(
-        'VocalShield/Errors',
+        'MACHER/Errors',
         'ErrorCount',
         1,
         MetricUnit.Count,
@@ -300,7 +300,7 @@ export class ErrorTracker {
 
       // Also publish total error count for the component
       await this.metricPublisher.publishMetric(
-        'VocalShield/Errors',
+        'MACHER/Errors',
         'TotalErrors',
         1,
         MetricUnit.Count,

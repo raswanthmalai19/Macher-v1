@@ -14,7 +14,7 @@ export interface LambdaFunctionsConstructProps {
 }
 
 /**
- * Construct for VocalShield Lambda functions
+ * Construct for MACHER Lambda functions
  * 
  * Creates Lambda functions for:
  * - WebSocket connection handling ($connect)
@@ -41,7 +41,7 @@ export class LambdaFunctionsConstruct extends Construct {
 
     // Create Connect Handler Lambda (Task 5.1)
     this.connectHandler = new lambda.Function(this, 'ConnectHandler', {
-      functionName: `VocalShield-ConnectHandler-${config.tags.Environment}`,
+      functionName: `MACHER-ConnectHandler-${config.tags.Environment}`,
       runtime: lambda.Runtime.NODEJS_20_X,
       architecture: lambda.Architecture.ARM_64,
       handler: 'index.handler',
@@ -68,7 +68,7 @@ export class LambdaFunctionsConstruct extends Construct {
 
     // Create Disconnect Handler Lambda (Task 5.2)
     this.disconnectHandler = new lambda.Function(this, 'DisconnectHandler', {
-      functionName: `VocalShield-DisconnectHandler-${config.tags.Environment}`,
+      functionName: `MACHER-DisconnectHandler-${config.tags.Environment}`,
       runtime: lambda.Runtime.NODEJS_20_X,
       architecture: lambda.Architecture.ARM_64,
       handler: 'index.handler',
@@ -95,7 +95,7 @@ export class LambdaFunctionsConstruct extends Construct {
 
     // Create Audio Processor Lambda (Task 5.3)
     this.audioProcessor = new lambda.Function(this, 'AudioProcessor', {
-      functionName: `VocalShield-AudioProcessor-${config.tags.Environment}`,
+      functionName: `MACHER-AudioProcessor-${config.tags.Environment}`,
       runtime: lambda.Runtime.NODEJS_20_X,
       architecture: lambda.Architecture.ARM_64,
       handler: 'index.handler',
@@ -126,25 +126,25 @@ export class LambdaFunctionsConstruct extends Construct {
     );
 
     // Grant Secrets Manager permissions for Audio Processor
-    // Restrict access to vocalshield/* secrets only
+    // Restrict access to macher/* secrets only
     this.audioProcessor.addToRolePolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         actions: ['secretsmanager:GetSecretValue'],
         resources: [
-          `arn:aws:secretsmanager:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:secret:vocalshield/*`,
+          `arn:aws:secretsmanager:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:secret:macher/*`,
         ],
       })
     );
 
     // Grant Parameter Store permissions for Audio Processor
-    // Restrict access to /vocalshield/* parameters only
+    // Restrict access to /macher/* parameters only
     this.audioProcessor.addToRolePolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         actions: ['ssm:GetParameter'],
         resources: [
-          `arn:aws:ssm:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:parameter/vocalshield/*`,
+          `arn:aws:ssm:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:parameter/macher/*`,
         ],
       })
     );
@@ -153,7 +153,7 @@ export class LambdaFunctionsConstruct extends Construct {
 
     // Create Investigation Handler Lambda (Task 9.4)
     this.investigationHandler = new lambda.Function(this, 'InvestigationHandler', {
-      functionName: `VocalShield-InvestigationHandler-${config.tags.Environment}`,
+      functionName: `MACHER-InvestigationHandler-${config.tags.Environment}`,
       runtime: lambda.Runtime.NODEJS_20_X,
       architecture: lambda.Architecture.ARM_64,
       handler: 'index.handler',

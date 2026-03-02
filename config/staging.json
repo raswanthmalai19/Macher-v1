@@ -9,11 +9,11 @@
     "timeout": 30
   },
   "monitoring": {
-    "alarmEmail": "staging-alerts@vocalshield.com"
+    "alarmEmail": "staging-alerts@macher.com"
   },
   "android": {
     "versionCode": 1,
     "versionName": "1.0.0",
-    "signingKeyAlias": "vocalshield-staging"
+    "signingKeyAlias": "macher-staging"
   }
 }

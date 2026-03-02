@@ -2,7 +2,7 @@
  * AlarmManager - Create and manage CloudWatch Alarms
  * 
  * This class provides programmatic alarm creation and management
- * for VocalShield monitoring.
+ * for MACHER monitoring.
  * 
  * Features:
  * - Lambda error rate alarms
@@ -70,7 +70,7 @@ export class AlarmManager {
         AlarmActions: config.alarmActions,
         Tags: [
           { Key: 'Severity', Value: config.severity },
-          { Key: 'Project', Value: 'VocalShield' },
+          { Key: 'Project', Value: 'MACHER' },
         ],
       });
 
@@ -139,7 +139,7 @@ export class AlarmManager {
     environment: string
   ): Promise<void> {
     const config: AlarmConfig = {
-      alarmName: `VocalShield-${environment}-Lambda-${functionName}-Errors`,
+      alarmName: `MACHER-${environment}-Lambda-${functionName}-Errors`,
       description: `Lambda function ${functionName} error rate exceeds 5%`,
       metricNamespace: 'AWS/Lambda',
       metricName: 'Errors',
@@ -169,7 +169,7 @@ export class AlarmManager {
     environment: string
   ): Promise<void> {
     const config: AlarmConfig = {
-      alarmName: `VocalShield-${environment}-APIGateway-${apiName}-5xxErrors`,
+      alarmName: `MACHER-${environment}-APIGateway-${apiName}-5xxErrors`,
       description: `API Gateway ${apiName} 5xx error rate exceeds 1%`,
       metricNamespace: 'AWS/ApiGateway',
       metricName: '5XXError',
@@ -199,7 +199,7 @@ export class AlarmManager {
     environment: string
   ): Promise<void> {
     const config: AlarmConfig = {
-      alarmName: `VocalShield-${environment}-DynamoDB-${tableName}-Throttles`,
+      alarmName: `MACHER-${environment}-DynamoDB-${tableName}-Throttles`,
       description: `DynamoDB table ${tableName} is experiencing throttling`,
       metricNamespace: 'AWS/DynamoDB',
       metricName: 'UserErrors',
@@ -229,7 +229,7 @@ export class AlarmManager {
     environment: string
   ): Promise<void> {
     const config: AlarmConfig = {
-      alarmName: `VocalShield-${environment}-APIGateway-${apiName}-HighLatency`,
+      alarmName: `MACHER-${environment}-APIGateway-${apiName}-HighLatency`,
       description: `API Gateway ${apiName} P99 latency exceeds 3000ms`,
       metricNamespace: 'AWS/ApiGateway',
       metricName: 'Latency',
@@ -259,9 +259,9 @@ export class AlarmManager {
     environment: string
   ): Promise<void> {
     const config: AlarmConfig = {
-      alarmName: `VocalShield-${environment}-FreeTier-${service}-Warning`,
+      alarmName: `MACHER-${environment}-FreeTier-${service}-Warning`,
       description: `${service} Free Tier usage exceeds 80%`,
-      metricNamespace: 'VocalShield/FreeTier',
+      metricNamespace: 'MACHER/FreeTier',
       metricName: `${service}Usage`,
       dimensions: {
         Environment: environment,
@@ -289,9 +289,9 @@ export class AlarmManager {
     environment: string
   ): Promise<void> {
     const config: AlarmConfig = {
-      alarmName: `VocalShield-${environment}-FreeTier-${service}-Critical`,
+      alarmName: `MACHER-${environment}-FreeTier-${service}-Critical`,
       description: `${service} Free Tier usage exceeds 95%`,
-      metricNamespace: 'VocalShield/FreeTier',
+      metricNamespace: 'MACHER/FreeTier',
       metricName: `${service}Usage`,
       dimensions: {
         Environment: environment,
@@ -318,9 +318,9 @@ export class AlarmManager {
     environment: string
   ): Promise<void> {
     const config: AlarmConfig = {
-      alarmName: `VocalShield-${environment}-Security-BruteForce`,
+      alarmName: `MACHER-${environment}-Security-BruteForce`,
       description: 'Potential brute force attack detected (>5 failed auth attempts in 5 minutes)',
-      metricNamespace: 'VocalShield/Security',
+      metricNamespace: 'MACHER/Security',
       metricName: 'FailedAuthAttempts',
       dimensions: {
         Environment: environment,

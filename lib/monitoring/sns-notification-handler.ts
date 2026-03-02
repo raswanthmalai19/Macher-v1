@@ -100,7 +100,7 @@ export class SNSNotificationHandler {
     const severityEmoji = this.getSeverityEmoji(message.severity);
     
     return `
-${severityEmoji} VocalShield Alert: ${message.alarmName}
+${severityEmoji} MACHER Alert: ${message.alarmName}
 
 Severity: ${message.severity.toUpperCase()}
 Time: ${message.timestamp}
@@ -120,7 +120,7 @@ Remediation Steps:
 ${message.remediationSteps.map((step, index) => `${index + 1}. ${step}`).join('\n')}
 
 ---
-This is an automated alert from VocalShield Monitoring System.
+This is an automated alert from MACHER Monitoring System.
 `.trim();
   }
 

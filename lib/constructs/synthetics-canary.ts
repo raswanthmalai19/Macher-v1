@@ -33,7 +33,7 @@ export class SyntheticsCanaryConstruct extends Construct {
 
     // Create S3 bucket for canary artifacts
     this.artifactsBucket = new s3.Bucket(this, 'CanaryArtifactsBucket', {
-      bucketName: `vocalshield-canary-artifacts-${config.tags.Environment}-${cdk.Aws.ACCOUNT_ID}`,
+      bucketName: `macher-canary-artifacts-${config.tags.Environment}-${cdk.Aws.ACCOUNT_ID}`,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
       lifecycleRules: [
@@ -45,7 +45,7 @@ export class SyntheticsCanaryConstruct extends Construct {
 
     // Create canary
     this.canary = new synthetics.Canary(this, 'WebSocketHealthCheckCanary', {
-      canaryName: `vocalshield-websocket-health-${config.tags.Environment}`,
+      canaryName: `macher-websocket-health-${config.tags.Environment}`,
       runtime: synthetics.Runtime.SYNTHETICS_NODEJS_PUPPETEER_6_2,
       test: synthetics.Test.custom({
         code: synthetics.Code.fromAsset('canaries'),
@@ -65,7 +65,7 @@ export class SyntheticsCanaryConstruct extends Construct {
 
     // Create CloudWatch alarm for canary failures
     this.canaryAlarm = new cloudwatch.Alarm(this, 'CanaryFailureAlarm', {
-      alarmName: `VocalShield-CanaryFailure-${config.tags.Environment}`,
+      alarmName: `MACHER-CanaryFailure-${config.tags.Environment}`,
       alarmDescription: 'Alert when WebSocket health check canary fails',
       metric: this.canary.metricSuccessPercent(),
       threshold: 90, // Alert if success rate drops below 90%

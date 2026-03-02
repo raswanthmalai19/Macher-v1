@@ -1,0 +1,1295 @@
+package com.macher.android.ui
+
+import android.Manifest
+import android.content.Intent
+import android.os.Bundle
+import android.provider.Settings
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.navigation.compose.rememberNavController
+import com.macher.android.data.model.UserRole
+import com.macher.android.data.preferences.UserPreferences
+import com.macher.android.data.preferences.AppPreferences
+import com.macher.android.detection.DetectionMode
+import com.macher.android.detection.RiskBreakdown
+import com.macher.android.detection.ScenarioProgress
+import com.macher.android.navigation.Routes
+import com.macher.android.navigation.MacherNavGraph
+import com.macher.android.service.ConnectionState
+import com.macher.android.service.MonitoringManager
+import com.macher.android.service.ThreatLevel as NetworkThreatLevel
+import com.macher.android.ui.components.DetectionModeIndicator
+import com.macher.android.util.AnnounceThreatLevel
+import com.macher.android.util.AnnounceDetectionMode
+import com.macher.android.ui.components.RiskBreakdownCard
+import com.macher.android.ui.components.ScenarioProgressCard
+import com.macher.android.ui.components.ScenarioSelectorCard
+import com.macher.android.ui.theme.*
+import com.macher.android.util.Config
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlin.math.sin
+
+/**
+ * MACHER - Premium Dark-Mode UI
+ * Professional, modern design with neon accents, glassmorphism, and fluid animations
+ */
+class MainActivity : ComponentActivity() {
+    
+    private lateinit var monitoringManager: MonitoringManager
+    
+    private val permissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        // Handle permission results
+    }
+    
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        
+        monitoringManager = MonitoringManager(this)
+        val userPreferences = UserPreferences(this)
+        val appPreferences = AppPreferences(this)
+        requestPermissions()
+        
+        setContent {
+            // Read theme preference from DataStore — recompose when it changes
+            val isDarkTheme by userPreferences.isDarkTheme.collectAsState(initial = true)
+
+            MacherTheme(darkTheme = isDarkTheme) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    val navController = rememberNavController()
+                    val scope = rememberCoroutineScope()
+                    
+                    // Determine start destination from persisted prefs
+                    var startDestination by remember { mutableStateOf<String?>(null) }
+                    LaunchedEffect(Unit) {
+                        combine(
+                            userPreferences.isOnboardingComplete,
+                            userPreferences.userRole
+                        ) { complete, role -> complete to role }
+                            .first()
+                            .let { (complete, role) ->
+                                startDestination = when {
+                                    !complete -> Routes.ONBOARDING
+                                    role == UserRole.GUARDIAN -> Routes.GUARDIAN_DASHBOARD
+                                    role == UserRole.PROTECTED -> Routes.PROTECTED_HOME
+                                    else -> Routes.ROLE_SELECTION
+                                }
+                            }
+                    }
+                    
+                    if (startDestination == null) {
+                        SplashScreen()
+                    } else {
+                        MacherNavGraph(
+                            navController = navController,
+                            startDestination = startDestination!!,
+                            monitoringManager = monitoringManager,
+                            userPreferences = userPreferences,
+                            appPreferences = appPreferences,
+                            isDarkTheme = isDarkTheme,
+                            onThemeToggle = { dark ->
+                                scope.launch { userPreferences.setDarkTheme(dark) }
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        monitoringManager.cleanup()
+    }
+    
+    private fun requestPermissions() {
+        val permissions = mutableListOf(
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.READ_PHONE_STATE
+        )
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        permissionLauncher.launch(permissions.toTypedArray())
+    }
+}
+
+@Composable
+fun MacherApp(monitoringManager: MonitoringManager) {
+    val isMonitoring by monitoringManager.isMonitoring.collectAsState()
+    val threatLevel by monitoringManager.threatLevel.collectAsState()
+    val transcription by monitoringManager.transcription.collectAsState()
+    val connectionState by monitoringManager.connectionState.collectAsState()
+    val overlayVisible by monitoringManager.overlayVisible.collectAsState()
+    val threatType by monitoringManager.threatType.collectAsState()
+    val threatConfidence by monitoringManager.threatConfidence.collectAsState()
+    val audioLevel by monitoringManager.audioLevel.collectAsState()
+    
+    // NEW: Collect detection state flows for multi-layer detection UI (Task 8.1)
+    val detectionState by monitoringManager.detectionState.collectAsState()
+    val riskBreakdown by monitoringManager.riskBreakdown.collectAsState()
+    val scenarioProgress by monitoringManager.scenarioProgress.collectAsState()
+    val detectionMode by monitoringManager.detectionMode.collectAsState()
+    
+    // Task 12.2: TalkBack announcements for threat level and detection mode changes
+    AnnounceThreatLevel(threatLevel = threatLevel.name)
+    AnnounceDetectionMode(detectionMode = detectionMode.name)
+    
+    var showSplash by remember { mutableStateOf(true) }
+    
+    val uiThreatLevel = when (threatLevel) {
+        NetworkThreatLevel.SAFE -> ThreatLevel.SAFE
+        NetworkThreatLevel.CAUTION -> ThreatLevel.CAUTION
+        NetworkThreatLevel.DANGER -> ThreatLevel.DANGER
+    }
+    
+    LaunchedEffect(Unit) {
+        delay(2200)
+        showSplash = false
+    }
+    
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        // Animated ambient background particles
+        AmbientBackground()
+        
+        AnimatedVisibility(
+            visible = showSplash,
+            exit = fadeOut(animationSpec = tween(600)) + slideOutVertically(targetOffsetY = { -it / 4 })
+        ) {
+            SplashScreen()
+        }
+        
+        AnimatedVisibility(
+            visible = !showSplash,
+            enter = fadeIn(animationSpec = tween(800, delayMillis = 200)) + slideInVertically(initialOffsetY = { it / 6 })
+        ) {
+            MainContent(
+                isMonitoring = isMonitoring,
+                threatLevel = uiThreatLevel,
+                threatConfidence = threatConfidence,
+                audioLevel = audioLevel,
+                transcription = transcription,
+                connectionState = connectionState,
+                detectionMode = detectionMode,
+                riskBreakdown = riskBreakdown,
+                scenarioProgress = scenarioProgress,
+                monitoringManager = monitoringManager,
+                onMonitoringToggle = {
+                    if (isMonitoring) monitoringManager.stopMonitoring()
+                    else monitoringManager.startMonitoring()
+                },
+                onThreatLevelChange = { level ->
+                    val networkLevel = when (level) {
+                        ThreatLevel.SAFE -> NetworkThreatLevel.SAFE
+                        ThreatLevel.CAUTION -> NetworkThreatLevel.CAUTION
+                        ThreatLevel.DANGER -> NetworkThreatLevel.DANGER
+                    }
+                    monitoringManager.simulateThreat(
+                        when (networkLevel) {
+                            NetworkThreatLevel.SAFE -> com.macher.android.service.ThreatLevel.SAFE
+                            NetworkThreatLevel.CAUTION -> com.macher.android.service.ThreatLevel.CAUTION
+                            NetworkThreatLevel.DANGER -> com.macher.android.service.ThreatLevel.DANGER
+                        }
+                    )
+                }
+            )
+        }
+        
+        ScamWarningOverlay(
+            visible = overlayVisible,
+            threatType = threatType.ifEmpty { "Known Scam Tactics Detected" },
+            onDismiss = { monitoringManager.dismissOverlay() },
+            onDisconnect = { monitoringManager.disconnectCall() }
+        )
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AMBIENT BACKGROUND - Floating gradient orbs
+// ═══════════════════════════════════════════════════════════════
+@Composable
+fun AmbientBackground() {
+    val infiniteTransition = rememberInfiniteTransition(label = "ambient")
+    val phase by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 6.2832f, // 2*PI
+        animationSpec = infiniteRepeatable(
+            animation = tween(12000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "phase"
+    )
+    
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        val w = size.width
+        val h = size.height
+        
+        // Cyan orb - top right
+        drawCircle(
+            color = MacherElectricCyan.copy(alpha = 0.06f),
+            radius = w * 0.4f,
+            center = Offset(w * 0.8f + sin(phase) * 30f, h * 0.15f + sin(phase * 0.7f) * 20f)
+        )
+        
+        // Violet orb - bottom left
+        drawCircle(
+            color = MacherViolet.copy(alpha = 0.05f),
+            radius = w * 0.35f,
+            center = Offset(w * 0.2f + sin(phase * 0.5f) * 25f, h * 0.75f + sin(phase * 0.8f) * 15f)
+        )
+        
+        // Small green accent - center
+        drawCircle(
+            color = SafeGreen.copy(alpha = 0.03f),
+            radius = w * 0.2f,
+            center = Offset(w * 0.5f + sin(phase * 1.2f) * 20f, h * 0.5f)
+        )
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SPLASH SCREEN - Premium animated entrance
+// ═══════════════════════════════════════════════════════════════
+@Composable
+fun SplashScreen() {
+    val scale = remember { Animatable(0.3f) }
+    val alpha = remember { Animatable(0f) }
+    val titleOffset = remember { Animatable(40f) }
+    
+    LaunchedEffect(Unit) {
+        launch {
+            scale.animateTo(1f, animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow
+            ))
+        }
+        launch { alpha.animateTo(1f, animationSpec = tween(1000)) }
+        launch { titleOffset.animateTo(0f, animationSpec = tween(1200, easing = EaseOutQuart)) }
+    }
+    
+    Box(
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.Center
+    ) {
+        // Radial glow behind logo
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(
+                        MacherElectricCyan.copy(alpha = 0.15f),
+                        MacherViolet.copy(alpha = 0.05f),
+                        Color.Transparent
+                    ),
+                    center = Offset(size.width / 2, size.height / 2),
+                    radius = size.width * 0.6f
+                ),
+                center = Offset(size.width / 2, size.height / 2),
+                radius = size.width * 0.6f
+            )
+        }
+        
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .scale(scale.value)
+                .graphicsLayer { this.alpha = alpha.value }
+        ) {
+            // Shield icon with cyan glow ring
+            Box(
+                modifier = Modifier.size(130.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                // Outer glow ring
+                Box(
+                    modifier = Modifier
+                        .size(130.dp)
+                        .border(
+                            width = 3.dp,
+                            brush = Brush.sweepGradient(
+                                colors = listOf(
+                                    MacherElectricCyan,
+                                    MacherViolet,
+                                    MacherElectricCyan
+                                )
+                            ),
+                            shape = CircleShape
+                        )
+                )
+                // Inner circle
+                Box(
+                    modifier = Modifier
+                        .size(110.dp)
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.surfaceVariant,
+                                    MaterialTheme.colorScheme.surface
+                                )
+                            ),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "🛡️", fontSize = 56.sp)
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            Text(
+                text = "MACHER",
+                fontSize = 48.sp,
+                fontWeight = FontWeight.Black,
+                color = MacherElectricCyan,
+                letterSpacing = 8.sp,
+                modifier = Modifier.graphicsLayer { translationY = titleOffset.value }
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = "AI Voice Fraud Firewall",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                letterSpacing = 3.sp,
+                modifier = Modifier.graphicsLayer { translationY = titleOffset.value * 0.5f }
+            )
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MAIN CONTENT - The hero screen
+// ═══════════════════════════════════════════════════════════════
+@Composable
+fun MainContent(
+    isMonitoring: Boolean,
+    threatLevel: ThreatLevel,
+    threatConfidence: Float = 0f,
+    audioLevel: Float = 0f,
+    transcription: String,
+    connectionState: ConnectionState,
+    detectionMode: DetectionMode,
+    riskBreakdown: RiskBreakdown?,
+    scenarioProgress: ScenarioProgress?,
+    monitoringManager: MonitoringManager,
+    onMonitoringToggle: () -> Unit,
+    onThreatLevelChange: (ThreatLevel) -> Unit
+) {
+    val scrollState = rememberScrollState()
+    val scope = rememberCoroutineScope()
+    
+    val pulseScale = remember { Animatable(1f) }
+    LaunchedEffect(isMonitoring) {
+        if (isMonitoring) {
+            while (true) {
+                pulseScale.animateTo(1.03f, animationSpec = tween(1500, easing = EaseInOutSine))
+                pulseScale.animateTo(1f, animationSpec = tween(1500, easing = EaseInOutSine))
+            }
+        } else {
+            pulseScale.snapTo(1f)
+        }
+    }
+    
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(modifier = Modifier.height(48.dp))
+        
+        // ── Premium Hero Header ──
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp),
+            color = Color.Transparent,
+            shadowElevation = 8.dp
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                MacherDeepBlue,
+                                MacherNavy,
+                                Color(0xFF0D1A33)
+                            )
+                        ),
+                        shape = RoundedCornerShape(24.dp)
+                    )
+                    .padding(24.dp)
+            ) {
+                Column {
+                    // Greeting row
+                    val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+                    val greeting = when {
+                        hour < 12 -> "Good Morning"
+                        hour < 17 -> "Good Afternoon"
+                        else -> "Good Evening"
+                    }
+                    Text(
+                        text = "$greeting 👋",
+                        fontSize = 16.sp,
+                        color = MacherCyanSoft,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "MACHER",
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Black,
+                        color = MacherElectricCyan,
+                        letterSpacing = 6.sp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "AI Voice Fraud Firewall",
+                        fontSize = 13.sp,
+                        color = Color.White.copy(alpha = 0.6f),
+                        letterSpacing = 2.sp
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    // Mini stats row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        HeroMiniStat(value = if (isMonitoring) "Active" else "Standby", label = "Status",
+                            color = if (isMonitoring) SafeGreen else CautionYellow)
+                        HeroMiniStat(value = when(threatLevel) {
+                            ThreatLevel.SAFE -> "Safe"
+                            ThreatLevel.CAUTION -> "Caution"
+                            ThreatLevel.DANGER -> "Danger"
+                        }, label = "Threat",
+                            color = when(threatLevel) {
+                            ThreatLevel.SAFE -> SafeGreen
+                            ThreatLevel.CAUTION -> CautionYellow
+                            ThreatLevel.DANGER -> DangerRed
+                        })
+                        HeroMiniStat(value = when(connectionState) {
+                            ConnectionState.CONNECTED -> "Online"
+                            else -> "Offline"
+                        }, label = "Backend",
+                            color = if (connectionState == ConnectionState.CONNECTED) SafeGreen else MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        // ── Detection Mode Indicator (Task 8.1) ──
+        DetectionModeIndicator(
+            mode = detectionMode,
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // ── Quick Demo Button (Task 15.1) ──
+        if (detectionMode == DetectionMode.DEMO && !isMonitoring) {
+            QuickDemoButton(
+                onQuickDemo = {
+                    // Auto-select high-risk scenario (Bank Fraud OTP)
+                    val bankFraudScenario = monitoringManager.getDemoScenarios()
+                        .find { it.id == "bank_fraud_otp" }
+                    if (bankFraudScenario != null) {
+                        monitoringManager.selectDemoScenario(bankFraudScenario.id)
+                        scope.launch {
+                            delay(500) // Brief delay for UI update
+                            monitoringManager.startMonitoring()
+                            delay(300)
+                            monitoringManager.playDemoScenario()
+                        }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+        
+        // ── Scenario Selector (Demo Mode Only) (Task 8.1) ──
+        if (detectionMode == DetectionMode.DEMO && !isMonitoring) {
+            ScenarioSelectorCard(
+                scenarios = monitoringManager.getDemoScenarios(),
+                selectedScenarioId = monitoringManager.getCurrentDemoScenario()?.id,
+                onScenarioSelected = { scenarioId ->
+                    monitoringManager.selectDemoScenario(scenarioId)
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+        
+        // ── Scenario Progress (When Scenario Selected) (Task 8.1) ──
+        if (scenarioProgress != null) {
+            ScenarioProgressCard(
+                progress = scenarioProgress,
+                onPlay = { monitoringManager.playDemoScenario() },
+                onPause = { monitoringManager.pauseDemoScenario() },
+                onReset = { monitoringManager.resetDemoScenario() },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+        
+        // ── Threat Level Ring ──
+        ThreatIndicator(
+            threatLevel = threatLevel,
+            isMonitoring = isMonitoring,
+            scale = pulseScale.value,
+            threatConfidence = threatConfidence
+        )
+        
+        Spacer(modifier = Modifier.height(36.dp))
+        
+        // ── Monitoring Button ──
+        AnimatedMonitoringButton(
+            isMonitoring = isMonitoring,
+            threatLevel = threatLevel,
+            onClick = onMonitoringToggle
+        )
+
+        // ── Audio Waveform (visible when monitoring) ──
+        AnimatedVisibility(
+            visible = isMonitoring,
+            enter = expandVertically(animationSpec = spring(stiffness = Spring.StiffnessLow)) + fadeIn(),
+            exit = shrinkVertically() + fadeOut()
+        ) {
+            AudioWaveform(
+                audioLevel = audioLevel,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(40.dp)
+                    .padding(top = 8.dp)
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        // ── Status Cards Grid ──
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Backend Status
+            StatusMiniCard(
+                modifier = Modifier.weight(1f),
+                icon = when (connectionState) {
+                    ConnectionState.CONNECTED -> "⚡"
+                    ConnectionState.CONNECTING -> "◎"
+                    ConnectionState.DISCONNECTED -> "○"
+                    ConnectionState.DISCONNECTING -> "◎"
+                    ConnectionState.ERROR -> "✗"
+                },
+                label = "Backend",
+                value = when (connectionState) {
+                    ConnectionState.CONNECTED -> "Connected"
+                    ConnectionState.CONNECTING -> "Connecting..."
+                    ConnectionState.DISCONNECTED -> "Offline"
+                    ConnectionState.DISCONNECTING -> "Closing..."
+                    ConnectionState.ERROR -> "Error"
+                },
+                accentColor = when (connectionState) {
+                    ConnectionState.CONNECTED -> SafeGreen
+                    ConnectionState.CONNECTING -> CautionYellow
+                    ConnectionState.DISCONNECTED -> MaterialTheme.colorScheme.onSurfaceVariant
+                    ConnectionState.DISCONNECTING -> CautionYellow
+                    ConnectionState.ERROR -> DangerRed
+                }
+            )
+            
+            // Monitoring Status
+            StatusMiniCard(
+                modifier = Modifier.weight(1f),
+                icon = if (isMonitoring) "🔴" else "⏸",
+                label = "Monitor",
+                value = if (isMonitoring) "Active" else "Standby",
+                accentColor = if (isMonitoring) SafeGreen else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // ── Live Transcription ──
+        AnimatedVisibility(
+            visible = isMonitoring && transcription.isNotEmpty() && Config.Features.ENABLE_TRANSCRIPTION_DISPLAY,
+            enter = expandVertically(animationSpec = spring(stiffness = Spring.StiffnessLow)) + fadeIn(),
+            exit = shrinkVertically() + fadeOut()
+        ) {
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .background(DangerRed, CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = "LIVE TRANSCRIPTION",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MacherElectricCyan,
+                            letterSpacing = 1.5.sp
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = transcription,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        lineHeight = 22.sp
+                    )
+                }
+            }
+        }
+        
+        // ── Risk Breakdown Card (Task 8.1) ──
+        if (riskBreakdown != null) {
+            Spacer(modifier = Modifier.height(16.dp))
+            RiskBreakdownCard(
+                riskBreakdown = riskBreakdown,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+        
+        // ── Demo Mode Card ──
+        if (Config.DEMO_MODE) {
+            Spacer(modifier = Modifier.height(16.dp))
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(MacherViolet.copy(alpha = 0.15f), RoundedCornerShape(12.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = "🧪", fontSize = 18.sp)
+                    }
+                    Spacer(modifier = Modifier.width(14.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Demo Mode",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MacherVioletGlow
+                        )
+                        Text(
+                            text = "Connect your AWS backend to go live",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 2.dp)
+                        )
+                    }
+                }
+            }
+        }
+        
+        // ── Demo Threat Controls ──
+        AnimatedVisibility(
+            visible = isMonitoring,
+            enter = expandVertically(animationSpec = spring(stiffness = Spring.StiffnessLow)) + fadeIn(),
+            exit = shrinkVertically() + fadeOut()
+        ) {
+            Column(modifier = Modifier.padding(top = 20.dp)) {
+                Text(
+                    text = "SIMULATE THREAT",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    letterSpacing = 2.sp,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    ThreatButton(
+                        modifier = Modifier.weight(1f),
+                        text = "Safe",
+                        color = SafeGreen,
+                        glowColor = GreenGlow,
+                        onClick = { onThreatLevelChange(ThreatLevel.SAFE) }
+                    )
+                    ThreatButton(
+                        modifier = Modifier.weight(1f),
+                        text = "Caution",
+                        color = CautionYellow,
+                        glowColor = YellowGlow,
+                        onClick = { onThreatLevelChange(ThreatLevel.CAUTION) }
+                    )
+                    ThreatButton(
+                        modifier = Modifier.weight(1f),
+                        text = "Danger",
+                        color = DangerRed,
+                        glowColor = RedGlow,
+                        onClick = { onThreatLevelChange(ThreatLevel.DANGER) }
+                    )
+                }
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        // ── Privacy Footer ──
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 1.dp
+        ) {
+            Row(
+                modifier = Modifier
+                    .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = "🔒", fontSize = 16.sp)
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "MACHER never stores call audio. All processing is ephemeral.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 18.sp
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(32.dp))
+    }
+}
+
+@Composable
+fun ThreatIndicator(
+    threatLevel: ThreatLevel,
+    isMonitoring: Boolean,
+    scale: Float,
+    threatConfidence: Float = 0f
+) {
+    val targetColor = when (threatLevel) {
+        ThreatLevel.SAFE -> SafeGreen
+        ThreatLevel.CAUTION -> CautionYellow
+        ThreatLevel.DANGER -> DangerRed
+    }
+    
+    val color by animateColorAsState(
+        targetValue = targetColor,
+        animationSpec = tween(800, easing = EaseInOutCubic),
+        label = "threatColor"
+    )
+    
+    val glowColor by animateColorAsState(
+        targetValue = when (threatLevel) {
+            ThreatLevel.SAFE -> GreenGlow
+            ThreatLevel.CAUTION -> YellowGlow
+            ThreatLevel.DANGER -> RedGlow
+        },
+        animationSpec = tween(800),
+        label = "glowColor"
+    )
+    
+    // Ring rotation animation (only when monitoring)
+    val infiniteTransition = rememberInfiniteTransition(label = "ring")
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = if (isMonitoring) 360f else 15f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(if (isMonitoring) 8000 else 6000, easing = if (isMonitoring) LinearEasing else EaseInOutSine),
+            repeatMode = if (isMonitoring) RepeatMode.Restart else RepeatMode.Reverse
+        ),
+        label = "rotation"
+    )
+    
+    // Idle breathing scale (when not monitoring)
+    val idleBreath by infiniteTransition.animateFloat(
+        initialValue = if (isMonitoring) 1f else 0.97f,
+        targetValue = if (isMonitoring) 1f else 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(3000, easing = EaseInOutSine),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "idleBreath"
+    )
+    
+    val glowPulse by infiniteTransition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 0.8f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = EaseInOutSine),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "glow"
+    )
+    
+    // Animated confidence percentage
+    val animatedConfidence by animateFloatAsState(
+        targetValue = threatConfidence,
+        animationSpec = tween(600, easing = EaseOutCubic),
+        label = "confidence"
+    )
+    
+    Box(
+        modifier = Modifier.size(220.dp).scale(scale * idleBreath),
+        contentAlignment = Alignment.Center
+    ) {
+        // Outer glow pulse
+        Box(
+            modifier = Modifier
+                .size(220.dp)
+                .blur(40.dp)
+                .background(color.copy(alpha = glowPulse * (if (isMonitoring) 0.3f else 0.08f)), CircleShape)
+        )
+        
+        // Neon border ring (rotating gradient)
+        Box(
+            modifier = Modifier
+                .size(200.dp)
+                .graphicsLayer { rotationZ = rotation }
+                .border(
+                    width = if (isMonitoring) 3.dp else 1.5.dp,
+                    brush = Brush.sweepGradient(
+                        colors = listOf(
+                            color,
+                            color.copy(alpha = 0.3f),
+                            Color.Transparent,
+                            color.copy(alpha = 0.3f),
+                            color
+                        )
+                    ),
+                    shape = CircleShape
+                )
+        )
+        
+        // Inner circle — theme-aware
+        Box(
+            modifier = Modifier
+                .size(188.dp)
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.surfaceVariant,
+                            MaterialTheme.colorScheme.surface,
+                            MaterialTheme.colorScheme.background
+                        )
+                    ),
+                    shape = CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = when (threatLevel) {
+                        ThreatLevel.SAFE -> "SAFE"
+                        ThreatLevel.CAUTION -> "CAUTION"
+                        ThreatLevel.DANGER -> "DANGER"
+                    },
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Black,
+                    color = color,
+                    letterSpacing = 3.sp
+                )
+                
+                // Confidence percentage
+                if (animatedConfidence > 0.01f) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "${(animatedConfidence * 100).toInt()}%",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = color.copy(alpha = 0.9f)
+                    )
+                }
+                
+                if (isMonitoring) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .background(color, CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Monitoring",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = color.copy(alpha = 0.8f),
+                            letterSpacing = 1.sp
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HERO MINI STAT - Compact stat for hero header
+// ═══════════════════════════════════════════════════════════════
+@Composable
+private fun HeroMiniStat(
+    value: String,
+    label: String,
+    color: Color
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = value,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold,
+            color = color
+        )
+        Text(
+            text = label,
+            fontSize = 11.sp,
+            color = Color.White.copy(alpha = 0.5f),
+            letterSpacing = 1.sp
+        )
+    }
+}// ═══════════════════════════════════════════════════════════════
+// AUDIO WAVEFORM - Live visualiser driven by audioLevel float
+// ═══════════════════════════════════════════════════════════════
+@Composable
+fun AudioWaveform(
+    audioLevel: Float,
+    modifier: Modifier = Modifier
+) {
+    val barCount = 20
+    val infiniteTransition = rememberInfiniteTransition(label = "waveform")
+    
+    // Animated phase offset drives the ripple effect across bars
+    val phase by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = (2 * Math.PI).toFloat(),
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "phase"
+    )
+    
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        repeat(barCount) { index ->
+            val sinOffset = sin(phase + index * (2 * Math.PI / barCount).toFloat()).toFloat()
+            val heightFraction = ((sinOffset + 1f) / 2f) * 0.6f + 0.1f + (audioLevel * 0.9f)
+            val barAlpha = 0.6f + (sinOffset + 1f) / 2f * 0.4f
+            
+            Box(
+                modifier = Modifier
+                    .width(3.dp)
+                    .height(
+                        (heightFraction.coerceIn(0.05f, 1.0f) * 40f).dp
+                    )
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(MacherElectricCyan.copy(alpha = barAlpha))
+            )
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MONITORING BUTTON - Gradient with press animation
+// ═══════════════════════════════════════════════════════════════
+@Composable
+fun AnimatedMonitoringButton(
+    isMonitoring: Boolean,
+    threatLevel: ThreatLevel = ThreatLevel.SAFE,
+    onClick: () -> Unit
+) {
+    val scale = remember { Animatable(1f) }
+    val scope = rememberCoroutineScope()
+    
+    val buttonColors = if (isMonitoring) {
+        listOf(DangerRed, DangerRedDark)
+    } else {
+        listOf(MacherElectricCyan, MacherCyanSoft.copy(alpha = 0.8f))
+    }
+    
+    val textColor = if (isMonitoring) Color.White else MacherNavy
+    
+    Button(
+        onClick = {
+            onClick()
+            scope.launch {
+                scale.animateTo(0.93f, animationSpec = tween(80))
+                scale.animateTo(1f, animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy))
+            }
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(60.dp)
+            .scale(scale.value),
+        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+        shape = RoundedCornerShape(20.dp),
+        contentPadding = PaddingValues(0.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.horizontalGradient(buttonColors),
+                    shape = RoundedCornerShape(20.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                if (isMonitoring) {
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .background(Color.White, RoundedCornerShape(3.dp))
+                    )
+                } else {
+                    Text("▶", fontSize = 16.sp, color = textColor)
+                }
+                Spacer(modifier = Modifier.width(14.dp))
+                Text(
+                    text = if (isMonitoring) "STOP MONITORING" else "START MONITORING",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = textColor,
+                    letterSpacing = 1.5.sp
+                )
+            }
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STATUS MINI CARD - Compact info display
+// ═══════════════════════════════════════════════════════════════
+@Composable
+fun StatusMiniCard(
+    modifier: Modifier = Modifier,
+    icon: String,
+    label: String,
+    value: String,
+    accentColor: Color
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 2.dp,
+        shadowElevation = 1.dp
+    ) {
+        Box(
+            modifier = Modifier
+                .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
+                .padding(16.dp)
+        ) {
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = icon, fontSize = 16.sp)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = label.uppercase(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        letterSpacing = 1.sp
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = accentColor
+                )
+            }
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// THREAT BUTTON - Compact colored pill
+// ═══════════════════════════════════════════════════════════════
+@Composable
+fun ThreatButton(
+    modifier: Modifier = Modifier,
+    text: String,
+    color: Color,
+    glowColor: Color = color.copy(alpha = 0.3f),
+    onClick: () -> Unit
+) {
+    val scale = remember { Animatable(1f) }
+    val scope = rememberCoroutineScope()
+    
+    Button(
+        onClick = {
+            scope.launch {
+                scale.animateTo(0.9f, animationSpec = tween(80))
+                scale.animateTo(1f, animationSpec = spring())
+            }
+            onClick()
+        },
+        modifier = modifier
+            .height(44.dp)
+            .scale(scale.value),
+        colors = ButtonDefaults.buttonColors(containerColor = color.copy(alpha = 0.15f)),
+        shape = RoundedCornerShape(14.dp),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.4f))
+    ) {
+        Text(
+            text = text,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 13.sp,
+            color = color,
+            letterSpacing = 0.5.sp
+        )
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GLASS CARD - Theme-aware frosted glass panel
+// ═══════════════════════════════════════════════════════════════
+@Composable
+fun GlassCard(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 2.dp,
+        shadowElevation = 1.dp
+    ) {
+        Box(
+            modifier = Modifier.border(
+                1.dp,
+                MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                RoundedCornerShape(20.dp)
+            )
+        ) {
+            content()
+        }
+    }
+}
+
+enum class ThreatLevel {
+    SAFE,
+    CAUTION,
+    DANGER
+}
+
+// ═══════════════════════════════════════════════════════════════
+// QUICK DEMO BUTTON - One-click demo for judges (Task 15.1)
+// ═══════════════════════════════════════════════════════════════
+@Composable
+fun QuickDemoButton(
+    onQuickDemo: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val scale = remember { Animatable(1f) }
+    val scope = rememberCoroutineScope()
+    
+    Button(
+        onClick = {
+            scope.launch {
+                scale.animateTo(0.95f, animationSpec = tween(100))
+                scale.animateTo(1f, animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy))
+            }
+            onQuickDemo()
+        },
+        modifier = modifier
+            .height(56.dp)
+            .scale(scale.value),
+        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+        shape = RoundedCornerShape(16.dp),
+        contentPadding = PaddingValues(0.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(
+                            VibrantRed.copy(alpha = 0.9f),
+                            DangerRed
+                        )
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .border(
+                    width = 1.dp,
+                    color = VibrantRed.copy(alpha = 0.5f),
+                    shape = RoundedCornerShape(16.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text("⚡", fontSize = 20.sp)
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(horizontalAlignment = Alignment.Start) {
+                    Text(
+                        text = "QUICK DEMO",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        letterSpacing = 1.5.sp
+                    )
+                    Text(
+                        text = "Auto-play high-risk scenario",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.9f),
+                        fontSize = 11.sp
+                    )
+                }
+            }
+        }
+    }
+}

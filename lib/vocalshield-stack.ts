@@ -14,9 +14,9 @@ import { CloudWatchAlarmsConstruct } from './constructs/cloudwatch-alarms';
 import { FraudDetectionConstruct } from './constructs/fraud-detection';
 
 /**
- * VocalShield Infrastructure Stack
+ * MACHER Infrastructure Stack
  * 
- * This stack defines the AWS infrastructure for VocalShield, a real-time
+ * This stack defines the AWS infrastructure for MACHER, a real-time
  * conversation firewall that protects users from voice-based financial fraud.
  * 
  * The infrastructure includes:
@@ -28,7 +28,7 @@ import { FraudDetectionConstruct } from './constructs/fraud-detection';
  * - CloudWatch for monitoring and observability
  * - VPC for future Wavelength Zone support
  */
-export class VocalShieldStack extends cdk.Stack {
+export class MACHERStack extends cdk.Stack {
   public readonly vpc: VpcConstruct;
   public readonly dynamoDbTables: DynamoDbTablesConstruct;
   public readonly secretsManager: SecretsManagerConstruct;
@@ -192,37 +192,37 @@ export class VocalShieldStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'WebSocketApiEndpoint', {
       value: this.webSocketApi.webSocketApi.apiEndpoint,
       description: 'WebSocket API endpoint URL (wss://)',
-      exportName: `${config.tags.Environment}-VocalShield-WebSocketEndpoint`,
+      exportName: `${config.tags.Environment}-MACHER-WebSocketEndpoint`,
     });
 
     new cdk.CfnOutput(this, 'WebSocketApiId', {
       value: this.webSocketApi.webSocketApi.apiId,
       description: 'WebSocket API ID',
-      exportName: `${config.tags.Environment}-VocalShield-WebSocketApiId`,
+      exportName: `${config.tags.Environment}-MACHER-WebSocketApiId`,
     });
 
     new cdk.CfnOutput(this, 'ConnectionsTableName', {
       value: this.dynamoDbTables.connectionsTable.tableName,
       description: 'DynamoDB Connections Table name',
-      exportName: `${config.tags.Environment}-VocalShield-ConnectionsTable`,
+      exportName: `${config.tags.Environment}-MACHER-ConnectionsTable`,
     });
 
     new cdk.CfnOutput(this, 'MetadataTableName', {
       value: this.dynamoDbTables.metadataTable.tableName,
       description: 'DynamoDB Metadata Table name',
-      exportName: `${config.tags.Environment}-VocalShield-MetadataTable`,
+      exportName: `${config.tags.Environment}-MACHER-MetadataTable`,
     });
 
     new cdk.CfnOutput(this, 'FamilyLoopTopicArn', {
       value: this.snsTopic.familyLoopTopic.topicArn,
       description: 'SNS Family Loop Topic ARN',
-      exportName: `${config.tags.Environment}-VocalShield-FamilyLoopTopic`,
+      exportName: `${config.tags.Environment}-MACHER-FamilyLoopTopic`,
     });
 
     new cdk.CfnOutput(this, 'AudioQueueUrl', {
       value: this.sqsQueues.audioQueue.queueUrl,
       description: 'SQS Audio Queue URL',
-      exportName: `${config.tags.Environment}-VocalShield-AudioQueue`,
+      exportName: `${config.tags.Environment}-MACHER-AudioQueue`,
     });
 
     new cdk.CfnOutput(this, 'ConnectHandlerArn', {

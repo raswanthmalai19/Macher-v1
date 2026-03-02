@@ -14,7 +14,7 @@ export interface WebSocketApiConstructProps {
 }
 
 /**
- * Construct for VocalShield WebSocket API
+ * Construct for MACHER WebSocket API
  * 
  * Creates API Gateway WebSocket API with:
  * - $connect route: Client connection establishment
@@ -41,8 +41,8 @@ export class WebSocketApiConstruct extends Construct {
 
     // Create WebSocket API with route selection expression
     this.webSocketApi = new apigatewayv2.WebSocketApi(this, 'WebSocketApi', {
-      apiName: `VocalShield-WebSocket-${config.tags.Environment}`,
-      description: 'Real-time audio streaming API for VocalShield fraud detection',
+      apiName: `MACHER-WebSocket-${config.tags.Environment}`,
+      description: 'Real-time audio streaming API for MACHER fraud detection',
       routeSelectionExpression: '$request.body.action',
     });
 
@@ -141,14 +141,14 @@ export class WebSocketApiConstruct extends Construct {
     new cdk.CfnOutput(this, 'WebSocketApiEndpoint', {
       value: this.apiEndpoint,
       description: 'WebSocket API endpoint URL',
-      exportName: `VocalShield-WebSocketApiEndpoint-${config.tags.Environment}`,
+      exportName: `MACHER-WebSocketApiEndpoint-${config.tags.Environment}`,
     });
 
     // Output the WebSocket API ID for reference
     new cdk.CfnOutput(this, 'WebSocketApiId', {
       value: this.webSocketApi.apiId,
       description: 'WebSocket API ID',
-      exportName: `VocalShield-WebSocketApiId-${config.tags.Environment}`,
+      exportName: `MACHER-WebSocketApiId-${config.tags.Environment}`,
     });
   }
 }

@@ -59,7 +59,7 @@ export class AnomalyDetectionConstruct extends Construct {
       });
 
       const alarm = new cloudwatch.Alarm(this, `${functionName}-InvocationAnomaly`, {
-        alarmName: `VocalShield-${functionName}-InvocationAnomaly`,
+        alarmName: `MACHER-${functionName}-InvocationAnomaly`,
         alarmDescription: `Anomalous invocation count detected for ${functionName}`,
         metric: invocationMetric,
         threshold: standardDeviations,
@@ -88,7 +88,7 @@ export class AnomalyDetectionConstruct extends Construct {
       });
 
       const errorAlarm = new cloudwatch.Alarm(this, `${functionName}-ErrorAnomaly`, {
-        alarmName: `VocalShield-${functionName}-ErrorAnomaly`,
+        alarmName: `MACHER-${functionName}-ErrorAnomaly`,
         alarmDescription: `Anomalous error rate detected for ${functionName}`,
         metric: errorMetric,
         threshold: standardDeviations,
@@ -119,7 +119,7 @@ export class AnomalyDetectionConstruct extends Construct {
       });
 
       const apiAlarm = new cloudwatch.Alarm(this, 'APIRequestAnomaly', {
-        alarmName: 'VocalShield-API-RequestAnomaly',
+        alarmName: 'MACHER-API-RequestAnomaly',
         alarmDescription: 'Anomalous API request rate detected',
         metric: apiMetric,
         threshold: standardDeviations,

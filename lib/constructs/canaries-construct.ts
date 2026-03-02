@@ -45,7 +45,7 @@ export class CanariesConstruct extends Construct {
 
     // Create or use existing artifacts bucket
     this.artifactsBucket = props.artifactsBucket || new s3.Bucket(this, 'CanaryArtifacts', {
-      bucketName: 'vocalshield-canary-artifacts',
+      bucketName: 'macher-canary-artifacts',
       encryption: s3.BucketEncryption.S3_MANAGED,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: RemovalPolicy.RETAIN,
@@ -65,7 +65,7 @@ export class CanariesConstruct extends Construct {
 
     // Health Check Canary (every 5 minutes)
     this.healthCheckCanary = new synthetics.Canary(this, 'HealthCheckCanary', {
-      canaryName: 'vocalshield-health-check',
+      canaryName: 'macher-health-check',
       runtime: synthetics.Runtime.SYNTHETICS_NODEJS_PUPPETEER_6_2,
       test: synthetics.Test.custom({
         code: synthetics.Code.fromAsset(path.join(__dirname, '../../canaries')),
@@ -86,7 +86,7 @@ export class CanariesConstruct extends Construct {
 
     // WebSocket Connection Canary (every 15 minutes)
     this.wsConnectionCanary = new synthetics.Canary(this, 'WSConnectionCanary', {
-      canaryName: 'vocalshield-ws-connection',
+      canaryName: 'macher-ws-connection',
       runtime: synthetics.Runtime.SYNTHETICS_NODEJS_PUPPETEER_6_2,
       test: synthetics.Test.custom({
         code: synthetics.Code.fromAsset(path.join(__dirname, '../../canaries')),
@@ -115,7 +115,7 @@ export class CanariesConstruct extends Construct {
   private createCanaryAlarms(): void {
     // Health check canary alarm
     new cloudwatch.Alarm(this, 'HealthCheckCanaryAlarm', {
-      alarmName: 'VocalShield-HealthCheckCanary-Failed',
+      alarmName: 'MACHER-HealthCheckCanary-Failed',
       alarmDescription: 'Health check canary failed',
       metric: this.healthCheckCanary.metricFailed({
         period: Duration.minutes(5),
@@ -129,7 +129,7 @@ export class CanariesConstruct extends Construct {
 
     // WebSocket connection canary alarm
     new cloudwatch.Alarm(this, 'WSConnectionCanaryAlarm', {
-      alarmName: 'VocalShield-WSConnectionCanary-Failed',
+      alarmName: 'MACHER-WSConnectionCanary-Failed',
       alarmDescription: 'WebSocket connection canary failed',
       metric: this.wsConnectionCanary.metricFailed({
         period: Duration.minutes(15),
@@ -143,7 +143,7 @@ export class CanariesConstruct extends Construct {
 
     // Success rate alarm (< 90% over 1 hour)
     new cloudwatch.Alarm(this, 'HealthCheckSuccessRateAlarm', {
-      alarmName: 'VocalShield-HealthCheck-LowSuccessRate',
+      alarmName: 'MACHER-HealthCheck-LowSuccessRate',
       alarmDescription: 'Health check success rate below 90%',
       metric: this.healthCheckCanary.metricSuccessPercent({
         period: Duration.hours(1),

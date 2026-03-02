@@ -1,7 +1,7 @@
 /**
  * FreeTierUsageTracker - Monitor AWS Free Tier usage and project overages
  * 
- * This class tracks usage across AWS services to ensure VocalShield stays
+ * This class tracks usage across AWS services to ensure MACHER stays
  * within Free Tier limits. It monitors Lambda, DynamoDB, CloudWatch Logs,
  * CloudWatch Metrics, and API Gateway usage.
  * 
@@ -368,7 +368,7 @@ export class FreeTierUsageTracker {
   private async publishUsageMetric(usage: FreeTierUsage): Promise<void> {
     try {
       await this.metricPublisher.publishMetric(
-        'VocalShield/FreeTier',
+        'MACHER/FreeTier',
         'UsagePercentage',
         usage.usagePercentage,
         MetricUnit.Percent,

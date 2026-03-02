@@ -180,7 +180,7 @@ npm run test:coverage
 MACHER/
 ├── bin/                        # CDK app entry point
 ├── lib/
-│   ├── vocalshield-stack.ts    # Main CDK stack
+│   ├── macher-stack.ts    # Main CDK stack
 │   ├── config/                 # Environment configs (dev / staging / prod)
 │   ├── constructs/             # Reusable CDK constructs
 │   └── monitoring/             # CloudWatch dashboards & alarms
@@ -236,7 +236,7 @@ GitHub: [@raswanthmalai19](https://github.com/raswanthmalai19)
 
 ## Overview
 
-This project uses AWS CDK (Cloud Development Kit) with TypeScript to define and deploy the cloud infrastructure for VocalShield. The infrastructure is designed to be:
+This project uses AWS CDK (Cloud Development Kit) with TypeScript to define and deploy the cloud infrastructure for MACHER. The infrastructure is designed to be:
 
 - **Cost-optimized**: Stays within AWS Free Tier limits
 - **Serverless**: Auto-scaling without capacity planning
@@ -389,7 +389,7 @@ View outputs:
 
 ```bash
 aws cloudformation describe-stacks \
-  --stack-name VocalShield-dev \
+  --stack-name MACHER-dev \
   --query 'Stacks[0].Outputs'
 ```
 
@@ -472,7 +472,7 @@ cdk deploy --rollback -c environment=dev
 Or manually via CloudFormation:
 
 ```bash
-aws cloudformation rollback-stack --stack-name VocalShield-dev
+aws cloudformation rollback-stack --stack-name MACHER-dev
 ```
 
 ## Destroy Stack
@@ -496,7 +496,7 @@ cdk destroy -c environment=dev
 ```
 .
 ├── bin/
-│   └── vocalshield.ts          # CDK app entry point
+│   └── macher.ts          # CDK app entry point
 ├── lib/
 │   ├── config/                 # Environment-specific configurations
 │   │   ├── dev.ts
@@ -505,7 +505,7 @@ cdk destroy -c environment=dev
 │   │   ├── types.ts
 │   │   └── index.ts
 │   ├── constructs/             # Reusable CDK constructs (future)
-│   └── vocalshield-stack.ts    # Main stack definition
+│   └── macher-stack.ts    # Main stack definition
 ├── lambda/                     # Lambda function code (future)
 ├── tests/                      # Test files
 │   ├── unit/                   # Unit tests
@@ -547,7 +547,7 @@ CDK will automatically detect changes and update the stack.
 For issues or questions, please refer to:
 
 - [AWS CDK Documentation](https://docs.aws.amazon.com/cdk/)
-- [VocalShield Project Documentation](./Project.md)
+- [MACHER Project Documentation](./Project.md)
 - [Requirements Document](./.kiro/specs/aws-infrastructure-foundation/requirements.md)
 - [Design Document](./.kiro/specs/aws-infrastructure-foundation/design.md)
 

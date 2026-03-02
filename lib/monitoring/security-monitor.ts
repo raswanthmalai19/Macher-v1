@@ -1,7 +1,7 @@
 /**
  * SecurityMonitor - Security event tracking and threat detection
  * 
- * This class monitors security-related events across VocalShield components,
+ * This class monitors security-related events across MACHER components,
  * detecting potential attacks and logging security events for audit purposes.
  * 
  * Features:
@@ -310,7 +310,7 @@ export class SecurityMonitor {
   ): Promise<void> {
     try {
       await this.metricPublisher.publishMetric(
-        'VocalShield/Security',
+        'MACHER/Security',
         metricName,
         value,
         MetricUnit.Count,
