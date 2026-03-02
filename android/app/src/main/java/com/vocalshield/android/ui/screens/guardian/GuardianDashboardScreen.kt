@@ -1,6 +1,7 @@
 package com.vocalshield.android.ui.screens.guardian
 
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,8 +17,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -26,6 +31,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vocalshield.android.ui.theme.*
 import kotlinx.coroutines.launch
+import java.util.Calendar
+import kotlin.math.sin
 
 /**
  * Guardian Dashboard - Main screen for family members
@@ -93,6 +100,11 @@ fun GuardianDashboardScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // Hero Banner with greeting & stats
+                item {
+                    GuardianHeroBanner()
+                }
+
                 item {
                     // Protected Users Section
                     SectionHeader(
@@ -184,6 +196,114 @@ fun GuardianDashboardScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun GuardianHeroBanner() {
+    val greeting = remember {
+        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+        when {
+            hour < 12 -> "Good Morning"
+            hour < 17 -> "Good Afternoon"
+            else -> "Good Evening"
+        }
+    }
+
+    val infiniteTransition = rememberInfiniteTransition(label = "hero")
+    val shimmer by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 6.2832f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(8000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "shimmer"
+    )
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            MacherViolet.copy(alpha = 0.9f),
+                            MacherDeepBlue.copy(alpha = 0.95f),
+                            MacherNavy
+                        )
+                    ),
+                    shape = RoundedCornerShape(24.dp)
+                )
+        ) {
+            // Floating orbs inside the banner
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                drawCircle(
+                    color = MacherElectricCyan.copy(alpha = 0.08f),
+                    radius = 120f,
+                    center = Offset(size.width * 0.85f + sin(shimmer) * 15f, 60f)
+                )
+                drawCircle(
+                    color = VibrantPink.copy(alpha = 0.06f),
+                    radius = 80f,
+                    center = Offset(60f + sin(shimmer * 0.7f) * 10f, size.height * 0.7f)
+                )
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp)
+            ) {
+                Text(
+                    text = "$greeting \uD83D\uDC4B",
+                    fontSize = 16.sp,
+                    color = Color.White.copy(alpha = 0.8f)
+                )
+                Text(
+                    text = "Guardian",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Black,
+                    color = Color.White,
+                    letterSpacing = 1.sp
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Quick stats row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    HeroStat(value = "1", label = "Protected", color = MacherElectricCyan)
+                    HeroStat(value = "12", label = "Contacts", color = SafeGreen)
+                    HeroStat(value = "98%", label = "Safe Rate", color = SafeGreenLight)
+                    HeroStat(value = "7", label = "Alerts", color = CautionYellow)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HeroStat(value: String, label: String, color: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = value,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Black,
+            color = color
+        )
+        Text(
+            text = label,
+            fontSize = 11.sp,
+            color = Color.White.copy(alpha = 0.7f),
+            fontWeight = FontWeight.Medium
+        )
     }
 }
 

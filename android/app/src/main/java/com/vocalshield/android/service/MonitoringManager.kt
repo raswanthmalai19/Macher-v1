@@ -10,11 +10,14 @@ import com.vocalshield.android.detection.*
 import com.vocalshield.android.demo.ScamScenarios
 import com.vocalshield.android.network.RealWebSocketClient
 import com.vocalshield.android.util.Config
+import com.vocalshield.android.util.ErrorSeverity
+import com.vocalshield.android.util.ErrorType
 import com.vocalshield.android.util.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -460,9 +463,8 @@ class MonitoringManager(private val context: Context) {
                 MetadataRiskResult(
                     riskScore = 0,
                     riskLevel = RiskLevel.LOW,
-                    confidence = 0f,
                     triggers = emptyList(),
-                    explanation = "Metadata analysis unavailable"
+                    confidence = 0f
                 )
             }
             metadataAnalysisTime = System.currentTimeMillis() - metadataStartTime
@@ -519,10 +521,11 @@ class MonitoringManager(private val context: Context) {
                     riskScore = metadataRisk.riskScore.toFloat(),
                     riskLevel = metadataRisk.riskLevel,
                     confidence = 0.3f, // Low confidence due to fusion failure
+                    triggers = emptyList(),
+                    explanation = "Risk fusion unavailable - using metadata only",
                     metadataContribution = metadataRisk.riskScore.toFloat(),
                     manipulationContribution = 0f,
-                    historicalContribution = 0f,
-                    explanation = "Risk fusion unavailable - using metadata only"
+                    historicalContribution = 0f
                 )
             }
             fusionTime = System.currentTimeMillis() - fusionStartTime
@@ -1915,16 +1918,13 @@ class MonitoringManager(private val context: Context) {
         try {
             Logger.info("MonitoringManager", "Deleting all call history data")
             
-            // Use transaction to ensure atomic deletion
-            database.runInTransaction {
-                // Delete all call records (cascades to risk assessments and triggers)
-                callHistoryDao.deleteAllCalls()
-                
-                // Delete all historical risk data
-                historicalRiskDao.deleteAllHistoricalRisks()
-                
-                Logger.info("MonitoringManager", "All call history data deleted successfully")
-            }
+            // Delete all call records (cascades to risk assessments and triggers)
+            callHistoryDao.deleteAllCalls()
+            
+            // Delete all historical risk data
+            historicalRiskDao.deleteAllHistoricalRisks()
+            
+            Logger.info("MonitoringManager", "All call history data deleted successfully")
             
             // Clear in-memory state flows
             withContext(Dispatchers.Main) {

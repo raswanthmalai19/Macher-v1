@@ -51,7 +51,7 @@ object Config {
      * 
      * Set to false for production use with real call audio.
      */
-    const val DEMO_MODE = false
+    const val DEMO_MODE = true
     
     /**
      * Audio configuration

@@ -1,6 +1,7 @@
 package com.vocalshield.android.data.database
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.UUID
 

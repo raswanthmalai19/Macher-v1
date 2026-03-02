@@ -310,7 +310,7 @@ fun SplashScreen() {
     }
     
     Box(
-        modifier = Modifier.fillMaxSize().background(BackgroundDark),
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center
     ) {
         // Radial glow behind logo
@@ -364,8 +364,8 @@ fun SplashScreen() {
                         .background(
                             brush = Brush.radialGradient(
                                 colors = listOf(
-                                    SurfaceElevated,
-                                    SurfaceDark
+                                    MaterialTheme.colorScheme.surfaceVariant,
+                                    MaterialTheme.colorScheme.surface
                                 )
                             ),
                             shape = CircleShape
@@ -393,7 +393,7 @@ fun SplashScreen() {
                 text = "AI Voice Fraud Firewall",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 letterSpacing = 3.sp,
                 modifier = Modifier.graphicsLayer { translationY = titleOffset.value * 0.5f }
             )
@@ -441,27 +441,88 @@ fun MainContent(
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(56.dp))
+        Spacer(modifier = Modifier.height(48.dp))
         
-        // ── App Header ──
-        Text(
-            text = "MACHER",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Black,
-            color = MacherElectricCyan,
-            letterSpacing = 6.sp
-        )
+        // ── Premium Hero Header ──
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp),
+            color = Color.Transparent,
+            shadowElevation = 8.dp
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                MacherDeepBlue,
+                                MacherNavy,
+                                Color(0xFF0D1A33)
+                            )
+                        ),
+                        shape = RoundedCornerShape(24.dp)
+                    )
+                    .padding(24.dp)
+            ) {
+                Column {
+                    // Greeting row
+                    val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+                    val greeting = when {
+                        hour < 12 -> "Good Morning"
+                        hour < 17 -> "Good Afternoon"
+                        else -> "Good Evening"
+                    }
+                    Text(
+                        text = "$greeting 👋",
+                        fontSize = 16.sp,
+                        color = MacherCyanSoft,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "MACHER",
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Black,
+                        color = MacherElectricCyan,
+                        letterSpacing = 6.sp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "AI Voice Fraud Firewall",
+                        fontSize = 13.sp,
+                        color = Color.White.copy(alpha = 0.6f),
+                        letterSpacing = 2.sp
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    // Mini stats row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        HeroMiniStat(value = if (isMonitoring) "Active" else "Standby", label = "Status",
+                            color = if (isMonitoring) SafeGreen else CautionYellow)
+                        HeroMiniStat(value = when(threatLevel) {
+                            ThreatLevel.SAFE -> "Safe"
+                            ThreatLevel.CAUTION -> "Caution"
+                            ThreatLevel.DANGER -> "Danger"
+                        }, label = "Threat",
+                            color = when(threatLevel) {
+                            ThreatLevel.SAFE -> SafeGreen
+                            ThreatLevel.CAUTION -> CautionYellow
+                            ThreatLevel.DANGER -> DangerRed
+                        })
+                        HeroMiniStat(value = when(connectionState) {
+                            ConnectionState.CONNECTED -> "Online"
+                            else -> "Offline"
+                        }, label = "Backend",
+                            color = if (connectionState == ConnectionState.CONNECTED) SafeGreen else MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+        }
         
-        Spacer(modifier = Modifier.height(4.dp))
-        
-        Text(
-            text = "AI Voice Fraud Firewall",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            letterSpacing = 2.sp
-        )
-        
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(24.dp))
         
         // ── Detection Mode Indicator (Task 8.1) ──
         DetectionModeIndicator(
@@ -911,6 +972,29 @@ fun ThreatIndicator(
 }
 
 // ═══════════════════════════════════════════════════════════════
+// HERO MINI STAT - Compact stat for hero header
+// ═══════════════════════════════════════════════════════════════
+@Composable
+private fun HeroMiniStat(
+    value: String,
+    label: String,
+    color: Color
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = value,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold,
+            color = color
+        )
+        Text(
+            text = label,
+            fontSize = 11.sp,
+            color = Color.White.copy(alpha = 0.5f),
+            letterSpacing = 1.sp
+        )
+    }
+}// ═══════════════════════════════════════════════════════════════
 // AUDIO WAVEFORM - Live visualiser driven by audioLevel float
 // ═══════════════════════════════════════════════════════════════
 @Composable

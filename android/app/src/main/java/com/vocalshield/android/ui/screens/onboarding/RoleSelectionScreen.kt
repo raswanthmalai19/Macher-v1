@@ -2,16 +2,21 @@ package com.vocalshield.android.ui.screens.onboarding
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -19,91 +24,308 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vocalshield.android.ui.theme.*
+import kotlinx.coroutines.delay
+import kotlin.math.sin
 
-/**
- * Role selection screen - Choose between Protected User or Guardian
- */
+private data class RoleOption(
+    val id: String,
+    val icon: String,
+    val title: String,
+    val subtitle: String,
+    val description: String,
+    val accentColor: Color,
+    val features: List<String>
+)
+
+private val roles = listOf(
+    RoleOption(
+        id = "PROTECTED",
+        icon = "\uD83D\uDC74",
+        title = "I need protection",
+        subtitle = "Protected User",
+        description = "MACHER monitors your calls and shields you from scams",
+        accentColor = MacherElectricCyan,
+        features = listOf(
+            "Real-time scam detection on every call",
+            "Instant audio + visual + haptic warnings",
+            "One-touch emergency contact alert"
+        )
+    ),
+    RoleOption(
+        id = "GUARDIAN",
+        icon = "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67",
+        title = "I\u2019m protecting someone",
+        subtitle = "Guardian",
+        description = "Monitor and manage protection for your loved ones remotely",
+        accentColor = MacherViolet,
+        features = listOf(
+            "Live dashboard for protected users",
+            "Push notifications on threat detection",
+            "Manage trusted contacts and settings"
+        )
+    )
+)
+
 @Composable
 fun RoleSelectionScreen(
     onRoleSelected: (String) -> Unit
 ) {
     var selectedRole by remember { mutableStateOf<String?>(null) }
-    
+    var showCard1 by remember { mutableStateOf(false) }
+    var showCard2 by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        delay(200)
+        showCard1 = true
+        delay(150)
+        showCard2 = true
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        contentAlignment = Alignment.Center
+            .background(MaterialTheme.colorScheme.background)
     ) {
+        RoleSelectionBackground()
+
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
+                .fillMaxSize()
+                .statusBarsPadding()
+                .padding(horizontal = 24.dp)
+                .padding(top = 48.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Title
             Text(
-                text = "Who will use this app?",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
+                text = "Who will use\nthis app?",
+                fontSize = 34.sp,
+                fontWeight = FontWeight.Black,
                 color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                lineHeight = 40.sp
             )
-            
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             Text(
                 text = "Choose your role to get started",
-                fontSize = 16.sp,
+                fontSize = 15.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 8.dp, bottom = 48.dp)
+                textAlign = TextAlign.Center
             )
-            
-            // Protected User Card
-            RoleCard(
-                icon = "👴",
-                title = "I need protection",
-                subtitle = "Protected User",
-                description = "I want MACHER to monitor my calls and protect me from scams",
-                isSelected = selectedRole == "PROTECTED",
-                onClick = { selectedRole = "PROTECTED" }
-            )
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            // Guardian Card
-            RoleCard(
-                icon = "👨‍👩‍👧",
-                title = "I'm protecting someone",
-                subtitle = "Guardian",
-                description = "I want to monitor and manage protection for my family member",
-                isSelected = selectedRole == "GUARDIAN",
-                onClick = { selectedRole = "GUARDIAN" }
-            )
-            
-            Spacer(modifier = Modifier.height(48.dp))
-            
-            // Continue Button
+
+            Spacer(modifier = Modifier.height(40.dp))
+
+            AnimatedVisibility(
+                visible = showCard1,
+                enter = fadeIn(tween(500)) + slideInVertically(
+                    initialOffsetY = { it / 3 },
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessLow
+                    )
+                )
+            ) {
+                RoleOptionCard(
+                    role = roles[0],
+                    isSelected = selectedRole == roles[0].id,
+                    onClick = { selectedRole = roles[0].id }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            AnimatedVisibility(
+                visible = showCard2,
+                enter = fadeIn(tween(500)) + slideInVertically(
+                    initialOffsetY = { it / 3 },
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessLow
+                    )
+                )
+            ) {
+                RoleOptionCard(
+                    role = roles[1],
+                    isSelected = selectedRole == roles[1].id,
+                    onClick = { selectedRole = roles[1].id }
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
             AnimatedVisibility(
                 visible = selectedRole != null,
-                enter = fadeIn() + expandVertically()
+                enter = fadeIn(tween(300)) + slideInVertically(
+                    initialOffsetY = { it / 2 },
+                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                )
             ) {
+                val btnColor = if (selectedRole == "PROTECTED") MacherElectricCyan else MacherViolet
+                val btnLabel = if (selectedRole == "PROTECTED")
+                    "Continue as Protected User" else "Continue as Guardian"
+
                 Button(
                     onClick = { selectedRole?.let { onRoleSelected(it) } },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(64.dp)
-                        .shadow(12.dp, RoundedCornerShape(32.dp)),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MacherElectricCyan
-                    ),
-                    shape = RoundedCornerShape(32.dp)
+                        .height(64.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = btnColor),
+                    shape = RoundedCornerShape(32.dp),
+                    elevation = ButtonDefaults.buttonElevation(
+                        defaultElevation = 8.dp,
+                        pressedElevation = 2.dp
+                    )
                 ) {
                     Text(
-                        text = "Continue",
-                        fontSize = 20.sp,
+                        text = btnLabel,
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.background
+                        color = if (btnColor == MacherElectricCyan) Color(0xFF050D1A) else Color.White
                     )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(48.dp))
+        }
+    }
+}
+
+@Composable
+private fun RoleOptionCard(
+    role: RoleOption,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val borderWidth by animateDpAsState(
+        targetValue = if (isSelected) 2.dp else 1.dp,
+        animationSpec = tween(300),
+        label = "border"
+    )
+    val borderColor by animateColorAsState(
+        targetValue = if (isSelected) role.accentColor else MaterialTheme.colorScheme.outlineVariant,
+        animationSpec = tween(300),
+        label = "borderColor"
+    )
+    val elevation by animateDpAsState(
+        targetValue = if (isSelected) 12.dp else 2.dp,
+        animationSpec = tween(300),
+        label = "elevation"
+    )
+    val cardScale by animateFloatAsState(
+        targetValue = if (isSelected) 1.02f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "scale"
+    )
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .scale(cardScale)
+            .border(borderWidth, borderColor, RoundedCornerShape(24.dp))
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected)
+                role.accentColor.copy(alpha = 0.06f)
+            else MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = elevation)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalAlignment = Alignment.Top
+        ) {
+            Box(
+                modifier = Modifier.size(72.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                if (isSelected) {
+                    Box(
+                        modifier = Modifier
+                            .size(72.dp)
+                            .blur(16.dp)
+                            .background(role.accentColor.copy(alpha = 0.25f), CircleShape)
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .background(
+                            role.accentColor.copy(alpha = 0.1f),
+                            CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = role.icon, fontSize = 36.sp)
+                }
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = role.title,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = role.subtitle,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = role.accentColor,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
+                Text(
+                    text = role.description,
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 8.dp),
+                    lineHeight = 18.sp
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                role.features.forEach { feature ->
+                    Row(
+                        modifier = Modifier.padding(vertical = 3.dp),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .padding(top = 6.dp)
+                                .size(6.dp)
+                                .background(role.accentColor, CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = feature,
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            lineHeight = 16.sp
+                        )
+                    }
+                }
+            }
+
+            AnimatedVisibility(
+                visible = isSelected,
+                enter = scaleIn(spring(stiffness = Spring.StiffnessMedium)) + fadeIn(),
+                exit = scaleOut() + fadeOut()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .background(role.accentColor, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("\u2713", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -111,99 +333,30 @@ fun RoleSelectionScreen(
 }
 
 @Composable
-fun RoleCard(
-    icon: String,
-    title: String,
-    subtitle: String,
-    description: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    val borderColor = if (isSelected) MacherElectricCyan else MaterialTheme.colorScheme.outlineVariant
-    val backgroundColor = if (isSelected) {
-        MacherElectricCyan.copy(alpha = 0.08f)
-    } else {
-        MaterialTheme.colorScheme.surface
-    }
-    
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(if (isSelected) 16.dp else 8.dp, RoundedCornerShape(24.dp))
-            .border(3.dp, borderColor, RoundedCornerShape(24.dp))
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = backgroundColor
+private fun RoleSelectionBackground() {
+    val transition = rememberInfiniteTransition(label = "bgOrbs")
+    val phase by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 6.283f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(10000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "bgPhase"
+    )
+
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        val w = size.width
+        val h = size.height
+        drawCircle(
+            color = MacherElectricCyan.copy(alpha = 0.04f),
+            radius = w * 0.35f,
+            center = Offset(w * 0.85f + sin(phase) * 15f, h * 0.2f)
         )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Icon
-            Text(
-                text = icon,
-                fontSize = 64.sp,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-            
-            // Title
-            Text(
-                text = title,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center
-            )
-            
-            // Subtitle
-            Text(
-                text = subtitle,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                color = VibrantBlue,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 4.dp)
-            )
-            
-            // Description
-            Text(
-                text = description,
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 12.dp)
-            )
-            
-            // Selected indicator
-            if (isSelected) {
-                Row(
-                    modifier = Modifier
-                        .padding(top = 16.dp)
-                        .background(
-                            color = VibrantBlue,
-                            shape = RoundedCornerShape(12.dp)
-                        )
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "✓",
-                        fontSize = 16.sp,
-                        color = Color.White,
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                    Text(
-                        text = "Selected",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
-            }
-        }
+        drawCircle(
+            color = MacherViolet.copy(alpha = 0.04f),
+            radius = w * 0.3f,
+            center = Offset(w * 0.15f + sin(phase * 0.7f) * 15f, h * 0.7f)
+        )
     }
 }

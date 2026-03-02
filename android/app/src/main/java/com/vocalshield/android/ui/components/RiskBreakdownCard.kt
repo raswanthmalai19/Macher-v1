@@ -194,9 +194,7 @@ fun RiskScoreGauge(
         String.format("%.1f / %.0f", score, maxScore)
     }
     
-    val textColor = remember(percentage) {
-        if (percentage > 0.5f) Color.White else MaterialTheme.colorScheme.onSurface
-    }
+    val textColor = if (percentage > 0.5f) Color.White else MaterialTheme.colorScheme.onSurface
     
     Column(modifier = modifier.semantics {
         contentDescription = "Overall risk score: $scoreText"

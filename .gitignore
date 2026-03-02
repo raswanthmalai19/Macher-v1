@@ -1,103 +1,136 @@
-# CDK asset staging directory
-.cdk.staging
-cdk.out
-*.js
-*.d.ts
+################################################################################
+# ANDROID / GRADLE BUILDS
+################################################################################
+android/.gradle/
+android/.gradle/**
+android/app/build/
+android/app/.cxx/
+android/*.jks
+android/*.keystore
+local.properties
+*.apk
+*.aab
+*.bundle
+*.so
+*.a
+*.ec
+*.jar
+!lib/**/*.jar
 
-# Dependency directories
+# Gradle
+.gradle
+*.gradle.kts.bak
+gradle-wrapper.properties.bak
+
+# Android Studio / IntelliJ IDEA
+.idea/
+.android/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Android
+.classpath
+.project
+.settings/
+*.class
+bin/
+gen/
+*.dex
+
+# Lint
+lint-results*.xml
+lint-results.html
+
+################################################################################
+# NODEJS / NPM / YARN
+################################################################################
 node_modules/
-jspm_packages/
-
-# TypeScript cache
-*.tsbuildinfo
-
-# Optional npm cache directory
+package-lock.json
+yarn.lock
 .npm
-
-# Optional eslint cache
 .eslintcache
-
-# Output of 'npm pack'
 *.tgz
-
-# Yarn Integrity file
 .yarn-integrity
-
-# dotenv environment variables file
-.env
-.env.test
-.env.production
-
-# parcel-bundler cache (https://parceljs.org/)
-.cache
-.parcel-cache
-
-# Next.js build output
-.next
-out
-
-# Nuxt.js build / generate output
-.nuxt
-dist
-
-# Gatsby files
-.cache/
-
-# vuepress build output
-.vuepress/dist
-
-# Serverless directories
-.serverless/
-
-# FuseBox cache
-.fusebox/
-
-# DynamoDB Local files
-.dynamodb/
-
-# TernJS port file
-.tern-port
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
-
-# yarn v2
 .yarn/cache
 .yarn/unplugged
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
 
-# Mac OS
-.DS_Store
+################################################################################
+# TYPESCRIPT
+################################################################################
+*.tsbuildinfo
+*.d.ts
+*.js
+!jest.config.js
+!write_screens.py
 
-# IDE
+################################################################################
+# FRONTEND BUILD & DIST
+################################################################################
+.next/
+out/
+.nuxt
+dist/
+build/
+.cache/
+.parcel-cache/
+
+################################################################################
+# CDK & AWS
+################################################################################
+.cdk.staging/
+cdk.out/
+.aws-sam/
+events/
+cdk.context.json
+
+################################################################################
+# ENVIRONMENT & SECRETS
+################################################################################
+.env
+.env.local
+.env.*.local
+.env.test
+.env.production
+
+################################################################################
+# IDE & EDITOR
+################################################################################
+.vscode/
+.vscode-test
 .idea/
+.kiro/
 *.swp
 *.swo
 *~
+.DS_Store
 
-# Editor / tool directories
-.vscode/
-.kiro/
-
-# Markdown files (except README.md)
-*.md
-!README.md
-
-# Test coverage
+################################################################################
+# BUILD & COVERAGE
+################################################################################
 coverage/
 .nyc_output/
+.fusebox/
+.dynamodb/
+.tern-port
+.serverless/
 
-# Build output
-build/
-dist/
+################################################################################
+# SOURCE DOCS (KEEP MAIN README)
+################################################################################
+*.md
+!README.md
+!QUICK_START.md
+!android/README.md
 
-# AWS SAM
-.aws-sam/
-
-# Local Lambda test events
-events/
-
-# CDK Context & Staging files
-cdk.context.json
+################################################################################
+# TEMPORARY & HELPER SCRIPTS
+################################################################################
+*.tmp
+*.log
+*.swp
+.cache
