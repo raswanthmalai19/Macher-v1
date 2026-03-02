@@ -1,4 +1,4 @@
-# MACHER APK - Sharing & Installation Guide
+# VocalShield APK - Sharing & Installation Guide
 
 **APK Location**: `android/app/build/outputs/apk/debug/app-debug.apk`  
 **APK Size**: 21 MB  
@@ -128,7 +128,7 @@ Before installing, you need to allow installation from unknown sources:
    - Or tap the download notification
 2. Tap **Install**
 3. Wait for installation to complete
-4. Tap **Open** to launch MACHER
+4. Tap **Open** to launch VocalShield
 
 ### Step 3: Grant Permissions
 When you first open the app, grant these permissions:
@@ -139,7 +139,7 @@ When you first open the app, grant these permissions:
 
 **Special Permissions** (grant later when needed):
 - **Display over other apps** - For scam warning overlay
-  - Settings → Apps → MACHER → Display over other apps → Allow
+  - Settings → Apps → VocalShield → Display over other apps → Allow
 
 ---
 
@@ -182,7 +182,7 @@ If installation fails:
 
 ### Copy APK to Desktop
 ```bash
-cp android/app/build/outputs/apk/debug/app-debug.apk ~/Desktop/MACHER.apk
+cp android/app/build/outputs/apk/debug/app-debug.apk ~/Desktop/VocalShield.apk
 ```
 
 ### Open APK Location in Finder
@@ -197,7 +197,7 @@ ls -lh android/app/build/outputs/apk/debug/app-debug.apk
 
 ### Rename APK (Optional)
 ```bash
-cp android/app/build/outputs/apk/debug/app-debug.apk ~/Desktop/MACHER-v1.0.0.apk
+cp android/app/build/outputs/apk/debug/app-debug.apk ~/Desktop/VocalShield-v1.0.0.apk
 ```
 
 ---
@@ -303,7 +303,7 @@ If you encounter any issues:
 You'll know it worked when:
 - ✅ APK downloads completely (21 MB)
 - ✅ Installation completes without errors
-- ✅ MACHER icon appears in app drawer
+- ✅ VocalShield icon appears in app drawer
 - ✅ App launches and shows onboarding
 - ✅ You can navigate through screens
 

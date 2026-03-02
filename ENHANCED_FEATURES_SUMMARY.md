@@ -1,4 +1,4 @@
-# MACHER - Enhanced Features Summary
+# VocalShield - Enhanced Features Summary
 
 **Date**: March 2, 2026  
 **Version**: 2.0.0 - Production Ready  
@@ -332,7 +332,7 @@ Incoming Call
 ## 🎬 Demo Script (Hackathon)
 
 ### Opening (30 seconds)
-"Voice scams cost $80 billion annually. Traditional solutions only block known numbers. MACHER analyzes what's being said in real-time using behavioral AI."
+"Voice scams cost $80 billion annually. Traditional solutions only block known numbers. VocalShield analyzes what's being said in real-time using behavioral AI."
 
 ### Demo (2 minutes)
 1. **Show metadata detection** (no audio needed)
@@ -350,7 +350,7 @@ Incoming Call
    - Clear explanation of threats
 
 ### Closing (30 seconds)
-"MACHER uses 3-layer detection: metadata patterns, conversational manipulation, and risk fusion. It works on-device for privacy, with optional cloud enhancement. Available as consumer app or enterprise SDK."
+"VocalShield uses 3-layer detection: metadata patterns, conversational manipulation, and risk fusion. It works on-device for privacy, with optional cloud enhancement. Available as consumer app or enterprise SDK."
 
 ---
 
@@ -391,7 +391,7 @@ Incoming Call
 
 ## 🎉 Summary
 
-MACHER is now a **competition-winning, production-ready application** with:
+VocalShield is now a **competition-winning, production-ready application** with:
 
 1. ✅ **Multi-layer detection** - Works with or without audio
 2. ✅ **Behavioral AI** - Detects manipulation, not just keywords

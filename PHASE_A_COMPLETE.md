@@ -274,7 +274,7 @@ The navigation and UI foundation is complete. The app now has:
 
 ### Data Layer (earlier)
 - `UserRole.kt` - User roles and models
-- `MACHERDatabase.kt` - Room database
+- `VocalShieldDatabase.kt` - Room database
 - `Daos.kt` - Data access objects
 - `UserPreferences.kt` - DataStore preferences
 

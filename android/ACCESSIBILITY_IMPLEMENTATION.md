@@ -1,8 +1,8 @@
-# MACHER Accessibility Implementation
+# VocalShield Accessibility Implementation
 
 ## Overview
 
-MACHER has been designed with comprehensive accessibility features to ensure it's usable by elderly users (80+) and hearing-impaired individuals, aligning with our core product value: **"The UI must be usable by an 80-year-old in a state of panic."**
+VocalShield has been designed with comprehensive accessibility features to ensure it's usable by elderly users (80+) and hearing-impaired individuals, aligning with our core product value: **"The UI must be usable by an 80-year-old in a state of panic."**
 
 ## Implemented Features
 
@@ -100,7 +100,7 @@ Created `AccessibilityAnnouncer` utility class with the following features:
 
 **Minimum Requirements:**
 - WCAG AA requires 4.5:1 for normal text, 3:1 for large text
-- All MACHER text exceeds these requirements significantly
+- All VocalShield text exceeds these requirements significantly
 - Color is never the only indicator (always paired with icons, text, or patterns)
 
 ### 5. Haptic Feedback (Task 12.4)
@@ -192,7 +192,7 @@ See `12.5 Write accessibility tests` task for automated test coverage.
 ### Potential Improvements
 1. **Multi-language TalkBack**: Announcements in user's preferred language
 2. **Customizable haptic patterns**: Let users choose vibration intensity
-3. **Voice control**: "MACHER, what's my current threat level?"
+3. **Voice control**: "VocalShield, what's my current threat level?"
 4. **Larger touch targets**: Option for extra-large buttons (72dp+)
 5. **Simplified mode**: Reduced UI complexity for cognitive accessibility
 

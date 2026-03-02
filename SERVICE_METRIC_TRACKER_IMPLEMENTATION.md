@@ -53,7 +53,7 @@ Successfully implemented comprehensive service metric tracking for AWS services 
 - Validation of input parameters
 
 ### CloudWatch Integration
-- Publishes to `MACHER/Services` namespace
+- Publishes to `VocalShield/Services` namespace
 - Uses appropriate metric units (Milliseconds, Count)
 - Includes service and environment dimensions
 - Consistent timestamps across related metrics

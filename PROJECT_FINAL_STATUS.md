@@ -1,4 +1,4 @@
-# MACHER - Final Project Status
+# VocalShield - Final Project Status
 
 **Date**: March 1, 2026  
 **Version**: 1.0.0  
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-MACHER is a production-ready, privacy-first voice firewall that protects vulnerable users from phone scams using real-time AI analysis. The unified Android app features dual modes (Protected User + Guardian), complete AWS backend integration, and a progressive 3-level intervention system.
+VocalShield is a production-ready, privacy-first voice firewall that protects vulnerable users from phone scams using real-time AI analysis. The unified Android app features dual modes (Protected User + Guardian), complete AWS backend integration, and a progressive 3-level intervention system.
 
 **Key Achievement**: Built a competition-winning app in record time using Kiro's agentic workflow, showcasing AWS's most advanced AI services (Transcribe + Bedrock) in a real-world social good application.
 
@@ -440,7 +440,7 @@ MACHER is a production-ready, privacy-first voice firewall that protects vulnera
 
 ## 🎬 Final Thoughts
 
-MACHER is a **competition-winning application** that demonstrates:
+VocalShield is a **competition-winning application** that demonstrates:
 
 1. **Technical Excellence**: Real-time AI processing with AWS's best services
 2. **Implementation Quality**: Production-ready code with clean architecture
@@ -456,9 +456,9 @@ MACHER is a **competition-winning application** that demonstrates:
 ## 📞 Support & Resources
 
 ### GitHub Repository
-- Code: `github.com/macher/macher`
-- Issues: `github.com/macher/macher/issues`
-- Wiki: `github.com/macher/macher/wiki`
+- Code: `github.com/vocalshield/vocalshield`
+- Issues: `github.com/vocalshield/vocalshield/issues`
+- Wiki: `github.com/vocalshield/vocalshield/wiki`
 
 ### Documentation
 - All docs in project root

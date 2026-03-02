@@ -1,4 +1,4 @@
-# MACHER AI-Powered Fraud Detection - Architecture
+# VocalShield AI-Powered Fraud Detection - Architecture
 
 ## Table of Contents
 
@@ -15,7 +15,7 @@
 
 ## Overview
 
-The MACHER AI-Powered Fraud Detection system is a serverless, real-time fraud analysis engine that processes phone call transcripts to identify scam attempts. Built on AWS using Amazon Bedrock Agents with Claude 3.5 Sonnet, the system provides sub-2-second analysis with comprehensive PII protection and context-aware pattern detection.
+The VocalShield AI-Powered Fraud Detection system is a serverless, real-time fraud analysis engine that processes phone call transcripts to identify scam attempts. Built on AWS using Amazon Bedrock Agents with Claude 3.5 Sonnet, the system provides sub-2-second analysis with comprehensive PII protection and context-aware pattern detection.
 
 ### Design Principles
 
@@ -40,7 +40,7 @@ The MACHER AI-Powered Fraud Detection system is a serverless, real-time fraud an
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                         MACHER System                          │
+│                         VocalShield System                          │
 └─────────────────────────────────────────────────────────────────────┘
                                   │
                                   ▼
@@ -1048,7 +1048,7 @@ Layer 4: External Services
         "dynamodb:PutItem",
         "dynamodb:UpdateItem"
       ],
-      "Resource": "arn:aws:dynamodb:*:*:table/MACHER-Context-*"
+      "Resource": "arn:aws:dynamodb:*:*:table/VocalShield-Context-*"
     },
     {
       "Effect": "Allow",
@@ -1366,7 +1366,7 @@ Total Duration: 1195ms
 **Dashboard Layout**:
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                  MACHER Fraud Detection                │
+│                  VocalShield Fraud Detection                │
 ├─────────────────────────────────────────────────────────────┤
 │  Requests/min │ Latency (P95) │ Error Rate │ Cost/hour     │
 │     125       │    1.2s       │   0.3%     │   $0.37       │
@@ -1683,7 +1683,7 @@ Error Response (4xx/5xx):
 
 ```bash
 # Required
-CONTEXT_TABLE_NAME=MACHER-Context-dev
+CONTEXT_TABLE_NAME=VocalShield-Context-dev
 BEDROCK_AGENT_ID=ABCDEFGHIJ
 BEDROCK_AGENT_ALIAS_ID=TSTALIASID
 GUARDRAIL_ID=xyz123abc456
@@ -1893,7 +1893,7 @@ Solutions:
 - [AWS Lambda Best Practices](https://docs.aws.amazon.com/lambda/latest/dg/best-practices.html)
 - [DynamoDB Best Practices](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/best-practices.html)
 
-**MACHER Documentation**:
+**VocalShield Documentation**:
 - [README.md](./README.md) - Setup and usage guide
 - [Requirements Document](../../.kiro/specs/ai-powered-fraud-detection/requirements.md)
 - [Design Document](../../.kiro/specs/ai-powered-fraud-detection/design.md)
@@ -1911,7 +1911,7 @@ Solutions:
 
 **Version**: 1.0  
 **Last Updated**: 2024-02-16  
-**Authors**: MACHER Development Team  
+**Authors**: VocalShield Development Team  
 **Status**: Production Ready  
 
 **Change Log**:
@@ -1924,4 +1924,4 @@ Solutions:
 
 ---
 
-*This architecture document is part of the MACHER AI-Powered Fraud Detection system, built for the AWS 10,000 AIdeas Competition. For questions or contributions, please see the main [README.md](./README.md).*
+*This architecture document is part of the VocalShield AI-Powered Fraud Detection system, built for the AWS 10,000 AIdeas Competition. For questions or contributions, please see the main [README.md](./README.md).*

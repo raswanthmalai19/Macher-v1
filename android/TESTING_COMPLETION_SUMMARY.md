@@ -28,7 +28,7 @@ All remaining optional unit tests and checkpoint tasks for the Android Mobile Cl
 ## New Test Files Created
 
 ### 1. CallMonitorViewModelUnitTest.kt
-**Location:** `android/app/src/test/java/com/macher/android/ui/`  
+**Location:** `android/app/src/test/java/com/vocalshield/android/ui/`  
 **Purpose:** Unit tests for ViewModel state transitions  
 **Coverage:**
 - Monitoring start/stop state updates
@@ -41,7 +41,7 @@ All remaining optional unit tests and checkpoint tasks for the Android Mobile Cl
 **Validates:** Requirements 1.1, 5.1
 
 ### 2. CallMonitorScreenNeutralStateTest.kt
-**Location:** `android/app/src/test/java/com/macher/android/ui/`  
+**Location:** `android/app/src/test/java/com/vocalshield/android/ui/`  
 **Purpose:** Unit tests for neutral state display  
 **Coverage:**
 - Neutral state when no analysis results available
@@ -54,7 +54,7 @@ All remaining optional unit tests and checkpoint tasks for the Android Mobile Cl
 **Validates:** Requirement 5.7
 
 ### 3. FirstLaunchConsentFlowTest.kt
-**Location:** `android/app/src/test/java/com/macher/android/ui/`  
+**Location:** `android/app/src/test/java/com/vocalshield/android/ui/`  
 **Purpose:** Unit tests for first launch consent flow  
 **Coverage:**
 - Consent not granted on first launch
@@ -69,7 +69,7 @@ All remaining optional unit tests and checkpoint tasks for the Android Mobile Cl
 **Note:** Uses Robolectric for Android context testing
 
 ### 4. CallHistoryDisplayTest.kt
-**Location:** `android/app/src/test/java/com/macher/android/ui/`  
+**Location:** `android/app/src/test/java/com/vocalshield/android/ui/`  
 **Purpose:** Unit tests for call history display  
 **Coverage:**
 - History list rendering with multiple sessions
@@ -84,7 +84,7 @@ All remaining optional unit tests and checkpoint tasks for the Android Mobile Cl
 **Validates:** Requirements 12.3, 12.5
 
 ### 5. NavigationIntegrationTest.kt
-**Location:** `android/app/src/test/java/com/macher/android/integration/`  
+**Location:** `android/app/src/test/java/com/vocalshield/android/integration/`  
 **Purpose:** Integration tests for navigation  
 **Coverage:**
 - Navigation between CallMonitor, Settings, CallHistory screens
@@ -102,7 +102,7 @@ All remaining optional unit tests and checkpoint tasks for the Android Mobile Cl
 **Validates:** Requirement 9.4
 
 ### 6. ErrorScenarioTest.kt
-**Location:** `android/app/src/test/java/com/macher/android/domain/`  
+**Location:** `android/app/src/test/java/com/vocalshield/android/domain/`  
 **Purpose:** Unit tests for error scenarios  
 **Coverage:**
 - Device incompatibility detection
@@ -150,10 +150,10 @@ cd android
 ./gradlew test --tests "*ViewModelUnitTest"
 
 # UI tests
-./gradlew test --tests "com.macher.android.ui.*"
+./gradlew test --tests "com.vocalshield.android.ui.*"
 
 # Integration tests
-./gradlew test --tests "com.macher.android.integration.*"
+./gradlew test --tests "com.vocalshield.android.integration.*"
 
 # Error scenario tests
 ./gradlew test --tests "*ErrorScenarioTest"

@@ -1,4 +1,4 @@
-# MACHER Unified App - Implementation Complete ✅
+# VocalShield Unified App - Implementation Complete ✅
 
 **Date**: March 1, 2026  
 **Status**: ✅ Core Implementation Complete  
@@ -9,7 +9,7 @@
 
 ## 🎉 Project Summary
 
-MACHER is now a fully functional unified app with dual modes (Protected User + Guardian) and complete AWS backend integration. The app is ready for device testing and demo video creation.
+VocalShield is now a fully functional unified app with dual modes (Protected User + Guardian) and complete AWS backend integration. The app is ready for device testing and demo video creation.
 
 ---
 
@@ -256,7 +256,7 @@ WebSocket Client
 ## 📝 Configuration Guide
 
 ### Step 1: Update AWS URLs
-Edit `android/app/src/main/java/com/macher/android/util/Config.kt`:
+Edit `android/app/src/main/java/com/vocalshield/android/util/Config.kt`:
 
 ```kotlin
 const val WEBSOCKET_URL = "wss://YOUR_API_ID.execute-api.us-east-1.amazonaws.com/production"
@@ -292,7 +292,7 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 - Traditional solutions don't work
 
 ### Scene 2: Solution (60 seconds)
-- Introduce MACHER
+- Introduce VocalShield
 - Show onboarding flow
 - Demonstrate dual modes
 

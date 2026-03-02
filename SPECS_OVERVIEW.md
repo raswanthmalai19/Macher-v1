@@ -1,8 +1,8 @@
-# MACHER Complete Specifications Overview
+# VocalShield Complete Specifications Overview
 
 ## Project Summary
 
-MACHER is a real-time conversation firewall designed for the AWS 10,000 AIdeas Competition. The system protects users from voice-based financial fraud and social engineering attacks by analyzing phone conversations in real-time using AWS services and AI-powered fraud detection.
+VocalShield is a real-time conversation firewall designed for the AWS 10,000 AIdeas Competition. The system protects users from voice-based financial fraud and social engineering attacks by analyzing phone conversations in real-time using AWS services and AI-powered fraud detection.
 
 **Competition Tracks**: Social Good, Daily Life Enhancement  
 **Development Methodology**: Kiro Agentic Development with Spec-Driven Approach  
@@ -151,7 +151,7 @@ MACHER is a real-time conversation firewall designed for the AWS 10,000 AIdeas C
 **Location**: `.kiro/specs/deployment-cicd-pipeline/`  
 **Status**: ✅ Complete
 
-**Overview**: Automated CI/CD pipeline using GitHub Actions for building, testing, and deploying MACHER across multiple environments with blue-green deployment strategy.
+**Overview**: Automated CI/CD pipeline using GitHub Actions for building, testing, and deploying VocalShield across multiple environments with blue-green deployment strategy.
 
 **Key Metrics**:
 - **Requirements**: 16 requirements with 96 acceptance criteria
@@ -389,7 +389,7 @@ All specs designed for AWS Free Tier compliance:
 ## File Structure
 
 ```
-macher/
+vocalshield/
 ├── .kiro/
 │   ├── specs/
 │   │   ├── aws-infrastructure-foundation/
@@ -506,7 +506,7 @@ This property is tested with 100+ different Lambda configurations to ensure Free
 
 ## Contact and Resources
 
-**Project**: MACHER - Real-Time Conversation Firewall  
+**Project**: VocalShield - Real-Time Conversation Firewall  
 **Competition**: AWS 10,000 AIdeas Competition  
 **Development Tool**: Kiro Agentic IDE  
 **Methodology**: Requirements-First Spec-Driven Development  

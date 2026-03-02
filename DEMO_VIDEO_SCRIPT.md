@@ -1,4 +1,4 @@
-# MACHER - Demo Video Script
+# VocalShield - Demo Video Script
 
 **Duration**: 4-5 minutes  
 **Target Audience**: AWS 10,000 AIdeas Competition Judges  
@@ -23,7 +23,7 @@
 ## Scene 1: Opening (30 seconds)
 
 ### Visual
-- MACHER logo animation
+- VocalShield logo animation
 - Tagline: "Your AI Bodyguard Against Scam Calls"
 - Fade to presenter or screen recording
 
@@ -47,12 +47,12 @@
 - Elderly person looking at phone (stock footage)
 
 ### Script
-> "Meet MACHER - a privacy-first, AI-powered voice firewall that protects vulnerable users from financial fraud and social engineering attacks.
+> "Meet VocalShield - a privacy-first, AI-powered voice firewall that protects vulnerable users from financial fraud and social engineering attacks.
 >
-> Unlike traditional solutions that only check caller IDs, MACHER analyzes what's being said during the call and intervenes in real-time to protect users."
+> Unlike traditional solutions that only check caller IDs, VocalShield analyzes what's being said during the call and intervenes in real-time to protect users."
 
 ### On-Screen Text
-- "MACHER: Real-Time Voice Firewall"
+- "VocalShield: Real-Time Voice Firewall"
 - "Content analysis, not just caller ID"
 - "Privacy-first, AI-powered"
 
@@ -66,7 +66,7 @@
 - Dual-mode interface preview
 
 ### Script
-> "MACHER is a unified Android app with two modes:
+> "VocalShield is a unified Android app with two modes:
 >
 > Protected Mode - for vulnerable users. Simple, one-tap monitoring with clear visual indicators.
 >
@@ -156,7 +156,7 @@
 >
 > Guardians control the AI sensitivity, enable or disable interventions, and configure Family Loop alerts.
 >
-> When a high threat is detected, the guardian receives an immediate SMS: 'URGENT: MACHER detected a high threat. Please call your loved one immediately.'
+> When a high threat is detected, the guardian receives an immediate SMS: 'URGENT: VocalShield detected a high threat. Please call your loved one immediately.'
 >
 > This Family Loop ensures vulnerable users have backup protection even if they ignore the warnings."
 
@@ -177,7 +177,7 @@
 - Data flow visualization
 
 ### Script
-> "Here's what makes MACHER technically innovative:
+> "Here's what makes VocalShield technically innovative:
 >
 > The Android app captures call audio using the AudioRecord API and streams it via WebSocket to AWS API Gateway.
 >
@@ -208,13 +208,13 @@
 - Call to action
 
 ### Script
-> "MACHER addresses an $80 billion problem affecting millions of vulnerable Americans.
+> "VocalShield addresses an $80 billion problem affecting millions of vulnerable Americans.
 >
 > It's built entirely on AWS Free Tier services, making it accessible to everyone who needs protection.
 >
 > This project showcases AWS's most advanced AI services - Transcribe and Bedrock - in a real-world application that saves lives and money.
 >
-> MACHER: Your AI bodyguard against scam calls. Built with AWS. Developed with Kiro. Protecting vulnerable users everywhere.
+> VocalShield: Your AI bodyguard against scam calls. Built with AWS. Developed with Kiro. Protecting vulnerable users everywhere.
 >
 > Thank you."
 
@@ -222,7 +222,7 @@
 - "$80B problem solved"
 - "AWS Free Tier compliant"
 - "Social good + technical innovation"
-- "github.com/macher"
+- "github.com/vocalshield"
 - "Built with AWS | Developed with Kiro"
 
 ---
@@ -270,12 +270,12 @@
 ### Start Screen Recording:
 ```bash
 # On device
-adb shell screenrecord --bit-rate 8000000 /sdcard/macher_demo.mp4
+adb shell screenrecord --bit-rate 8000000 /sdcard/vocalshield_demo.mp4
 
 # Stop with Ctrl+C after recording
 
 # Pull to Mac
-adb pull /sdcard/macher_demo.mp4 ~/Desktop/
+adb pull /sdcard/vocalshield_demo.mp4 ~/Desktop/
 ```
 
 ### Alternative: Use Android Studio

@@ -1,4 +1,4 @@
-# MACHER - Quick Reference Guide
+# VocalShield - Quick Reference Guide
 
 **Last Updated**: March 1, 2026  
 **Status**: Ready for Competition Submission
@@ -30,10 +30,10 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 ## 📁 Project Structure
 
 ```
-MACHER/
+VocalShield/
 ├── android/                    # Android app
 │   ├── app/src/main/
-│   │   ├── java/com/macher/android/
+│   │   ├── java/com/vocalshield/android/
 │   │   │   ├── ui/            # UI screens & components
 │   │   │   ├── service/       # Business logic services
 │   │   │   ├── network/       # WebSocket client
@@ -51,7 +51,7 @@ MACHER/
 ## 🔑 Key Files
 
 ### Configuration
-- `android/app/src/main/java/com/macher/android/util/Config.kt`
+- `android/app/src/main/java/com/vocalshield/android/util/Config.kt`
   - WebSocket URL
   - REST API URL
   - Demo mode toggle
@@ -100,7 +100,7 @@ object Features {
 ### View Logs
 ```bash
 # All logs
-adb logcat | grep MACHER
+adb logcat | grep VocalShield
 
 # Specific component
 adb logcat | grep "WebSocketClient"
@@ -122,10 +122,10 @@ adb pull /sdcard/demo.mp4 ~/Desktop/
 ### Performance Monitoring
 ```bash
 # CPU usage
-adb shell top | grep macher
+adb shell top | grep vocalshield
 
 # Memory usage
-adb shell dumpsys meminfo com.macher.android
+adb shell dumpsys meminfo com.vocalshield.android
 
 # Battery stats
 adb shell dumpsys battery
@@ -138,7 +138,7 @@ adb shell dumpsys battery
 ### App Won't Install
 ```bash
 # Uninstall first
-adb uninstall com.macher.android
+adb uninstall com.vocalshield.android
 
 # Reinstall
 adb install app/build/outputs/apk/debug/app-debug.apk
@@ -240,7 +240,7 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 
 **Sections:**
 1. Opening (30s) - Problem statement
-2. Solution (45s) - MACHER overview
+2. Solution (45s) - VocalShield overview
 3. Protected Mode (90s) - Core demo
 4. Guardian Mode (60s) - Dashboard features
 5. Architecture (45s) - Technical innovation
@@ -286,10 +286,10 @@ adb pull /sdcard/demo.mp4 ~/Desktop/
 ### Build & Run
 - Build: `./gradlew assembleDebug`
 - Install: `adb install -r app/build/outputs/apk/debug/app-debug.apk`
-- Logs: `adb logcat | grep MACHER`
+- Logs: `adb logcat | grep VocalShield`
 
 ### Configuration
-- Config file: `android/app/src/main/java/com/macher/android/util/Config.kt`
+- Config file: `android/app/src/main/java/com/vocalshield/android/util/Config.kt`
 - Manifest: `android/app/src/main/AndroidManifest.xml`
 - Build config: `android/app/build.gradle.kts`
 
@@ -303,12 +303,12 @@ adb pull /sdcard/demo.mp4 ~/Desktop/
 ## 📞 Support
 
 ### Issues
-- Check logs: `adb logcat | grep MACHER`
+- Check logs: `adb logcat | grep VocalShield`
 - Review documentation
 - Check troubleshooting section
 
 ### Resources
-- GitHub: `github.com/macher`
+- GitHub: `github.com/vocalshield`
 - Docs: Project root directory
 - AWS: `aws.amazon.com/documentation`
 

@@ -1,6 +1,6 @@
-# MACHER Infrastructure
+# VocalShield Infrastructure
 
-AWS Infrastructure Foundation for MACHER - A real-time conversation firewall protecting users from voice-based financial fraud.
+AWS Infrastructure Foundation for VocalShield - A real-time conversation firewall protecting users from voice-based financial fraud.
 
 ## Overview
 
@@ -62,7 +62,7 @@ Mobile App → WebSocket API → Lambda Functions → DynamoDB
 
 ```bash
 git clone <repository-url>
-cd macher-infrastructure
+cd vocalshield-infrastructure
 ```
 
 ### 2. Install Dependencies
@@ -117,7 +117,7 @@ cdk bootstrap aws://$ACCOUNT_ID/us-east-1
 cdk synth -c environment=dev
 
 # View the generated template
-cat cdk.out/MACHER-dev.template.json
+cat cdk.out/VocalShield-dev.template.json
 ```
 
 #### 3. Preview Changes
@@ -179,7 +179,7 @@ After deployment, the stack outputs critical resource identifiers:
 ```bash
 # View all outputs
 aws cloudformation describe-stacks \
-  --stack-name MACHER-dev \
+  --stack-name VocalShield-dev \
   --query 'Stacks[0].Outputs'
 ```
 
@@ -202,12 +202,12 @@ Configuration values stored in AWS Systems Manager Parameter Store:
 ```bash
 # View all parameters
 aws ssm get-parameters-by-path \
-  --path /macher/dev \
+  --path /vocalshield/dev \
   --recursive
 
 # Update a parameter
 aws ssm put-parameter \
-  --name /macher/dev/audio-processor/fraud-threshold \
+  --name /vocalshield/dev/audio-processor/fraud-threshold \
   --value 75 \
   --overwrite
 ```
@@ -219,17 +219,17 @@ Sensitive values stored in AWS Secrets Manager:
 ```bash
 # View secret (without value)
 aws secretsmanager describe-secret \
-  --secret-id macher/dev/api-keys
+  --secret-id vocalshield/dev/api-keys
 
 # Retrieve secret value
 aws secretsmanager get-secret-value \
-  --secret-id macher/dev/api-keys \
+  --secret-id vocalshield/dev/api-keys \
   --query SecretString \
   --output text | jq .
 
 # Update secret
 aws secretsmanager put-secret-value \
-  --secret-id macher/dev/api-keys \
+  --secret-id vocalshield/dev/api-keys \
   --secret-string '{"mlServiceApiKey":"YOUR_REAL_KEY"}'
 ```
 
@@ -282,7 +282,7 @@ View real-time metrics:
 ```bash
 # Get dashboard URL from stack outputs
 aws cloudformation describe-stacks \
-  --stack-name MACHER-dev \
+  --stack-name VocalShield-dev \
   --query 'Stacks[0].Outputs[?OutputKey==`DashboardUrl`].OutputValue' \
   --output text
 ```
@@ -293,10 +293,10 @@ View Lambda function logs:
 
 ```bash
 # Connect Handler logs
-aws logs tail /aws/lambda/MACHER-ConnectHandler --follow
+aws logs tail /aws/lambda/VocalShield-ConnectHandler --follow
 
 # Audio Processor logs
-aws logs tail /aws/lambda/MACHER-AudioProcessor --follow
+aws logs tail /aws/lambda/VocalShield-AudioProcessor --follow
 ```
 
 ### X-Ray Traces
@@ -317,11 +317,11 @@ Check alarm status:
 ```bash
 # List all alarms
 aws cloudwatch describe-alarms \
-  --alarm-name-prefix MACHER
+  --alarm-name-prefix VocalShield
 
 # View alarm history
 aws cloudwatch describe-alarm-history \
-  --alarm-name MACHER-BillingAlarm
+  --alarm-name VocalShield-BillingAlarm
 ```
 
 ## Cost Management
@@ -348,7 +348,7 @@ aws ce get-cost-and-usage \
 
 # Check billing alarm status
 aws cloudwatch describe-alarms \
-  --alarm-names MACHER-BillingAlarm
+  --alarm-names VocalShield-BillingAlarm
 ```
 
 ### Cost Optimization Tips
@@ -367,7 +367,7 @@ aws cloudwatch describe-alarms \
 
 ```bash
 # Check stack status
-aws cloudformation describe-stacks --stack-name MACHER-dev
+aws cloudformation describe-stacks --stack-name VocalShield-dev
 
 # If in ROLLBACK_COMPLETE state, delete and redeploy
 cdk destroy -c environment=dev
@@ -378,10 +378,10 @@ cdk deploy -c environment=dev
 
 ```bash
 # Check function logs
-aws logs tail /aws/lambda/MACHER-AudioProcessor --follow
+aws logs tail /aws/lambda/VocalShield-AudioProcessor --follow
 
 # Check function configuration
-aws lambda get-function --function-name MACHER-AudioProcessor
+aws lambda get-function --function-name VocalShield-AudioProcessor
 ```
 
 **Issue**: WebSocket connection failures
@@ -389,7 +389,7 @@ aws lambda get-function --function-name MACHER-AudioProcessor
 ```bash
 # Test WebSocket endpoint
 wscat -c $(aws cloudformation describe-stacks \
-  --stack-name MACHER-dev \
+  --stack-name VocalShield-dev \
   --query 'Stacks[0].Outputs[?OutputKey==`WebSocketApiEndpoint`].OutputValue' \
   --output text)
 ```
@@ -412,11 +412,11 @@ wscat -c $(aws cloudformation describe-stacks \
 ```bash
 # View stack events
 aws cloudformation describe-stack-events \
-  --stack-name MACHER-dev \
+  --stack-name VocalShield-dev \
   --max-items 20
 
 # Rollback stack
-aws cloudformation rollback-stack --stack-name MACHER-dev
+aws cloudformation rollback-stack --stack-name VocalShield-dev
 ```
 
 ### Complete Stack Deletion
@@ -426,7 +426,7 @@ aws cloudformation rollback-stack --stack-name MACHER-dev
 cdk destroy -c environment=dev
 
 # Verify deletion
-aws cloudformation describe-stacks --stack-name MACHER-dev
+aws cloudformation describe-stacks --stack-name VocalShield-dev
 ```
 
 **Warning**: This deletes all resources including DynamoDB tables. Data cannot be recovered unless backups exist.
@@ -535,7 +535,7 @@ jobs:
 
 - **Issues**: Open an issue on GitHub
 - **Discussions**: Join our community discussions
-- **Email**: support@macher.example.com
+- **Email**: support@vocalshield.example.com
 
 ## License
 
@@ -547,4 +547,4 @@ Contributions welcome! Please read CONTRIBUTING.md for guidelines.
 
 ---
 
-**MACHER** - Your AI Bodyguard Against Scam Calls 🛡️
+**VocalShield** - Your AI Bodyguard Against Scam Calls 🛡️

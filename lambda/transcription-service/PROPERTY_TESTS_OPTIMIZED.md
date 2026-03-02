@@ -129,4 +129,4 @@ npm test -- tests/properties/ --coverage
 
 **Optimization Date**: February 23, 2026  
 **Optimized By**: Kiro AI Assistant  
-**Project**: MACHER - Real-Time Audio Transcription Service
+**Project**: VocalShield - Real-Time Audio Transcription Service

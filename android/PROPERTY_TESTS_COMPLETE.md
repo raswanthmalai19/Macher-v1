@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document summarizes the comprehensive property-based testing suite for the MACHER Android Mobile Client. All 49 correctness properties from the design document have been implemented using Kotest property testing framework.
+This document summarizes the comprehensive property-based testing suite for the VocalShield Android Mobile Client. All 49 correctness properties from the design document have been implemented using Kotest property testing framework.
 
 ## Test Coverage Summary
 
@@ -58,11 +58,11 @@ cd android
 
 ### Run Specific Test Suite
 ```bash
-./gradlew test --tests "com.macher.android.data.*"
-./gradlew test --tests "com.macher.android.domain.*"
-./gradlew test --tests "com.macher.android.repository.*"
-./gradlew test --tests "com.macher.android.ui.*"
-./gradlew test --tests "com.macher.android.integration.*"
+./gradlew test --tests "com.vocalshield.android.data.*"
+./gradlew test --tests "com.vocalshield.android.domain.*"
+./gradlew test --tests "com.vocalshield.android.repository.*"
+./gradlew test --tests "com.vocalshield.android.ui.*"
+./gradlew test --tests "com.vocalshield.android.integration.*"
 ```
 
 ### Run Property Tests Only

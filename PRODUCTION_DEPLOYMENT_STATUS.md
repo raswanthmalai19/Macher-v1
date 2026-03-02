@@ -1,4 +1,4 @@
-# MACHER - Production Deployment Status
+# VocalShield - Production Deployment Status
 
 **Date**: March 1, 2026  
 **Current Status**: Ready for AWS Backend Connection  
@@ -62,7 +62,7 @@
    aws configure
    
    # Check if stack exists
-   aws cloudformation describe-stacks --stack-name MACHER-dev
+   aws cloudformation describe-stacks --stack-name VocalShield-dev
    ```
 
 2. **If not deployed, deploy now:**
@@ -117,7 +117,7 @@
 ### Option 3: "AWS is already deployed"
 → Provide me the WebSocket URL from:
    - AWS Console → API Gateway → Stages → production
-   - Or CloudFormation → MACHER-dev → Outputs
+   - Or CloudFormation → VocalShield-dev → Outputs
 → I'll update config immediately and rebuild
 
 ---

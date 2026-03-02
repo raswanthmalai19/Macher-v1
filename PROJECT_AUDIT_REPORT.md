@@ -1,8 +1,8 @@
-# MACHER Project - Comprehensive Audit Report
+# VocalShield Project - Comprehensive Audit Report
 
 **Audit Date**: February 25, 2026  
 **Auditor**: Kiro AI Assistant  
-**Project**: MACHER - Real-Time Conversation Firewall
+**Project**: VocalShield - Real-Time Conversation Firewall
 
 ---
 

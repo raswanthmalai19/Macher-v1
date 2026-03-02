@@ -1,4 +1,4 @@
-# MACHER Unified App - Implementation Plan
+# VocalShield Unified App - Implementation Plan
 
 **Goal**: Single app with dual modes (Protected User + Guardian)  
 **Approach**: Phased implementation with testing at each step

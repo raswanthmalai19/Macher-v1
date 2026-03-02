@@ -1,4 +1,4 @@
-# MACHER Android App - Build Complete ✅
+# VocalShield Android App - Build Complete ✅
 
 **Build Date**: March 1, 2026  
 **APK Location**: `android/app/build/outputs/apk/debug/app-debug.apk`  
@@ -79,10 +79,10 @@
    ```
 
 5. **Launch the App**:
-   - Find "MACHER" in the app drawer
+   - Find "VocalShield" in the app drawer
    - Or from command line:
    ```bash
-   ~/Library/Android/sdk/platform-tools/adb shell am start -n com.macher.android/.ui.MainActivity
+   ~/Library/Android/sdk/platform-tools/adb shell am start -n com.vocalshield.android/.ui.MainActivity
    ```
 
 ### On Physical Android Device
@@ -109,7 +109,7 @@
    ```
 
 4. **Grant Permissions**:
-   - Open MACHER app
+   - Open VocalShield app
    - Grant Audio Recording permission
    - Grant Phone State permission
    - Grant Notifications permission (Android 13+)
@@ -154,7 +154,7 @@ To connect to real AWS backend:
 
 2. **Update Config**:
    ```kotlin
-   // android/app/src/main/java/com/macher/android/util/Config.kt
+   // android/app/src/main/java/com/vocalshield/android/util/Config.kt
    const val WEBSOCKET_URL = "wss://YOUR_API_ID.execute-api.us-east-1.amazonaws.com/production"
    const val DEMO_MODE = false  // Disable demo mode
    ```
@@ -317,14 +317,14 @@ cd android
 ### Installation Errors
 ```bash
 # Uninstall old version
-~/Library/Android/sdk/platform-tools/adb uninstall com.macher.android
+~/Library/Android/sdk/platform-tools/adb uninstall com.vocalshield.android
 
 # Reinstall
 ./gradlew installDebug
 ```
 
 ### Permission Errors
-- Go to Settings → Apps → MACHER → Permissions
+- Go to Settings → Apps → VocalShield → Permissions
 - Grant all required permissions manually
 
 ### Emulator Issues
@@ -341,7 +341,7 @@ cd android
 
 ## Success! 🎉
 
-The MACHER Android app is now built with:
+The VocalShield Android app is now built with:
 - ✅ Premium animated UI
 - ✅ Backend integration architecture
 - ✅ Demo mode for testing

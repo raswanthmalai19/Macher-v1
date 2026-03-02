@@ -1,4 +1,4 @@
-# MACHER - Final Deployment Checklist
+# VocalShield - Final Deployment Checklist
 
 **Date**: March 2, 2026  
 **Version**: 2.0.0  
@@ -114,10 +114,10 @@ cd /path/to/AIDEA
 
 After deployment, you'll see:
 ```
-✅ MACHER-dev
+✅ VocalShield-dev
 
 Outputs:
-MACHER-dev.WebSocketApiEndpoint = wss://abc123xyz.execute-api.us-east-1.amazonaws.com/production
+VocalShield-dev.WebSocketApiEndpoint = wss://abc123xyz.execute-api.us-east-1.amazonaws.com/production
 ```
 
 **Copy that WebSocket URL!**
@@ -258,7 +258,7 @@ The current APK works perfectly in demo mode with:
 ### Demo Video Script (3 minutes)
 
 **Intro (30 sec)**:
-"Voice scams cost $80 billion annually. MACHER uses behavioral AI to detect fraud in real-time."
+"Voice scams cost $80 billion annually. VocalShield uses behavioral AI to detect fraud in real-time."
 
 **Problem (30 sec)**:
 "Traditional solutions only block known numbers. Scammers constantly change tactics. We need to analyze what's being said, not just who's calling."
@@ -270,7 +270,7 @@ The current APK works perfectly in demo mode with:
 - Show progressive interventions (haptic, overlay, disconnect)
 
 **Impact (30 sec)**:
-"MACHER protects vulnerable users with privacy-first, on-device processing. Available as consumer app or enterprise SDK."
+"VocalShield protects vulnerable users with privacy-first, on-device processing. Available as consumer app or enterprise SDK."
 
 ### Pitch Deck Outline
 1. Problem: $80B voice fraud market
@@ -348,7 +348,7 @@ aws configure
 
 ## 🏆 Final Status
 
-**MACHER is PRODUCTION-READY with:**
+**VocalShield is PRODUCTION-READY with:**
 
 ✅ Multi-layer detection (metadata + manipulation + fusion)  
 ✅ Privacy-first architecture (on-device processing)  

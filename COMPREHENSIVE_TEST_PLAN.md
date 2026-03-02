@@ -1,4 +1,4 @@
-# MACHER - Comprehensive Test & Validation Plan
+# VocalShield - Comprehensive Test & Validation Plan
 
 **Objective**: Ensure ZERO loopholes for competition win  
 **Approach**: Test everything systematically  

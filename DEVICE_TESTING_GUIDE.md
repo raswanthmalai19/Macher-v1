@@ -1,4 +1,4 @@
-# MACHER - Device Testing Guide
+# VocalShield - Device Testing Guide
 
 **Date**: March 1, 2026  
 **Version**: 1.0.0  
@@ -18,7 +18,7 @@
 - Android Studio installed on Mac
 - ADB (Android Debug Bridge) configured
 - USB cable for device connection
-- MACHER APK built successfully
+- VocalShield APK built successfully
 
 ---
 
@@ -62,7 +62,7 @@ adb devices
 
 ---
 
-## Step 3: Install MACHER APK
+## Step 3: Install VocalShield APK
 
 ### Option A: Install via ADB
 ```bash
@@ -86,10 +86,10 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ### Verify Installation:
 ```bash
 # Check if app is installed
-adb shell pm list packages | grep macher
+adb shell pm list packages | grep vocalshield
 
 # Expected output:
-# package:com.macher.android
+# package:com.vocalshield.android
 ```
 
 ---
@@ -98,12 +98,12 @@ adb shell pm list packages | grep macher
 
 ### Launch App and Grant Permissions:
 
-1. **Open MACHER** on your device
+1. **Open VocalShield** on your device
 2. Complete onboarding flow
 3. Select role (Protected or Guardian)
 
 ### Grant Permissions Manually:
-Go to **Settings** → **Apps** → **MACHER** → **Permissions**
+Go to **Settings** → **Apps** → **VocalShield** → **Permissions**
 
 **Required Permissions:**
 - ✅ **Microphone** - For audio capture
@@ -113,14 +113,14 @@ Go to **Settings** → **Apps** → **MACHER** → **Permissions**
 
 **Special Permissions:**
 - ✅ **Display over other apps** - For scam warning overlay
-  - Settings → Apps → Special app access → Display over other apps → MACHER → Allow
+  - Settings → Apps → Special app access → Display over other apps → VocalShield → Allow
 
 ---
 
 ## Step 5: Configure AWS Backend (Real Mode)
 
 ### Update Configuration:
-Edit `android/app/src/main/java/com/macher/android/util/Config.kt`:
+Edit `android/app/src/main/java/com/vocalshield/android/util/Config.kt`:
 
 ```kotlin
 object Config {
@@ -286,10 +286,10 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 **Monitor Logs:**
 ```bash
 # View real-time logs
-adb logcat | grep MACHER
+adb logcat | grep VocalShield
 
 # Filter for performance metrics
-adb logcat | grep "MACHER.*latency"
+adb logcat | grep "VocalShield.*latency"
 ```
 
 **Key Metrics:**
@@ -309,7 +309,7 @@ adb logcat | grep "MACHER.*latency"
 adb shell dumpsys battery
 
 # Monitor power usage
-adb shell dumpsys batterystats | grep macher
+adb shell dumpsys batterystats | grep vocalshield
 ```
 
 **Target:** <5% battery drain per hour
@@ -342,7 +342,7 @@ adb shell dumpsys batterystats | grep macher
 
 ### Test Low Memory
 1. Open many apps
-2. Start MACHER monitoring
+2. Start VocalShield monitoring
 3. Switch between apps
 
 **Expected:**
@@ -356,8 +356,8 @@ adb shell dumpsys batterystats | grep macher
 
 ### View Logs in Real-Time:
 ```bash
-# All MACHER logs
-adb logcat | grep MACHER
+# All VocalShield logs
+adb logcat | grep VocalShield
 
 # Specific components
 adb logcat | grep "WebSocketClient"
@@ -369,10 +369,10 @@ adb logcat | grep "InterventionEngine"
 ### Save Logs to File:
 ```bash
 # Capture logs during testing
-adb logcat > macher_test_logs.txt
+adb logcat > vocalshield_test_logs.txt
 
 # Filter and save
-adb logcat | grep MACHER > macher_filtered.txt
+adb logcat | grep VocalShield > vocalshield_filtered.txt
 ```
 
 ### Check Crash Reports:
@@ -391,15 +391,15 @@ adb logcat | grep "Exception"
 ### Record Device Screen:
 ```bash
 # Start recording (max 3 minutes)
-adb shell screenrecord /sdcard/macher_demo.mp4
+adb shell screenrecord /sdcard/vocalshield_demo.mp4
 
 # Stop recording (Ctrl+C)
 
 # Pull video to Mac
-adb pull /sdcard/macher_demo.mp4 ~/Desktop/
+adb pull /sdcard/vocalshield_demo.mp4 ~/Desktop/
 
 # Delete from device
-adb shell rm /sdcard/macher_demo.mp4
+adb shell rm /sdcard/vocalshield_demo.mp4
 ```
 
 ### Recording Tips:
@@ -418,7 +418,7 @@ adb shell rm /sdcard/macher_demo.mp4
 **Solution:**
 ```bash
 # Clear app data
-adb shell pm clear com.macher.android
+adb shell pm clear com.vocalshield.android
 
 # Reinstall
 adb install -r app/build/outputs/apk/debug/app-debug.apk

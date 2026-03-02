@@ -69,12 +69,12 @@ This will:
 After deployment completes, you'll see output like:
 
 ```
-✅ MACHER-dev
+✅ VocalShield-dev
 
 Outputs:
-MACHER-dev.WebSocketApiEndpoint = wss://abc123xyz.execute-api.us-east-1.amazonaws.com/production
-MACHER-dev.ConnectionsTableName = MACHER-dev-Connections
-MACHER-dev.MetadataTableName = MACHER-dev-Metadata
+VocalShield-dev.WebSocketApiEndpoint = wss://abc123xyz.execute-api.us-east-1.amazonaws.com/production
+VocalShield-dev.ConnectionsTableName = VocalShield-dev-Connections
+VocalShield-dev.MetadataTableName = VocalShield-dev-Metadata
 ...
 ```
 
@@ -92,11 +92,11 @@ npm install
 cdk synth
 
 # Deploy to AWS
-cdk deploy MACHER-dev --require-approval never
+cdk deploy VocalShield-dev --require-approval never
 
 # Get outputs
 aws cloudformation describe-stacks \
-  --stack-name MACHER-dev \
+  --stack-name VocalShield-dev \
   --query 'Stacks[0].Outputs' \
   --output table
 ```

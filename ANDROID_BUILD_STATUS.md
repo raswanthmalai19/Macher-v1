@@ -1,4 +1,4 @@
-# MACHER Android Build Status
+# VocalShield Android Build Status
 
 **Date**: March 1, 2026  
 **Status**: Ready to Build  
@@ -25,7 +25,7 @@ android/
 │   └── src/
 │       ├── main/
 │       │   ├── AndroidManifest.xml           ✅ Complete
-│       │   ├── java/com/macher/android/
+│       │   ├── java/com/vocalshield/android/
 │       │   │   ├── data/                     ✅ Complete (5 files)
 │       │   │   ├── domain/                   ✅ Complete (11 files)
 │       │   │   ├── repository/               ✅ Complete (6 files)
@@ -88,10 +88,10 @@ Expected output:
 
 ```bash
 # Launch app
-~/Library/Android/sdk/platform-tools/adb shell am start -n com.macher.android/.ui.MainActivity
+~/Library/Android/sdk/platform-tools/adb shell am start -n com.vocalshield.android/.ui.MainActivity
 
 # Watch logs
-~/Library/Android/sdk/platform-tools/adb logcat | grep MACHER
+~/Library/Android/sdk/platform-tools/adb logcat | grep VocalShield
 ```
 
 ---

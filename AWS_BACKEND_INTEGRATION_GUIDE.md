@@ -1,6 +1,6 @@
 # AWS Backend Integration Guide
 
-This guide explains how to connect the MACHER Android app to the real AWS backend.
+This guide explains how to connect the VocalShield Android app to the real AWS backend.
 
 ---
 
@@ -15,7 +15,7 @@ The app is in **Demo Mode** with simulated backend responses. To enable real AWS
 ### From AWS Console
 
 1. Go to **AWS Console** → **API Gateway**
-2. Find your **WebSocket API** (should be named something like "MACHERWebSocketAPI")
+2. Find your **WebSocket API** (should be named something like "VocalShieldWebSocketAPI")
 3. Click on **Stages** in the left sidebar
 4. Select your stage (e.g., "production" or "dev")
 5. Copy the **WebSocket URL** - it looks like:
@@ -30,7 +30,7 @@ If you deployed using CDK, the WebSocket URL should be in the stack outputs:
 ```bash
 # List stack outputs
 aws cloudformation describe-stacks \
-  --stack-name MACHERStack \
+  --stack-name VocalShieldStack \
   --query 'Stacks[0].Outputs'
 
 # Look for output with key like "WebSocketApiUrl"
@@ -40,7 +40,7 @@ aws cloudformation describe-stacks \
 
 ## Step 2: Update Android Config
 
-Edit `android/app/src/main/java/com/macher/android/util/Config.kt`:
+Edit `android/app/src/main/java/com/vocalshield/android/util/Config.kt`:
 
 ```kotlin
 object Config {
@@ -71,13 +71,13 @@ object Config {
 
 ## Step 3: Implement Full WebSocket Client
 
-Create `android/app/src/main/java/com/macher/android/network/WebSocketClient.kt`:
+Create `android/app/src/main/java/com/vocalshield/android/network/WebSocketClient.kt`:
 
 ```kotlin
-package com.macher.android.network
+package com.vocalshield.android.network
 
-import com.macher.android.util.Config
-import com.macher.android.util.Logger
+import com.vocalshield.android.util.Config
+import com.vocalshield.android.util.Logger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import okhttp3.*
@@ -148,16 +148,16 @@ class WebSocketClient {
 
 ## Step 4: Implement Audio Capture Service
 
-Create `android/app/src/main/java/com/macher/android/service/AudioCaptureService.kt`:
+Create `android/app/src/main/java/com/vocalshield/android/service/AudioCaptureService.kt`:
 
 ```kotlin
-package com.macher.android.service
+package com.vocalshield.android.service
 
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
-import com.macher.android.util.Config
-import com.macher.android.util.Logger
+import com.vocalshield.android.util.Config
+import com.vocalshield.android.util.Logger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
@@ -222,7 +222,7 @@ class AudioCaptureService {
 
 ## Step 5: Update MonitoringManager
 
-Update `android/app/src/main/java/com/macher/android/service/MonitoringManager.kt`:
+Update `android/app/src/main/java/com/vocalshield/android/service/MonitoringManager.kt`:
 
 ```kotlin
 class MonitoringManager(private val context: Context) {

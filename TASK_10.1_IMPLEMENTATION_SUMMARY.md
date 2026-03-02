@@ -7,8 +7,8 @@ Successfully implemented the SNS topic for Family Loop notifications as specifie
 
 ### 1. SNS Topic Construct (`lib/constructs/sns-topic.ts`)
 Created a new CDK construct that defines:
-- **Topic Name**: `MACHER-FamilyLoop-{Environment}`
-- **Display Name**: "MACHER Fraud Alerts"
+- **Topic Name**: `VocalShield-FamilyLoop-{Environment}`
+- **Display Name**: "VocalShield Fraud Alerts"
 - **Topic Type**: Standard (not FIFO) for cost optimization
 - **Tags**: Component, Project, Environment, ManagedBy, CostCenter
 
@@ -17,8 +17,8 @@ Key features:
 - Proper tagging for cost tracking and resource organization
 - Environment-specific naming for multi-environment support
 
-### 2. Stack Integration (`lib/macher-stack.ts`)
-Integrated the SNS topic into the main MACHER stack:
+### 2. Stack Integration (`lib/vocalshield-stack.ts`)
+Integrated the SNS topic into the main VocalShield stack:
 - Instantiated the SNS topic construct
 - Granted Audio Processor Lambda permission to publish to the topic
 - Added `SNS_TOPIC_ARN` environment variable to Audio Processor Lambda
@@ -56,7 +56,7 @@ Verified the synthesized CloudFormation template includes:
 {
   "Type": "AWS::SNS::Topic",
   "Properties": {
-    "DisplayName": "MACHER Fraud Alerts",
+    "DisplayName": "VocalShield Fraud Alerts",
     "FifoTopic": false,
     "Tags": [...]
   }
@@ -90,7 +90,7 @@ The implementation follows Free Tier best practices:
 ## Post-Deployment Configuration
 
 **Note**: Email and SMS subscriptions must be configured post-deployment via:
-- AWS Console: SNS → Topics → MACHER-FamilyLoop-{env} → Create subscription
+- AWS Console: SNS → Topics → VocalShield-FamilyLoop-{env} → Create subscription
 - AWS CLI: `aws sns subscribe --topic-arn <arn> --protocol email --notification-endpoint user@example.com`
 
 This is intentional as subscriptions require user confirmation and are user-specific.
@@ -105,7 +105,7 @@ import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
 const sns = new SNSClient({});
 await sns.send(new PublishCommand({
   TopicArn: process.env.SNS_TOPIC_ARN,
-  Subject: 'MACHER Fraud Alert',
+  Subject: 'VocalShield Fraud Alert',
   Message: JSON.stringify({
     sessionId: 'session-123',
     timestamp: Date.now(),
@@ -119,7 +119,7 @@ await sns.send(new PublishCommand({
 ## Files Modified/Created
 
 1. **Created**: `lib/constructs/sns-topic.ts` - SNS topic construct
-2. **Modified**: `lib/macher-stack.ts` - Integrated SNS topic into stack
+2. **Modified**: `lib/vocalshield-stack.ts` - Integrated SNS topic into stack
 3. **Created**: `tests/unit/sns-topic.test.ts` - Unit tests for SNS topic
 4. **Created**: `TASK_10.1_IMPLEMENTATION_SUMMARY.md` - This summary document
 

@@ -1,4 +1,4 @@
-# MACHER - Complete Build and Test Guide
+# VocalShield - Complete Build and Test Guide
 
 **Date**: March 1, 2026  
 **Platform**: macOS (M1/M2/M3 or Intel)  
@@ -10,7 +10,7 @@
 
 This guide will help you:
 1. ✅ Install Android development tools on Mac
-2. ✅ Build the MACHER APK
+2. ✅ Build the VocalShield APK
 3. ✅ Test on emulator and real device
 4. ✅ Create demo mode for competition video
 5. ✅ Generate all competition materials
@@ -148,7 +148,7 @@ ls -lh app-debug.apk
 # - Category: Phone
 # - Device: Pixel 7
 # - System Image: API 34 (Android 14) - Download if needed
-# - AVD Name: MACHER_Test
+# - AVD Name: VocalShield_Test
 # - Click "Finish"
 ```
 
@@ -156,7 +156,7 @@ ls -lh app-debug.apk
 
 ```bash
 # In Android Studio Device Manager:
-# Click ▶️ (Play) button next to MACHER_Test
+# Click ▶️ (Play) button next to VocalShield_Test
 
 # Wait 2-3 minutes for emulator to boot
 ```
@@ -184,7 +184,7 @@ cd ~/Library/Android/sdk/platform-tools
 ### Step 3.4: Test Basic Functionality
 
 1. **Launch App**
-   - Find "MACHER" in app drawer
+   - Find "VocalShield" in app drawer
    - Tap to open
 
 2. **Grant Permissions**
@@ -194,7 +194,7 @@ cd ~/Library/Android/sdk/platform-tools
 3. **Enable Accessibility Service**
    - App will prompt to enable Accessibility
    - Tap "Enable" → Opens Settings
-   - Find "MACHER" in list
+   - Find "VocalShield" in list
    - Toggle ON
    - Tap "Allow" on warning
    - Go back to app
@@ -210,7 +210,7 @@ cd ~/Library/Android/sdk/platform-tools
 ```bash
 # In another terminal:
 cd ~/Library/Android/sdk/platform-tools
-./adb logcat | grep MACHER
+./adb logcat | grep VocalShield
 
 # Look for:
 # - "App started"
@@ -265,12 +265,12 @@ cd ~/Library/Android/sdk/platform-tools
 **This is the moment of truth!**
 
 ```bash
-# 1. Open MACHER on phone
+# 1. Open VocalShield on phone
 # 2. Enable monitoring
 # 3. Call your phone from another phone
 # 4. Answer the call
 # 5. Speak into the phone
-# 6. Watch MACHER for:
+# 6. Watch VocalShield for:
 #    - Audio capture indicator
 #    - WebSocket connection
 #    - Transcription (if enabled)
@@ -279,7 +279,7 @@ cd ~/Library/Android/sdk/platform-tools
 
 **Check logs during call:**
 ```bash
-./adb logcat | grep MACHER
+./adb logcat | grep VocalShield
 
 # Look for:
 # ✅ "Audio capture started"
@@ -355,7 +355,7 @@ This will be indistinguishable from real operation in the demo video.
 
 ```bash
 # While app is running:
-./adb shell dumpsys meminfo com.macher.android
+./adb shell dumpsys meminfo com.vocalshield.android
 
 # Check:
 # - Total PSS: Should be <100 MB
@@ -366,7 +366,7 @@ This will be indistinguishable from real operation in the demo video.
 
 ```bash
 # While app is running:
-./adb shell top | grep macher
+./adb shell top | grep vocalshield
 
 # Target:
 # - <5% CPU when idle
@@ -386,7 +386,7 @@ This will be indistinguishable from real operation in the demo video.
    - Existing solutions don't analyze call content
 
 2. **Solution** (1 minute)
-   - MACHER: Real-time AI fraud detection
+   - VocalShield: Real-time AI fraud detection
    - Privacy-first: No audio storage
    - AWS-powered: Transcribe + Bedrock
 
@@ -488,7 +488,7 @@ rm -rf app/build
 
 ```bash
 # Uninstall old version
-./adb uninstall com.macher.android
+./adb uninstall com.vocalshield.android
 
 # Reinstall
 ./adb install app-debug.apk

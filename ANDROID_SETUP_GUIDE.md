@@ -43,7 +43,7 @@ Android Studio will automatically install:
 
 ---
 
-## Part 2: Open MACHER Project (5 minutes)
+## Part 2: Open VocalShield Project (5 minutes)
 
 ### 1. Open the Android Project
 
@@ -181,8 +181,8 @@ cd /path/to/MACHER/android
 
 ```bash
 # First, create a keystore (one-time setup):
-keytool -genkey -v -keystore macher-release.keystore \
-  -alias macher -keyalg RSA -keysize 2048 -validity 10000
+keytool -genkey -v -keystore vocalshield-release.keystore \
+  -alias vocalshield -keyalg RSA -keysize 2048 -validity 10000
 
 # You'll be prompted for:
 # - Keystore password (remember this!)
@@ -194,9 +194,9 @@ cd /path/to/MACHER/android
 
 # Sign the APK:
 jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
-  -keystore macher-release.keystore \
+  -keystore vocalshield-release.keystore \
   app/build/outputs/apk/release/app-release-unsigned.apk \
-  macher
+  vocalshield
 
 # Verify signature:
 jarsigner -verify -verbose -certs \
@@ -237,10 +237,10 @@ cd ~/Library/Android/sdk/platform-tools
 ### Launch the App
 
 ```bash
-# On device/emulator, find "MACHER" app and tap to open
+# On device/emulator, find "VocalShield" app and tap to open
 
 # OR launch from command line:
-./adb shell am start -n com.macher/.MainActivity
+./adb shell am start -n com.vocalshield/.MainActivity
 ```
 
 ---
@@ -252,10 +252,10 @@ Your app needs Accessibility Service permission to capture call audio.
 ### On Device/Emulator:
 
 ```bash
-# 1. Open MACHER app
+# 1. Open VocalShield app
 # 2. App will prompt for Accessibility permission
 # 3. Tap "Enable" → Opens Settings
-# 4. Find "MACHER" in the list
+# 4. Find "VocalShield" in the list
 # 5. Toggle ON
 # 6. Tap "Allow" on the warning dialog
 # 7. Go back to the app
@@ -265,10 +265,10 @@ Your app needs Accessibility Service permission to capture call audio.
 
 ```bash
 # Check if service is running:
-./adb shell dumpsys accessibility | grep MACHER
+./adb shell dumpsys accessibility | grep VocalShield
 
 # You should see:
-# Service[label=MACHER Audio Capture,...]
+# Service[label=VocalShield Audio Capture,...]
 ```
 
 ---
@@ -278,7 +278,7 @@ Your app needs Accessibility Service permission to capture call audio.
 ### Test 1: Basic UI Test (Emulator or Device)
 
 ```bash
-# 1. Open MACHER app
+# 1. Open VocalShield app
 # 2. Grant Accessibility permission
 # 3. Toggle "Monitoring Enabled" ON
 # 4. Check that UI shows:
@@ -311,12 +311,12 @@ Your app needs Accessibility Service permission to capture call audio.
 **WARNING**: This is the critical test that may not work!
 
 ```bash
-# 1. Make sure MACHER is running
+# 1. Make sure VocalShield is running
 # 2. Make sure Monitoring is ON
 # 3. Call your phone from another phone
 # 4. Answer the call
 # 5. Speak into the phone
-# 6. Check if MACHER:
+# 6. Check if VocalShield:
 #    - Captures audio (check logs)
 #    - Sends to AWS (check CloudWatch)
 #    - Shows transcription (if enabled)
@@ -327,7 +327,7 @@ Your app needs Accessibility Service permission to capture call audio.
 
 ```bash
 # In another terminal, watch logs:
-./adb logcat | grep MACHER
+./adb logcat | grep VocalShield
 
 # Look for:
 # - "Audio capture started"
@@ -380,7 +380,7 @@ echo "sdk.dir=/Users/$(whoami)/Library/Android/sdk" > local.properties
 ```bash
 # Error: "INSTALL_FAILED_UPDATE_INCOMPATIBLE"
 # Solution: Uninstall old version first
-./adb uninstall com.macher
+./adb uninstall com.vocalshield
 ./adb install app-debug.apk
 
 # Error: "INSTALL_FAILED_INSUFFICIENT_STORAGE"
@@ -397,7 +397,7 @@ echo "sdk.dir=/Users/$(whoami)/Library/Android/sdk" > local.properties
 # Check if service is enabled:
 ./adb shell settings get secure enabled_accessibility_services
 
-# Should include: com.macher/.AudioCaptureService
+# Should include: com.vocalshield/.AudioCaptureService
 
 # If not working:
 # 1. Try different device (Pixel phones work best)
@@ -443,7 +443,7 @@ echo "sdk.dir=/Users/$(whoami)/Library/Android/sdk" > local.properties
 
 ```bash
 # While app is running:
-./adb shell dumpsys meminfo com.macher
+./adb shell dumpsys meminfo com.vocalshield
 
 # Look for:
 # - Total PSS: Should be <100 MB
@@ -454,7 +454,7 @@ echo "sdk.dir=/Users/$(whoami)/Library/Android/sdk" > local.properties
 
 ```bash
 # While app is running:
-./adb shell top | grep macher
+./adb shell top | grep vocalshield
 
 # CPU usage should be <5% when idle
 # CPU usage should be <20% during active call
@@ -468,10 +468,10 @@ echo "sdk.dir=/Users/$(whoami)/Library/Android/sdk" > local.properties
 
 ```bash
 # Pull APK from device:
-./adb pull /data/app/com.macher-*/base.apk macher.apk
+./adb pull /data/app/com.vocalshield-*/base.apk vocalshield.apk
 
 # Or use the built APK:
-cp android/app/build/outputs/apk/debug/app-debug.apk ~/Desktop/MACHER.apk
+cp android/app/build/outputs/apk/debug/app-debug.apk ~/Desktop/VocalShield.apk
 ```
 
 ### Share APK via Cloud:
@@ -497,13 +497,13 @@ cd /path/to/MACHER/android
 ./adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 # Launch app
-./adb shell am start -n com.macher/.MainActivity
+./adb shell am start -n com.vocalshield/.MainActivity
 
 # View logs
-./adb logcat | grep MACHER
+./adb logcat | grep VocalShield
 
 # Uninstall app
-./adb uninstall com.macher
+./adb uninstall com.vocalshield
 
 # Check connected devices
 ./adb devices
@@ -534,7 +534,7 @@ cd /path/to/MACHER/android
 - **Android Studio Issues**: https://developer.android.com/studio/troubleshoot
 - **ADB Commands**: https://developer.android.com/studio/command-line/adb
 - **Accessibility Service**: https://developer.android.com/guide/topics/ui/accessibility/service
-- **MACHER Logs**: Check CloudWatch Logs in AWS Console
+- **VocalShield Logs**: Check CloudWatch Logs in AWS Console
 
 ---
 

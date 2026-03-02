@@ -1,4 +1,4 @@
-# MACHER - Final Build Status
+# VocalShield - Final Build Status
 
 **Date**: March 1, 2026  
 **Build**: v1.0.0-beta  
@@ -67,7 +67,7 @@ cd android
 
 ### Testing Progressive Intervention
 
-1. **Launch MACHER**
+1. **Launch VocalShield**
 2. **Tap "START MONITORING"**
 3. **Watch the progression**:
    - **0-2s**: Normal conversation, green indicator
@@ -189,10 +189,10 @@ cd android
 
 **Script**:
 ```
-"MACHER is your AI bodyguard against scam calls.
+"VocalShield is your AI bodyguard against scam calls.
 
 [Show app launch]
-When you receive a call, MACHER monitors the conversation in real-time.
+When you receive a call, VocalShield monitors the conversation in real-time.
 
 [Tap START MONITORING]
 If suspicious patterns are detected...
@@ -210,7 +210,7 @@ Clear instructions tell you exactly what NOT to do.
 You can hang up immediately, or override if you know the caller.
 
 [Show privacy notice]
-MACHER NEVER stores your call audio. Everything happens in memory only.
+VocalShield NEVER stores your call audio. Everything happens in memory only.
 
 Your AI bodyguard. Always watching. Always protecting."
 ```
@@ -285,7 +285,7 @@ private fun disconnectCall() {
 - Show confusion and stress
 
 ### Scene 2: Solution Introduction (10 seconds)
-- MACHER logo and tagline
+- VocalShield logo and tagline
 - "Your AI Bodyguard Against Scam Calls"
 
 ### Scene 3: App Demo (60 seconds)
@@ -357,15 +357,15 @@ private fun disconnectCall() {
 
 ### vs. TrueCaller
 - ❌ TrueCaller: Caller ID only (metadata)
-- ✅ MACHER: Content analysis (what's being said)
+- ✅ VocalShield: Content analysis (what's being said)
 
 ### vs. RoboKiller
 - ❌ RoboKiller: Blocks known numbers
-- ✅ MACHER: Detects novel scams in real-time
+- ✅ VocalShield: Detects novel scams in real-time
 
 ### vs. Carrier Solutions
 - ❌ Carriers: Passive blocking
-- ✅ MACHER: Active intervention during call
+- ✅ VocalShield: Active intervention during call
 
 ### Our Advantage
 - ✅ **Progressive Intervention**: Not just alerts, but escalating actions
@@ -447,7 +447,7 @@ private fun disconnectCall() {
 
 ## 🎉 Conclusion
 
-MACHER now has a **fully operational Progressive Intervention System** that:
+VocalShield now has a **fully operational Progressive Intervention System** that:
 
 1. ✅ Detects threats in real-time (simulated)
 2. ✅ Escalates interventions progressively (3 levels)

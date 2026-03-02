@@ -5,7 +5,7 @@
 ### For WebSocket URL:
 1. Go to [AWS Console](https://console.aws.amazon.com/)
 2. Navigate to **API Gateway**
-3. Find your WebSocket API (should be named "MACHER" or similar)
+3. Find your WebSocket API (should be named "VocalShield" or similar)
 4. Click on **Stages** in the left menu
 5. Click on **production** (or **dev**)
 6. Copy the **WebSocket URL** - it looks like:
@@ -36,7 +36,7 @@ aws configure
 
 # Get stack outputs
 aws cloudformation describe-stacks \
-  --stack-name MACHER-dev \
+  --stack-name VocalShield-dev \
   --query 'Stacks[0].Outputs' \
   --output json
 ```
@@ -50,7 +50,7 @@ This will show you all the outputs including:
 ## Option 3: Check CloudFormation Console
 
 1. Go to [AWS CloudFormation Console](https://console.aws.amazon.com/cloudformation)
-2. Find stack named **MACHER-dev**
+2. Find stack named **VocalShield-dev**
 3. Click on the stack
 4. Go to **Outputs** tab
 5. Look for:

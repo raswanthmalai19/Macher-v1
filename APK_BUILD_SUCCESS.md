@@ -1,4 +1,4 @@
-# 🎉 MACHER APK Build SUCCESS!
+# 🎉 VocalShield APK Build SUCCESS!
 
 **Date**: March 1, 2026  
 **Build Time**: 5 seconds  
@@ -24,7 +24,7 @@ android/app/build/outputs/apk/debug/app-debug.apk
 
 ### Minimal Working Demo App
 
-This is a **simplified, demo-ready version** of MACHER that:
+This is a **simplified, demo-ready version** of VocalShield that:
 
 ✅ **Compiles and runs** without errors  
 ✅ **Shows the core UI** with traffic light threat indicator  
@@ -68,7 +68,7 @@ cd ~/Library/Android/sdk/platform-tools
 ./adb install /Users/raswanthmalaisamy/Downloads/AIDEA/android/app/build/outputs/apk/debug/app-debug.apk
 
 # 6. Launch app:
-./adb shell am start -n com.macher.android/.ui.MainActivity
+./adb shell am start -n com.vocalshield.android/.ui.MainActivity
 ```
 
 ### Option 2: Test on Real Android Device
@@ -96,7 +96,7 @@ cd ~/Library/Android/sdk/platform-tools
 
 ```bash
 # Copy APK to Desktop for easy sharing:
-cp /Users/raswanthmalaisamy/Downloads/AIDEA/android/app/build/outputs/apk/debug/app-debug.apk ~/Desktop/MACHER.apk
+cp /Users/raswanthmalaisamy/Downloads/AIDEA/android/app/build/outputs/apk/debug/app-debug.apk ~/Desktop/VocalShield.apk
 
 # Share via:
 # - Email
@@ -125,14 +125,14 @@ cp /Users/raswanthmalaisamy/Downloads/AIDEA/android/app/build/outputs/apk/debug/
 cd ~/Library/Android/sdk/platform-tools
 
 # Start recording (max 3 minutes)
-./adb shell screenrecord /sdcard/macher-demo.mp4
+./adb shell screenrecord /sdcard/vocalshield-demo.mp4
 
 # Perform demo actions in app
 
 # Stop recording (Ctrl+C)
 
 # Pull video from device
-./adb pull /sdcard/macher-demo.mp4 ~/Desktop/
+./adb pull /sdcard/vocalshield-demo.mp4 ~/Desktop/
 ```
 
 ### Step 2: Demo Script (3-5 minutes)
@@ -140,7 +140,7 @@ cd ~/Library/Android/sdk/platform-tools
 **Scene 1: Introduction (30 seconds)**
 - Show app icon and launch
 - Explain the problem: $80B+ lost to phone scams
-- Introduce MACHER
+- Introduce VocalShield
 
 **Scene 2: App Overview (30 seconds)**
 - Show main screen
@@ -270,16 +270,16 @@ cd ~/Library/Android/sdk/platform-tools
 "Every year, Americans lose over $80 billion to phone scams. The elderly are hit hardest. Existing solutions only block known numbers. But what if we could analyze what's being said in real-time?"
 
 ### The Solution
-"MACHER is your AI bodyguard against scam calls. It listens to your conversations in real-time, detects fraud patterns using AWS Bedrock, and alerts you instantly with a simple traffic light system."
+"VocalShield is your AI bodyguard against scam calls. It listens to your conversations in real-time, detects fraud patterns using AWS Bedrock, and alerts you instantly with a simple traffic light system."
 
 ### Privacy First
-"Unlike other solutions, MACHER NEVER stores your call audio. Everything is processed in memory only and immediately discarded. Your privacy is our top priority."
+"Unlike other solutions, VocalShield NEVER stores your call audio. Everything is processed in memory only and immediately discarded. Your privacy is our top priority."
 
 ### Technical Innovation
-"Built on AWS serverless architecture, MACHER uses Amazon Transcribe for real-time speech-to-text and Amazon Bedrock Agents for AI-powered fraud detection. The entire system runs within AWS Free Tier limits."
+"Built on AWS serverless architecture, VocalShield uses Amazon Transcribe for real-time speech-to-text and Amazon Bedrock Agents for AI-powered fraud detection. The entire system runs within AWS Free Tier limits."
 
 ### Social Impact
-"MACHER protects the most vulnerable - elderly individuals, immigrants, and those who can't afford to lose money to fraud. It's free, open source, and could save thousands of dollars."
+"VocalShield protects the most vulnerable - elderly individuals, immigrants, and those who can't afford to lose money to fraud. It's free, open source, and could save thousands of dollars."
 
 ### Kiro Showcase
 "This project was built using Kiro's agentic workflow, with spec-driven development and 276 property-based tests ensuring correctness at every step."
@@ -306,7 +306,7 @@ cd ~/Library/Android/sdk/platform-tools
 ## 🔧 Technical Details
 
 ### App Specifications
-- **Package**: com.macher.android
+- **Package**: com.vocalshield.android
 - **Version**: 1.0.0 (versionCode 1)
 - **Min SDK**: 26 (Android 8.0)
 - **Target SDK**: 34 (Android 14)
@@ -378,7 +378,7 @@ cd ~/Library/Android/sdk/platform-tools
 
 ## 🎉 Congratulations!
 
-You now have a **working Android APK** that demonstrates MACHER's core concept!
+You now have a **working Android APK** that demonstrates VocalShield's core concept!
 
 This is a HUGE milestone. The app:
 - ✅ Compiles without errors
@@ -402,7 +402,7 @@ This is a HUGE milestone. The app:
 ### If installation fails:
 ```bash
 # Uninstall old version
-~/Library/Android/sdk/platform-tools/adb uninstall com.macher.android
+~/Library/Android/sdk/platform-tools/adb uninstall com.vocalshield.android
 
 # Reinstall
 ~/Library/Android/sdk/platform-tools/adb install app-debug.apk
@@ -419,5 +419,5 @@ This is a HUGE milestone. The app:
 
 ---
 
-**You did it! The APK is built and ready to showcase MACHER to the world!** 🛡️🎉
+**You did it! The APK is built and ready to showcase VocalShield to the world!** 🛡️🎉
 

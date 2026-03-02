@@ -17,7 +17,7 @@ We'll build TWO APKs:
 ## Build 1: DEMO MODE APK
 
 ### Step 1: Set Demo Mode
-Edit `android/app/src/main/java/com/macher/android/util/Config.kt`:
+Edit `android/app/src/main/java/com/vocalshield/android/util/Config.kt`:
 ```kotlin
 const val DEMO_MODE = true  // ← Set to true
 ```
@@ -30,7 +30,7 @@ cd android
 
 ### Step 3: Copy APK
 ```bash
-cp app/build/outputs/apk/debug/app-debug.apk ../builds/macher-demo.apk
+cp app/build/outputs/apk/debug/app-debug.apk ../builds/vocalshield-demo.apk
 ```
 
 ### Features:
@@ -45,7 +45,7 @@ cp app/build/outputs/apk/debug/app-debug.apk ../builds/macher-demo.apk
 ## Build 2: REAL MODE APK
 
 ### Step 1: Set Real Mode
-Edit `android/app/src/main/java/com/macher/android/util/Config.kt`:
+Edit `android/app/src/main/java/com/vocalshield/android/util/Config.kt`:
 ```kotlin
 const val DEMO_MODE = false  // ← Set to false
 ```
@@ -67,7 +67,7 @@ cd android
 
 ### Step 4: Copy APK
 ```bash
-cp app/build/outputs/apk/debug/app-debug.apk ../builds/macher-real.apk
+cp app/build/outputs/apk/debug/app-debug.apk ../builds/vocalshield-real.apk
 ```
 
 ### Features:
@@ -82,7 +82,7 @@ cp app/build/outputs/apk/debug/app-debug.apk ../builds/macher-real.apk
 ## Verification
 
 ### Demo Mode Testing:
-1. Install: `adb install builds/macher-demo.apk`
+1. Install: `adb install builds/vocalshield-demo.apk`
 2. Open app
 3. Complete onboarding
 4. Start monitoring
@@ -91,7 +91,7 @@ cp app/build/outputs/apk/debug/app-debug.apk ../builds/macher-real.apk
 7. Check interventions trigger
 
 ### Real Mode Testing:
-1. Install: `adb install builds/macher-real.apk`
+1. Install: `adb install builds/vocalshield-real.apk`
 2. Open app
 3. Grant permissions
 4. Start monitoring
