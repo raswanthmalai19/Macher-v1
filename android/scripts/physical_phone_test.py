@@ -144,6 +144,9 @@ def setup_to_home(max_steps=20):
 
         # Profile setup
         if has_text(root, "Almost there") or find_edit_text_centers(root):
+            if tap_text(["Skip for now", "Skip"], sleep_s=1.2):
+                continue
+
             fields = find_edit_text_centers(root)
             if len(fields) >= 1:
                 input_into_field(fields[0], "TestUser")
