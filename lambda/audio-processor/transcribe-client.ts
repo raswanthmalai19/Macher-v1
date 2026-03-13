@@ -13,7 +13,6 @@ import {
   AudioStream,
   LanguageCode,
 } from '@aws-sdk/client-transcribe-streaming';
-import { captureAWSv3Client } from 'aws-xray-sdk-core';
 
 /**
  * Transcription segment from Transcribe response
@@ -71,17 +70,17 @@ export class TranscribeStreamingService {
       region: 'us-east-1',
       mediaSampleRateHertz: 16000,
       mediaEncoding: 'pcm',
+      languageCode: 'en-US' as LanguageCode, // Fixed to en-US for reliability
       enablePartialResultsStabilization: true,
       partialResultsStability: 'high',
       ...config,
     };
 
-    // Initialize Transcribe client with X-Ray tracing
-    this.client = captureAWSv3Client(
-      new TranscribeStreamingClient({
+    // Initialize Transcribe client WITHOUT X-Ray tracing
+    // (X-Ray's HTTP wrapper is incompatible with HTTP/2 bidirectional streaming)
+    this.client = new TranscribeStreamingClient({
         region: this.config.region,
-      })
-    );
+      });
   }
 
   /**
@@ -181,13 +180,9 @@ export class TranscribeStreamingService {
         MediaSampleRateHertz: this.config.mediaSampleRateHertz,
         MediaEncoding: this.config.mediaEncoding,
         
-        // Language detection (auto-detect if not specified)
-        // Supports English, Spanish, and Mandarin per requirements
-        LanguageCode: this.config.languageCode,
-        IdentifyLanguage: !this.config.languageCode, // Auto-detect if no language specified
-        LanguageOptions: this.config.languageCode 
-          ? undefined 
-          : 'en-US,es-US,zh-CN', // English, Spanish, Mandarin
+        // Use fixed language code (auto-detect via IdentifyLanguage is not used
+        // because it requires a different subscription tier)
+        LanguageCode: this.config.languageCode || ('en-US' as LanguageCode),
         
         // Partial results stabilization
         EnablePartialResultsStabilization: this.config.enablePartialResultsStabilization,

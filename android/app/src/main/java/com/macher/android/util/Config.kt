@@ -106,8 +106,8 @@ object Config {
         const val HEALTH_CHECK_INTERVAL_MS = 60000L     // 60s instead of 30s
         /** Only do health checks while actively monitoring a call */
         const val HEALTH_CHECK_ONLY_DURING_CALLS = true
-        /** Batch audio chunks to reduce WebSocket messages. e.g. 3 = send every 300ms */
-        const val AUDIO_CHUNK_BATCH_SIZE = 3
+        /** Batch audio chunks to reduce WebSocket messages. e.g. 10 = send every 1s */
+        const val AUDIO_CHUNK_BATCH_SIZE = 10
         /** Skip transcription requests for the first N seconds of a call (usually greetings) */
         const val SKIP_FIRST_SECONDS = 5
     }

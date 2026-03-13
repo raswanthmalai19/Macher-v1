@@ -6,8 +6,8 @@ import { EventBridgeClient, PutEventsCommand } from '@aws-sdk/client-eventbridge
 import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
 import { captureAWSv3Client } from 'aws-xray-sdk-core';
-import { TranscribeStreamingService, TranscriptionSegment } from './transcribe-client';
-import { invokeBedrockAgent, FraudAnalysisResult } from './bedrock-client';
+import { analyzeTranscriptWithClaude, FraudAnalysisResult } from './bedrock-direct';
+import { TranscribeStreamingService } from './transcribe-client';
 import { WebSocketClient } from './websocket-client';
 
 /**
@@ -18,6 +18,18 @@ interface AudioMessage {
   callSessionId: string;
   timestamp: number;
   audioData: string; // Base64-encoded PCM audio
+  sequenceNumber: number;
+}
+
+/**
+ * Transcript message from client-side speech recognition
+ */
+interface TranscriptMessage {
+  action: 'transcript';
+  callSessionId: string;
+  timestamp: number;
+  text: string;
+  isFinal: boolean;
   sequenceNumber: number;
 }
 
@@ -58,10 +70,6 @@ const snsClient = captureAWSv3Client(new SNSClient({}));
 const eventBridgeClient = captureAWSv3Client(new EventBridgeClient({}));
 const secretsClient = captureAWSv3Client(new SecretsManagerClient({}));
 const ssmClient = captureAWSv3Client(new SSMClient({}));
-
-// Initialize Transcribe streaming service
-// Requirements 3.1, 3.2, 3.3: Real-time speech transcription
-const transcribeService = new TranscribeStreamingService();
 
 // Environment variables
 const METADATA_TABLE = process.env.METADATA_TABLE_NAME!;
@@ -148,6 +156,9 @@ interface LogEntry {
   outputTokens?: number;
   snippetLength?: number;
   ttl?: number;
+  chunkCount?: number;
+  totalAudioSize?: number;
+  durationSeconds?: string;
 }
 
 /**
@@ -605,7 +616,7 @@ export function formatFraudAlertMessage(
  * @returns Parsed and validated audio message
  * @throws Error if message format is invalid
  */
-function parseAudioMessage(body: string | undefined, connectionId: string): AudioMessage {
+function parseAudioMessage(body: string | undefined, connectionId: string): AudioMessage | TranscriptMessage {
   if (!body) {
     throw new Error('Missing message body');
   }
@@ -622,21 +633,40 @@ function parseAudioMessage(body: string | undefined, connectionId: string): Audi
     throw new Error('Message must be a JSON object');
   }
 
-  // Validate required fields
-  const requiredFields = ['action', 'callSessionId', 'timestamp', 'audioData', 'sequenceNumber'];
+  if (typeof message.action !== 'string') {
+    throw new Error('Field "action" must be a string');
+  }
+  if (typeof message.callSessionId !== 'string') {
+    throw new Error('Field "callSessionId" must be a string');
+  }
+
+  // Handle transcript messages from on-device speech recognition
+  if (message.action === 'transcript') {
+    if (typeof message.text !== 'string' || message.text.trim().length === 0) {
+      throw new Error('Field "text" must be a non-empty string for transcript action');
+    }
+    log({
+      level: 'INFO',
+      message: 'Transcript message parsed',
+      connectionId,
+      callSessionId: message.callSessionId,
+    });
+    return {
+      action: 'transcript',
+      callSessionId: message.callSessionId,
+      timestamp: message.timestamp || Date.now(),
+      text: message.text,
+      isFinal: message.isFinal !== false,
+      sequenceNumber: message.sequenceNumber || 0,
+    } as TranscriptMessage;
+  }
+
+  // Handle audio messages
+  const requiredFields = ['callSessionId', 'timestamp', 'audioData', 'sequenceNumber'];
   const missingFields = requiredFields.filter(field => !(field in message));
   
   if (missingFields.length > 0) {
     throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
-  }
-
-  // Validate field types
-  if (typeof message.action !== 'string') {
-    throw new Error('Field "action" must be a string');
-  }
-  
-  if (typeof message.callSessionId !== 'string') {
-    throw new Error('Field "callSessionId" must be a string');
   }
   
   if (typeof message.timestamp !== 'number') {
@@ -651,9 +681,8 @@ function parseAudioMessage(body: string | undefined, connectionId: string): Audi
     throw new Error('Field "sequenceNumber" must be a number');
   }
 
-  // Validate action value
   if (message.action !== 'audio') {
-    throw new Error(`Invalid action: "${message.action}". Expected "audio"`);
+    throw new Error(`Invalid action: "${message.action}". Expected "audio" or "transcript"`);
   }
 
   // Validate timestamp is reasonable (not too far in past or future)
@@ -731,9 +760,9 @@ function validateAudioFormat(audioBuffer: Buffer): AudioFormatValidation {
   
   // Check if buffer size is reasonable for PCM audio
   // Minimum: 0.1 second = 1600 samples = 3200 bytes
-  // Maximum: 2 seconds = 32000 samples = 64000 bytes
+  // Maximum: 5 seconds = 80000 samples = 160000 bytes (batched chunks from mobile app)
   const minSize = 3200;
-  const maxSize = 64000;
+  const maxSize = 160000;
   
   if (bufferSize < minSize) {
     return {
@@ -762,11 +791,11 @@ function validateAudioFormat(audioBuffer: Buffer): AudioFormatValidation {
   const bytesPerSecond = 16000 * 2 * 1; // sampleRate * bytesPerSample * channels
   const durationSeconds = bufferSize / bytesPerSecond;
   
-  // Validate duration is reasonable (0.1 to 2 seconds)
-  if (durationSeconds < 0.1 || durationSeconds > 2.0) {
+  // Validate duration is reasonable (0.1 to 5 seconds for batched audio)
+  if (durationSeconds < 0.1 || durationSeconds > 5.0) {
     return {
       valid: false,
-      error: `Audio duration out of range (${durationSeconds.toFixed(2)}s). Expected 0.1-2.0 seconds for PCM 16kHz 16-bit mono`,
+      error: `Audio duration out of range (${durationSeconds.toFixed(2)}s). Expected 0.1-5.0 seconds for PCM 16kHz 16-bit mono`,
     };
   }
   
@@ -912,6 +941,234 @@ async function saveSessionToDynamoDB(session: CallSessionState): Promise<void> {
 }
 
 /**
+ * Process audio chunks through Amazon Transcribe for speech-to-text conversion
+ * 
+ * Requirements 3.1, 3.2, 3.3: Transcribe streaming PCM audio to text with
+ * 16kHz sample rate, 16-bit depth, mono channel, and partial results stabilization
+ * 
+ * @param session - Call session state
+ * @param audioChunks - Array of audio buffers to transcribe
+ * @param requestId - Request ID for logging
+ */
+async function processAudioTranscription(
+  session: CallSessionState,
+  audioChunks: Buffer[]
+): Promise<void> {
+  if (!audioChunks || audioChunks.length === 0) {
+    return;
+  }
+
+  const transcriptionStartTime = Date.now();
+  
+  log({
+    level: 'INFO',
+    message: 'Starting audio transcription',
+    callSessionId: session.callSessionId,
+    chunkCount: audioChunks.length,
+    totalAudioSize: audioChunks.reduce((sum, b) => sum + b.length, 0),
+  });
+
+  try {
+    // Merge audio chunks into single buffer for Transcribe
+    const totalSize = audioChunks.reduce((sum, b) => sum + b.length, 0);
+    const mergedAudio = Buffer.alloc(totalSize);
+    let offset = 0;
+    for (const chunk of audioChunks) {
+      chunk.copy(mergedAudio, offset);
+      offset += chunk.length;
+    }
+
+    // Initialize Transcribe service
+    const transcribeService = new TranscribeStreamingService({
+      region: 'us-east-1',
+      mediaSampleRateHertz: 16000,
+      mediaEncoding: 'pcm',
+      languageCode: 'en-US',
+      enablePartialResultsStabilization: true,
+      partialResultsStability: 'high',
+    });
+
+    // Collect transcription segments
+    const transcribedText: string[] = [];
+    let partialText = '';
+
+    // Transcribe audio
+    await transcribeService.transcribeAudioChunk(
+      mergedAudio,
+      (segment) => {
+        log({
+          level: 'INFO',
+          message: 'Transcription segment received',
+          callSessionId: session.callSessionId,
+          text: segment.text,
+          isPartial: segment.isPartial,
+          confidence: segment.confidence,
+        });
+
+        if (segment.isPartial) {
+          partialText = segment.text;
+        } else if (segment.text) {
+          // Final result
+          transcribedText.push(segment.text);
+          partialText = '';
+        }
+      }
+    );
+
+    // Add any remaining partial results
+    if (partialText) {
+      transcribedText.push(partialText);
+    }
+
+    const fullTranscription = transcribedText.join(' ').trim();
+
+    if (!fullTranscription) {
+      log({
+        level: 'WARN',
+        message: 'No speech detected in audio chunk',
+        callSessionId: session.callSessionId,
+      });
+      
+      // Send status to client
+      try {
+        const wsClient = getWebSocketClient();
+        await wsClient.sendMessage(session.connectionId, {
+          type: 'transcription',
+          callSessionId: session.callSessionId,
+          transcript: '(silence)',
+          isFinal: false,
+          timestamp: Date.now(),
+        }, session.callSessionId);
+      } catch (e) {
+        // Ignore WebSocket errors
+      }
+      return;
+    }
+
+    log({
+      level: 'INFO',
+      message: 'Audio successfully transcribed',
+      callSessionId: session.callSessionId,
+      transcriptionLength: fullTranscription.length,
+    });
+
+    // Send transcription to client
+    try {
+      const wsClient = getWebSocketClient();
+      await wsClient.sendMessage(session.connectionId, {
+        type: 'transcription',
+        callSessionId: session.callSessionId,
+        transcript: fullTranscription,
+        isFinal: true,
+        timestamp: Date.now(),
+      }, session.callSessionId);
+    } catch (wsErr) {
+      log({
+        level: 'WARN',
+        message: 'Failed to send transcription to client',
+        callSessionId: session.callSessionId,
+        error: { name: (wsErr as Error).name, message: (wsErr as Error).message },
+      });
+    }
+
+    // Add to session transcription buffer for fraud analysis
+    session.transcriptionBuffer.push(fullTranscription);
+    const words = fullTranscription.trim().split(/\s+/).filter(w => w.length > 0);
+    session.wordCount += words.length;
+    session.speechDuration += audioChunks.reduce((sum, b) => sum + b.length, 0) / (16000 * 2); // Estimate duration
+
+    log({
+      level: 'INFO',
+      message: 'Transcription buffer updated',
+      callSessionId: session.callSessionId,
+      wordCount: session.wordCount,
+      speechDuration: session.speechDuration.toFixed(2),
+    });
+
+    // Trigger fraud analysis if threshold reached
+    if (checkAnalysisThreshold(session)) {
+      log({
+        level: 'INFO',
+        message: 'Analysis threshold reached after transcription',
+        callSessionId: session.callSessionId,
+        wordCount: session.wordCount,
+      });
+      
+      await triggerFraudAnalysis(session).catch(error => {
+        log({
+          level: 'ERROR',
+          message: 'Fraud analysis failed after transcription',
+          callSessionId: session.callSessionId,
+          error: { name: (error as Error).name, message: (error as Error).message },
+        });
+      });
+    }
+
+    // Save updated session
+    await saveSessionToDynamoDB(session);
+
+    const duration = Date.now() - transcriptionStartTime;
+    log({
+      level: 'INFO',
+      message: 'Audio transcription completed',
+      callSessionId: session.callSessionId,
+      duration,
+      durationSeconds: (duration / 1000).toFixed(2),
+    });
+
+  } catch (error) {
+    const duration = Date.now() - transcriptionStartTime;
+    const errorMsg = (error as Error).message || '';
+    
+    // Check if Transcribe subscription is missing — log as WARN, don't alarm client
+    const isSubscriptionError = errorMsg.includes('subscription') || 
+      errorMsg.includes('Subscription') ||
+      errorMsg.includes('SubscriptionRequired');
+
+    if (isSubscriptionError) {
+      log({
+        level: 'WARN',
+        message: 'Amazon Transcribe not enabled for this account — using client-side transcription. Enable Transcribe at https://console.aws.amazon.com/transcribe',
+        callSessionId: session.callSessionId,
+        duration,
+      });
+      // Don't send error to client — the app is using on-device SpeechHelper as fallback
+      return;
+    }
+
+    log({
+      level: 'ERROR',
+      message: 'Audio transcription failed',
+      callSessionId: session.callSessionId,
+      duration,
+      error: {
+        name: (error as Error).name,
+        message: (error as Error).message,
+        stack: (error as Error).stack,
+      },
+    });
+
+    // Only send transcription error to client for non-subscription errors
+    // (subscription errors are handled silently — client falls back to on-device SR)
+    try {
+      const wsClient = getWebSocketClient();
+      await wsClient.sendErrorMessage(
+        session.connectionId,
+        {
+          type: 'error',
+          code: 'TRANSCRIPTION_ERROR',
+          message: 'Failed to transcribe audio',
+          timestamp: Date.now(),
+        },
+        session.callSessionId
+      );
+    } catch (wsErr) {
+      // Ignore WebSocket errors
+    }
+  }
+}
+
+/**
  * Clean up call session state
  * 
  * Requirements 2.3: Clean up state on disconnection or Lambda timeout
@@ -943,8 +1200,8 @@ function cleanupCallSession(callSessionId: string): void {
  * @returns True if analysis should be triggered, false otherwise
  */
 export function checkAnalysisThreshold(session: CallSessionState): boolean {
-  const WORD_THRESHOLD = 50;
-  const DURATION_THRESHOLD = 10; // seconds
+  const WORD_THRESHOLD = 10;
+  const DURATION_THRESHOLD = 5; // seconds
 
   // Check if we've reached 50 words OR 10 seconds of speech
   const wordThresholdReached = session.wordCount >= WORD_THRESHOLD;
@@ -995,9 +1252,8 @@ export async function triggerFraudAnalysis(session: CallSessionState): Promise<v
       transcriptionLength: transcription.length,
     });
 
-    // Requirements 4.1, 11.4: Invoke Bedrock Agent with transcription
-    // Requirements 4.2: Guardrails will redact PII automatically (configured in Bedrock Agent)
-    const analysisResult: FraudAnalysisResult = await invokeBedrockAgent(
+    // Invoke Claude directly via Bedrock InvokeModel for fraud analysis
+    const analysisResult: FraudAnalysisResult = await analyzeTranscriptWithClaude(
       transcription,
       session.callSessionId
     );
@@ -1200,210 +1456,6 @@ export async function triggerFraudAnalysis(session: CallSessionState): Promise<v
 }
 
 /**
- * Forward audio chunk to Amazon Transcribe for real-time transcription
- * 
- * Requirements 2.3, 10.4: Forward audio chunks to Transcribe stream in real-time,
- * ensure audio is NOT stored persistently (process in memory only),
- * handle stream backpressure and buffering, log audio forwarding with duration metrics
- * 
- * @param audioBuffer - Decoded audio buffer (PCM 16kHz 16-bit mono)
- * @param callSessionId - Unique call session identifier
- * @param sequenceNumber - Audio chunk sequence number
- * @returns Promise that resolves when transcription is complete
- */
-async function forwardAudioToTranscribe(
-  audioBuffer: Buffer,
-  callSessionId: string,
-  sequenceNumber: number
-): Promise<void> {
-  const startTime = Date.now();
-  const maxRetries = 3;
-  const backoffDelays = [1000, 2000, 4000]; // 1s, 2s, 4s exponential backoff
-
-  let lastError: Error | null = null;
-
-  // Requirements 8.1: Retry up to 3 times with exponential backoff
-  for (let retryCount = 0; retryCount <= maxRetries; retryCount++) {
-    try {
-      log({
-        level: 'INFO',
-        message: retryCount === 0 ? 'Forwarding audio chunk to Transcribe' : 'Retrying audio forwarding to Transcribe',
-        callSessionId,
-        sequenceNumber,
-        audioSize: audioBuffer.length,
-        retryCount,
-      });
-
-      // Forward audio to Transcribe streaming service
-      // Requirements 2.3: Audio is processed in memory only, not stored persistently
-      // The transcribeAudioChunk method handles stream backpressure internally
-      await transcribeService.transcribeAudioChunk(
-        audioBuffer,
-        (segment: TranscriptionSegment) => {
-          // Handle transcription segment callback
-          // Requirements 10.4: Log transcription receipt with latency metrics
-          const transcriptionLatency = Date.now() - startTime;
-
-          log({
-            level: 'INFO',
-            message: 'Transcription segment received',
-            callSessionId,
-            sequenceNumber,
-            text: segment.text,
-            isPartial: segment.isPartial,
-            confidence: segment.confidence,
-            language: segment.language,
-            duration: transcriptionLatency,
-          });
-
-          // Get call session to accumulate transcription
-          // Requirements 3.6: Accumulate transcribed text segments for analysis
-          const session = callSessions.get(callSessionId);
-          if (session && !segment.isPartial) {
-            // Only accumulate stabilized (non-partial) results
-            // Requirements 3.6: Handle partial results - update buffer as results stabilize
-            session.transcriptionBuffer.push(segment.text);
-
-            // Relay transcription to mobile client so the UI can display it
-            const wsClient = getWebSocketClient();
-            wsClient.sendMessage(session.connectionId, {
-              type: 'transcription',
-              callSessionId,
-              transcript: segment.text,
-              isFinal: true,
-              timestamp: Date.now(),
-            }, callSessionId).catch((relayErr) => {
-              log({
-                level: 'WARN',
-                message: 'Failed to relay transcription to client',
-                callSessionId,
-                error: { name: (relayErr as Error).name, message: (relayErr as Error).message },
-              });
-            });
-
-            // Update word count (simple word splitting)
-            // Requirements 3.6: Track word count for analysis trigger logic
-            const words = segment.text.trim().split(/\s+/).filter(w => w.length > 0);
-            session.wordCount += words.length;
-
-            // Track speech duration (endTime - startTime for this segment)
-            // Requirements 3.6, 3.7: Track timing for 10-second analysis threshold
-            const segmentDuration = segment.endTime - segment.startTime;
-            session.speechDuration += segmentDuration;
-
-            log({
-              level: 'INFO',
-              message: 'Transcription accumulated',
-              callSessionId,
-              wordCount: session.wordCount,
-              bufferSize: session.transcriptionBuffer.length,
-              speechDuration: session.speechDuration.toFixed(2),
-            });
-
-            // Requirements 3.7: Check if analysis threshold has been reached
-            // Trigger fraud analysis when transcription reaches 50 words OR 10 seconds
-            if (checkAnalysisThreshold(session)) {
-              log({
-                level: 'INFO',
-                message: 'Analysis threshold reached',
-                callSessionId,
-                wordCount: session.wordCount,
-                speechDuration: session.speechDuration.toFixed(2),
-              });
-
-              // Trigger fraud analysis asynchronously
-              // Don't await here to avoid blocking transcription processing
-              triggerFraudAnalysis(session).catch(error => {
-                log({
-                  level: 'ERROR',
-                  message: 'Fraud analysis failed',
-                  callSessionId,
-                  error: {
-                    name: (error as Error).name,
-                    message: (error as Error).message,
-                    stack: (error as Error).stack,
-                  },
-                });
-              });
-            }
-          }
-        }
-      );
-
-      // Log successful audio forwarding with duration metrics
-      // Requirements 10.4: Log audio forwarding with duration metrics
-      const forwardingDuration = Date.now() - startTime;
-
-      log({
-        level: 'INFO',
-        message: 'Audio forwarded to Transcribe successfully',
-        callSessionId,
-        sequenceNumber,
-        duration: forwardingDuration,
-        retryCount,
-      });
-
-      // Success - return without retrying
-      return;
-
-    } catch (error) {
-      lastError = error as Error;
-
-      // Requirements 8.4: Log errors with context (retryCount, error type, callSessionId)
-      log({
-        level: retryCount < maxRetries ? 'WARN' : 'ERROR',
-        message: retryCount < maxRetries ? 'Transcribe error, will retry' : 'Transcribe error, all retries exhausted',
-        callSessionId,
-        sequenceNumber,
-        retryCount,
-        errorType: lastError.name,
-        errorMessage: lastError.message,
-        error: {
-          name: lastError.name,
-          message: lastError.message,
-          stack: lastError.stack,
-        },
-      });
-
-      // If we haven't exhausted retries, wait before retrying
-      // Requirements 8.1: Exponential backoff (1s, 2s, 4s)
-      if (retryCount < maxRetries) {
-        const delay = backoffDelays[retryCount];
-        log({
-          level: 'INFO',
-          message: 'Waiting before retry',
-          callSessionId,
-          sequenceNumber,
-          retryCount,
-          delayMs: delay,
-        });
-
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
-    }
-  }
-
-  // All retries failed
-  // Requirements 3.5: Continue processing subsequent audio chunks after error
-  // Requirements 8.1: If all retries fail, log error and continue
-  log({
-    level: 'ERROR',
-    message: 'Failed to forward audio to Transcribe after all retries',
-    callSessionId,
-    sequenceNumber,
-    maxRetries,
-    totalDuration: Date.now() - startTime,
-    finalError: {
-      name: lastError?.name,
-      message: lastError?.message,
-    },
-  });
-
-  // Re-throw to allow caller to handle (e.g., return CAUTION response)
-  throw lastError;
-}
-
-/**
  * Get secrets from Secrets Manager with 5-minute caching
  */
 async function getSecrets(): Promise<any> {
@@ -1511,78 +1563,6 @@ async function getConfiguration(): Promise<ConfigCache> {
 }
 
 
-
-/**
- * Process audio for fraud detection
- * 
- * Analyzes audio buffer for fraud by combining transcription accumulation
- * with Bedrock Agent analysis when enough speech has accumulated.
- * 
- * Falls back to heuristic scoring when:
- * - Insufficient transcription accumulated (< 10 words)
- * - Bedrock circuit breaker is open
- * 
- * @param audioBuffer - Decoded audio data
- * @returns Fraud score (0-100)
- */
-async function processAudioForFraud(audioBuffer: Buffer): Promise<number> {
-  log({
-    level: 'INFO',
-    message: `Processing audio buffer of ${audioBuffer.length} bytes`,
-  });
-
-  // Use the latest accumulated transcription from all active sessions
-  // and delegate to Bedrock agent for analysis
-  let fraudScore = 0;
-
-  try {
-    // Find the most recent active session
-    let latestSession: CallSessionState | null = null;
-    for (const [, session] of callSessions) {
-      if (!latestSession || session.startTime > latestSession.startTime) {
-        latestSession = session;
-      }
-    }
-
-    if (latestSession && latestSession.transcriptionBuffer.length > 0) {
-      const transcript = latestSession.transcriptionBuffer.join(' ');
-
-      // Only invoke Bedrock if we have enough content
-      if (latestSession.wordCount >= 10) {
-        const analysisResult = await invokeBedrockAgent(
-          transcript,
-          latestSession.callSessionId
-        );
-        fraudScore = analysisResult.riskScore;
-        latestSession.currentRiskScore = fraudScore;
-        latestSession.currentThreatLevel = analysisResult.threatLevel;
-        latestSession.lastAnalysisTime = Date.now();
-        latestSession.analysisCount++;
-      } else {
-        // Not enough speech yet — use conservative score
-        fraudScore = Math.min(latestSession.currentRiskScore, 20);
-      }
-    }
-  } catch (error) {
-    log({
-      level: 'ERROR',
-      message: 'Bedrock analysis failed in processAudioForFraud, using fallback score',
-      error: {
-        name: (error as Error).name,
-        message: (error as Error).message,
-      },
-    });
-    // Fallback: return a CAUTION-level score
-    fraudScore = 50;
-  }
-
-  log({
-    level: 'INFO',
-    message: `Audio fraud analysis complete, score: ${fraudScore}`,
-  });
-
-  return fraudScore;
-}
 
 /**
  * Publish fraud alert to SNS topic
@@ -1733,18 +1713,116 @@ export async function handler(
   });
 
   try {
-    // Step 1: Parse and validate WebSocket audio message
-    // Requirements 2.2, 2.5, 12.6
-    const audioMessage = parseAudioMessage(event.body, connectionId);
-    
-    // Step 2: Decode Base64 audioData to Buffer
-    // Requirements 2.2, 2.5
+    // Step 1: Parse and validate WebSocket message (audio or transcript)
+    const parsedMessage = parseAudioMessage(event.body, connectionId);
+
+    // Branch: Handle transcript messages from on-device speech recognition
+    if (parsedMessage.action === 'transcript') {
+      const transcriptMsg = parsedMessage as TranscriptMessage;
+
+      log({
+        level: 'INFO',
+        message: `Processing transcript message (${transcriptMsg.text.length} chars, final=${transcriptMsg.isFinal})`,
+        requestId,
+        connectionId,
+        callSessionId: transcriptMsg.callSessionId,
+      });
+
+      // Get or create session
+      await getOrCreateCallSession(transcriptMsg.callSessionId, connectionId);
+      const session = callSessions.get(transcriptMsg.callSessionId);
+
+      if (session) {
+        // Accumulate transcription text
+        session.transcriptionBuffer.push(transcriptMsg.text);
+        const words = transcriptMsg.text.trim().split(/\s+/).filter((w: string) => w.length > 0);
+        session.wordCount += words.length;
+        // Estimate ~0.5s per word for speech duration tracking
+        session.speechDuration += words.length * 0.5;
+
+        // Relay transcription back to client for display
+        try {
+          const wsClient = getWebSocketClient();
+          await wsClient.sendMessage(session.connectionId, {
+            type: 'transcription',
+            callSessionId: transcriptMsg.callSessionId,
+            transcript: transcriptMsg.text,
+            isFinal: transcriptMsg.isFinal,
+            timestamp: Date.now(),
+          }, transcriptMsg.callSessionId);
+        } catch (relayErr) {
+          log({
+            level: 'WARN',
+            message: 'Failed to relay transcription to client',
+            callSessionId: transcriptMsg.callSessionId,
+            error: { name: (relayErr as Error).name, message: (relayErr as Error).message },
+          });
+        }
+
+        // Check if we have enough text for fraud analysis
+        if (transcriptMsg.isFinal && checkAnalysisThreshold(session)) {
+          await triggerFraudAnalysis(session).catch(error => {
+            log({
+              level: 'ERROR',
+              message: 'Fraud analysis failed',
+              callSessionId: transcriptMsg.callSessionId,
+              error: { name: (error as Error).name, message: (error as Error).message },
+            });
+          });
+        }
+
+        await saveSessionToDynamoDB(session);
+      }
+
+      const processingDuration = Date.now() - startTime;
+      const result: AudioProcessingResult = {
+        sessionId: transcriptMsg.callSessionId,
+        timestamp: Date.now(),
+        fraudScore: session?.currentRiskScore || 0,
+        fraudDetected: (session?.currentRiskScore || 0) >= 67,
+        message: 'Transcript processed',
+      };
+
+      // Store metadata
+      await docClient.send(
+        new PutCommand({
+          TableName: METADATA_TABLE,
+          Item: {
+            callSessionId: transcriptMsg.callSessionId,
+            timestamp: Date.now(),
+            connectionId,
+            sequenceNumber: transcriptMsg.sequenceNumber,
+            fraudScore: result.fraudScore,
+            fraudDetected: result.fraudDetected,
+            processingDuration,
+            messageType: 'transcript',
+            ttl: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
+          },
+        })
+      );
+
+      if (result.fraudDetected) {
+        await publishFraudAlert(result);
+      }
+      await publishEvent(result, connectionId);
+
+      log({
+        level: 'INFO',
+        message: 'Transcript processing completed',
+        requestId,
+        connectionId,
+        callSessionId: transcriptMsg.callSessionId,
+        duration: processingDuration,
+      });
+
+      return { statusCode: 200, body: JSON.stringify(result) };
+    }
+
+    // Branch: Handle audio messages — decode, validate, buffer, and transcribe
+    const audioMessage = parsedMessage as AudioMessage;
     const audioBuffer = decodeBase64AudioData(audioMessage.audioData);
-    
-    // Step 3: Validate audio format (PCM, 16kHz, 16-bit, mono)
-    // Requirements 2.2, 2.5
     const formatValidation = validateAudioFormat(audioBuffer);
-    
+
     if (!formatValidation.valid) {
       log({
         level: 'WARN',
@@ -1753,12 +1831,8 @@ export async function handler(
         connectionId,
         callSessionId: audioMessage.callSessionId,
         sequenceNumber: audioMessage.sequenceNumber,
-        error: {
-          name: 'InvalidAudioFormat',
-          message: formatValidation.error || 'Unknown format error',
-        },
+        error: { name: 'InvalidAudioFormat', message: formatValidation.error || 'Unknown format error' },
       });
-      
       return {
         statusCode: 400,
         body: JSON.stringify({
@@ -1770,9 +1844,7 @@ export async function handler(
         }),
       };
     }
-    
-    // Step 4: Log audio receipt with structured JSON
-    // Requirements 10.1, 10.2
+
     log({
       level: 'INFO',
       message: 'Audio chunk received and validated',
@@ -1782,92 +1854,83 @@ export async function handler(
       sequenceNumber: audioMessage.sequenceNumber,
       audioSize: audioBuffer.length,
     });
-    
-    // Step 5: Initialize or retrieve call session state (from DynamoDB if exists)
-    // Requirements 2.3, 3.6
+
     await getOrCreateCallSession(audioMessage.callSessionId, connectionId);
-
-    // Get configuration (cached for 5 minutes)
     const config = await getConfiguration();
-
-    // Get secrets (cached for 5 minutes)
     await getSecrets();
-
-    // Step 6: Forward audio to Amazon Transcribe for real-time transcription
-    // Requirements 2.3, 10.4: Forward audio chunks to Transcribe stream in real-time
-    // Audio is processed in memory only and NOT stored persistently (privacy requirement)
-    try {
-      await forwardAudioToTranscribe(
-        audioBuffer,
-        audioMessage.callSessionId,
-        audioMessage.sequenceNumber
-      );
-    } catch (transcribeError) {
-      // Requirements 3.5, 8.1: Continue processing subsequent audio chunks after error
-      // Requirements 8.1: If all retries fail, return CAUTION response
-      log({
-        level: 'ERROR',
-        message: 'Transcribe forwarding failed after all retries, will return CAUTION response',
-        requestId,
-        connectionId,
-        callSessionId: audioMessage.callSessionId,
-        sequenceNumber: audioMessage.sequenceNumber,
-        error: {
-          name: (transcribeError as Error).name,
-          message: (transcribeError as Error).message,
-        },
-      });
-      
-      // Requirements 8.5: Send error message to mobile client via WebSocket
-      try {
-        const wsClient = getWebSocketClient();
-        const errorMessage = formatErrorMessage(
-          transcribeError as Error,
-          'TRANSCRIPTION_ERROR',
-          requestId
-        );
-        
-        await wsClient.sendErrorMessage(
-          connectionId,
-          errorMessage,
-          audioMessage.callSessionId
-        );
-        
-        log({
-          level: 'INFO',
-          message: 'Transcription error message sent to mobile client',
-          requestId,
-          connectionId,
-          callSessionId: audioMessage.callSessionId,
-        });
-      } catch (wsError) {
-        // Log WebSocket error but don't fail the processing
-        log({
-          level: 'WARN',
-          message: 'Failed to send transcription error message via WebSocket',
-          requestId,
-          connectionId,
-          callSessionId: audioMessage.callSessionId,
-          error: {
-            name: (wsError as Error).name,
-            message: (wsError as Error).message,
-          },
-        });
-      }
-      
-      // Continue processing - don't throw, as we want to continue with subsequent audio chunks
+    
+    const session = callSessions.get(audioMessage.callSessionId);
+    if (!session) {
+      throw new Error('Failed to get or create call session');
     }
 
-    // Process audio for fraud detection (placeholder - will be replaced with Bedrock in future tasks)
-    const fraudScore = await processAudioForFraud(audioBuffer);
-    const fraudDetected = fraudScore >= config.fraudThreshold;
+    // NEW: Buffer audio chunks for transcription
+    // Transcribe requires minimum 100ms (~1600 bytes at 16kHz)
+    const AUDIO_BUFFER_KEY = `${audioMessage.callSessionId}_audio`;
+    if (!callSessions.has(AUDIO_BUFFER_KEY)) {
+      callSessions.set(AUDIO_BUFFER_KEY, {
+        callSessionId: audioMessage.callSessionId,
+        connectionId,
+        startTime: Date.now(),
+        transcriptionBuffer: [],
+        wordCount: 0,
+        speechDuration: 0,
+        lastAnalysisTime: 0,
+        analysisCount: 0,
+        currentRiskScore: 0,
+        currentThreatLevel: 'SAFE' as const,
+      });
+    }
 
-    // Calculate processing duration
+    // Add audio chunk to buffer
+    if (!Array.isArray((session as any).audioChunks)) {
+      (session as any).audioChunks = [];
+    }
+    (session as any).audioChunks.push(audioBuffer);
+    
+    // Accumulate audio for transcription (100ms chunks = 1600 bytes at 16kHz 16-bit mono)
+    const MIN_AUDIO_FOR_TRANSCRIBE = 16000 * 2; // 1 second of audio minimum
+    const totalAudioSize = ((session as any).audioChunks as Buffer[]).reduce((sum, b) => sum + b.length, 0);
+
+    // Send status on first chunk
+    if (audioMessage.sequenceNumber <= 1) {
+      try {
+        const wsClient = getWebSocketClient();
+        await wsClient.sendMessage(session.connectionId, {
+          type: 'transcription',
+          callSessionId: audioMessage.callSessionId,
+          transcript: '🎙️ Listening and analyzing call audio...',
+          isFinal: false,
+          timestamp: Date.now(),
+        }, audioMessage.callSessionId);
+      } catch (wsErr) {
+        log({ level: 'WARN', message: 'Failed to send status transcription', callSessionId: audioMessage.callSessionId });
+      }
+    }
+
+    // When sufficient audio accumulated (1+ second), send to Transcribe (non-blocking)
+    if (totalAudioSize >= MIN_AUDIO_FOR_TRANSCRIBE) {
+      // Spawn async transcription in background, don't block response
+      processAudioTranscription(session, (session as any).audioChunks).catch(error => {
+        log({
+          level: 'WARN',
+          message: 'Background transcription failed',
+          callSessionId: audioMessage.callSessionId,
+          error: { name: (error as Error).name, message: (error as Error).message },
+        });
+      });
+      
+      // Clear buffer after queuing for transcription
+      (session as any).audioChunks = [];
+    }
+
+    // Use session risk score (updated by transcript-based analysis)
+    const fraudScore = session?.currentRiskScore || 0;
+    const fraudDetected = fraudScore >= config.fraudThreshold;
     const processingDuration = Date.now() - startTime;
     const timestamp = Date.now();
-    const ttl = Math.floor(Date.now() / 1000) + (24 * 60 * 60); // 24 hours
+    const ttl = Math.floor(Date.now() / 1000) + (24 * 60 * 60);
 
-    // Store metadata in DynamoDB (no audio data stored - privacy requirement)
     await docClient.send(
       new PutCommand({
         TableName: METADATA_TABLE,
@@ -1885,37 +1948,23 @@ export async function handler(
       })
     );
 
-    log({
-      level: 'INFO',
-      message: 'Metadata stored in DynamoDB',
-      requestId,
-      connectionId,
-      callSessionId: audioMessage.callSessionId,
-    });
-
-    // Create processing result
     const result: AudioProcessingResult = {
       sessionId: audioMessage.callSessionId,
       timestamp,
       fraudScore,
       fraudDetected,
-      message: fraudDetected 
-        ? `Potential fraud detected (score: ${fraudScore})` 
+      message: fraudDetected
+        ? `Potential fraud detected (score: ${fraudScore})`
         : 'No fraud detected',
     };
 
-    // If fraud detected, publish alert to SNS
     if (fraudDetected) {
       await publishFraudAlert(result);
     }
-
-    // Publish event to EventBridge
     await publishEvent(result, connectionId);
 
-    // Persist session state to DynamoDB so it survives across Lambda invocations
-    const currentSession = callSessions.get(audioMessage.callSessionId);
-    if (currentSession) {
-      await saveSessionToDynamoDB(currentSession);
+    if (session) {
+      await saveSessionToDynamoDB(session);
     }
 
     log({
@@ -1927,10 +1976,7 @@ export async function handler(
       duration: processingDuration,
     });
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify(result),
-    };
+    return { statusCode: 200, body: JSON.stringify(result) };
   } catch (error) {
     const duration = Date.now() - startTime;
     const err = error as Error;

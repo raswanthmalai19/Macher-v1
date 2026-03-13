@@ -125,7 +125,7 @@ export class LambdaFunctionsConstruct extends Construct {
       functionName: `MACHER-AudioProcessor-${config.tags.Environment}`,
       runtime: lambda.Runtime.NODEJS_20_X,
       architecture: lambda.Architecture.ARM_64,
-      handler: 'index.handler',
+      handler: 'dist/index.handler',
       code: lambda.Code.fromAsset('lambda/audio-processor'),
       memorySize: 1024,
       timeout: cdk.Duration.seconds(30),
@@ -142,12 +142,12 @@ export class LambdaFunctionsConstruct extends Construct {
     });
 
     // Grant DynamoDB permissions for Audio Processor (Requirement 7.5)
-    // Audio Processor needs PutItem to store call metadata
+    // Audio Processor needs PutItem to store call metadata, GetItem/UpdateItem to persist session state
     // Query permission for GSI access if needed
     this.audioProcessor.addToRolePolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
-        actions: ['dynamodb:PutItem', 'dynamodb:Query'],
+        actions: ['dynamodb:PutItem', 'dynamodb:GetItem', 'dynamodb:UpdateItem', 'dynamodb:Query'],
         resources: [
           metadataTableArn,
           `${metadataTableArn}/index/*`, // GSI access
@@ -182,6 +182,10 @@ export class LambdaFunctionsConstruct extends Construct {
           `arn:aws:bedrock:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:agent/*`,
           // Allow access to Claude 3.5 Sonnet model
           `arn:aws:bedrock:${cdk.Stack.of(this).region}::foundation-model/anthropic.claude-3-5-sonnet-*`,
+          // Allow access to Nova Micro cross-region inference profile (us.amazon.nova-micro-v1:0)
+          `arn:aws:bedrock:*:${cdk.Stack.of(this).account}:inference-profile/*`,
+          `arn:aws:bedrock:*::foundation-model/amazon.nova-micro-v1:0`,
+          `arn:aws:bedrock:*::foundation-model/us.amazon.nova-micro-v1:0`,
         ],
       })
     );

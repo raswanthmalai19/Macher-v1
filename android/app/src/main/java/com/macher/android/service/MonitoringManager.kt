@@ -45,6 +45,7 @@ class MonitoringManager(private val context: Context) {
     private val interventionEngine = InterventionEngine(context)
     val webSocketClient = RealWebSocketClient()
     private val audioCaptureService = AudioCaptureService()
+    private val speechHelper = SpeechRecognitionHelper(context)
     private val familyLoopService = FamilyLoopService(context)
     
     // User settings preferences — checked before acting on toggleable behaviors
@@ -320,11 +321,17 @@ class MonitoringManager(private val context: Context) {
      * Start monitoring with a specific phone number (called from call detection).
      * This means an actual call is happening — connect to backend and analyze.
      * Can be called when armed (isMonitoring=true, isActiveCall=false) or directly.
+     * Auto-arms (_isMonitoring) if not already set.
      */
     fun startMonitoring(phoneNumber: String) {
         if (_isActiveCall.value) {
             Logger.warn("MonitoringManager", "Already monitoring an active call")
             return
+        }
+        // Auto-arm if not already armed (e.g. call came in before shield was toggled)
+        if (!_isMonitoring.value) {
+            Logger.info("MonitoringManager", "Auto-arming because call started without shield press")
+            _isMonitoring.value = true
         }
         currentCallPhoneNumber = phoneNumber
         currentCallStartTime = System.currentTimeMillis()
@@ -388,6 +395,14 @@ class MonitoringManager(private val context: Context) {
         Logger.info("MonitoringManager", "Starting real call monitoring for: $currentCallPhoneNumber")
         
         _isMonitoring.value = true
+
+        // Start foreground service so audio capture survives the app going to background
+        // (the phone dialer takes focus during a call)
+        try {
+            CallMonitorForegroundService.start(context)
+        } catch (e: Exception) {
+            Logger.error("MonitoringManager", "Failed to start foreground service: ${e.message}", e)
+        }
         
         // Validate backend config first
         if (Config.WEBSOCKET_URL.contains("YOUR_API_ID")) {
@@ -407,63 +422,109 @@ class MonitoringManager(private val context: Context) {
         
         // Connect to WebSocket
         webSocketClient.connect()
-        
-        // Wait up to 20s — gives all 3 retry attempts time to resolve before giving up.
-        // Must wait for CONNECTED specifically; ERROR should not exit early (retries may follow).
+
         scope.launch {
-            withTimeoutOrNull(20_000L) {
-                webSocketClient.connectionState.first { state ->
-                    state == com.macher.android.network.ConnectionState.CONNECTED
+            // ── STEP 1: Start audio capture IMMEDIATELY ───────────────────────────────
+            // Don't wait for WebSocket — we buffer locally so no early speech is missed.
+            if (!audioCaptureService.hasPermission(context)) {
+                Logger.error("MonitoringManager", "Audio recording permission not granted")
+                _transcription.value = "⚠️ Mic permission needed. Grant in Settings > Apps > MACHER."
+                _detectionMode.value = DetectionMode.REAL_METADATA_ONLY
+                // Still wait for WS to do metadata-only analysis
+            } else {
+                // Pre-buffer: holds audio captured while WS is establishing (max 60 chunks ≈ 6s)
+                val preBuffer = ArrayDeque<ByteArray>(60)
+                Logger.info("MonitoringManager", "Starting audio capture NOW (pre-buffering until WS ready)")
+                _transcription.value = "🎙️ Recording call audio... connecting to analysis server..."
+                audioCaptureService.startCapture { audioChunk ->
+                    synchronized(preBuffer) { if (preBuffer.size < 60) preBuffer.addLast(audioChunk) }
                 }
-            }
-            if (_connectionState.value == ConnectionState.CONNECTED) {
-                if (audioCaptureService.hasPermission(context)) {
-                    // Batch audio chunks to reduce WebSocket messages and save AWS credits
+                Logger.info("MonitoringManager", "Audio capture active ✅ (pre-buffering)")
+
+                // ── STEP 2: Wait for WebSocket ────────────────────────────────────────────
+                withTimeoutOrNull(20_000L) {
+                    webSocketClient.connectionState.first { s ->
+                        s == com.macher.android.network.ConnectionState.CONNECTED
+                    }
+                }
+
+                if (_connectionState.value == ConnectionState.CONNECTED) {
+                    val buffered = synchronized(preBuffer) {
+                        val copy = preBuffer.toList(); preBuffer.clear(); copy
+                    }
+                    Logger.info("MonitoringManager", "WS connected — flushing ${buffered.size} pre-buffered chunks")
+                    _transcription.value = "🎙️ Analyzing call audio in real-time..."
+
                     val batchSize = Config.CreditSaver.AUDIO_CHUNK_BATCH_SIZE
                     val audioBuffer = mutableListOf<ByteArray>()
-                    audioCaptureService.startCapture { audioChunk ->
-                        audioBuffer.add(audioChunk)
+                    var lastSendTime = System.currentTimeMillis()
+
+                    // Flush pre-buffer
+                    for (chunk in buffered) {
+                        audioBuffer.add(chunk)
                         if (audioBuffer.size >= batchSize) {
-                            // Combine chunks into one message
-                            val totalSize = audioBuffer.sumOf { it.size }
-                            val merged = ByteArray(totalSize)
-                            var offset = 0
-                            for (chunk in audioBuffer) {
-                                chunk.copyInto(merged, offset)
-                                offset += chunk.size
-                            }
-                            audioBuffer.clear()
-                            webSocketClient.sendAudioChunk(merged)
+                            sendMergedAudioChunk(audioBuffer)
+                            lastSendTime = System.currentTimeMillis()
                         }
                     }
+                    if (audioBuffer.isNotEmpty()) {
+                        sendMergedAudioChunk(audioBuffer)
+                        lastSendTime = System.currentTimeMillis()
+                    }
+
+                    // ── STEP 3: Live streaming ────────────────────────────────────────
+                    // Stop pre-buffer capture and restart with live-send callback
+                    audioCaptureService.stopCapture()
+                    audioCaptureService.startCapture { audioChunk ->
+                        audioBuffer.add(audioChunk)
+                        val elapsed = System.currentTimeMillis() - lastSendTime
+                        if (audioBuffer.size >= batchSize || (audioBuffer.isNotEmpty() && elapsed >= 2000L)) {
+                            sendMergedAudioChunk(audioBuffer)
+                            lastSendTime = System.currentTimeMillis()
+                        }
+                    }
+                    Logger.info("MonitoringManager", "Live audio streaming to AWS ✅")
+
+                    // Start on-device speech recognition as the primary transcription method.
+                    // Amazon Transcribe (server-side) requires a separate subscription.
+                    // SpeechHelper sends transcript messages to Lambda, which runs fraud analysis.
+                    speechHelper.onResult = { text, isFinal ->
+                        webSocketClient.sendTranscript(text, isFinal)
+                        if (isFinal && text.isNotBlank()) {
+                            _transcription.value = (_transcription.value.let {
+                                if (it.startsWith("🎙️") || it.isEmpty()) text else "$it $text"
+                            })
+                        }
+                    }
+                    speechHelper.start()
+                    Logger.info("MonitoringManager", "On-device speech recognition started ✅")
+                    _transcription.value = "🎙️ Listening for call audio..."
                 } else {
-                    Logger.error("MonitoringManager", "Audio recording permission not granted")
-                    // Disconnect WS cleanly so it stops emitting ERROR state
+                    // WS failed — keep audio running for local analysis, but stop sending
+                    if (!_isMonitoring.value) return@launch
+                    Logger.warn("MonitoringManager", "WS failed — audio captured but server unavailable")
                     webSocketClient.disconnect()
                     webSocketClient.reset()
-                    // Go back to armed mode, not full stop
                     _isActiveCall.value = false
                     _connectionState.value = ConnectionState.DISCONNECTED
                     _detectionMode.value = DetectionMode.REAL_METADATA_ONLY
-                    _transcription.value = "⚠️ Mic permission needed. Local AI protection still active. Grant mic in Settings > Apps > MACHER."
+                    val errDetail = webSocketClient.lastConnectionError.value ?: "timeout"
+                    _transcription.value = "⚠️ Server unreachable ($errDetail). Local AI active — call is being monitored."
+                    fallbackManager.stopHealthChecks()
                 }
-            } else {
-                // Guard: stop was called while we were waiting for connection
-                if (!_isMonitoring.value) return@launch
-                Logger.error("MonitoringManager", "Failed to connect to backend (state=${_connectionState.value})")
-                // Disconnect WS cleanly so it stops emitting ERROR state
-                webSocketClient.disconnect()
-                webSocketClient.reset()
-                // Go back to armed mode instead of full stop
-                _isActiveCall.value = false
-                _connectionState.value = ConnectionState.DISCONNECTED
-                // Switch to local-only detection; app continues protecting with ManipulationDetector
-                _detectionMode.value = DetectionMode.REAL_METADATA_ONLY
-                val errDetail = webSocketClient.lastConnectionError.value ?: "timeout"
-                _transcription.value = "⚠️ Cloud server unreachable ($errDetail). Local AI protection active. Will retry on next call."
-                fallbackManager.stopHealthChecks()
             }
         }
+    }
+
+    /** Merge audio chunks into a single byte array and send to WebSocket. */
+    private fun sendMergedAudioChunk(chunks: MutableList<ByteArray>) {
+        if (chunks.isEmpty()) return
+        val totalSize = chunks.sumOf { it.size }
+        val merged = ByteArray(totalSize)
+        var offset = 0
+        for (chunk in chunks) { chunk.copyInto(merged, offset); offset += chunk.size }
+        chunks.clear()
+        webSocketClient.sendAudioChunk(merged)
     }
     
     /**
@@ -506,9 +567,19 @@ class MonitoringManager(private val context: Context) {
         // Stop audio capture
         audioCaptureService.stopCapture()
         
+        // Stop on-device speech recognition
+        speechHelper.stop()
+        
         // Disconnect WebSocket
         webSocketClient.disconnect()
         webSocketClient.reset()
+        
+        // Stop foreground service
+        try {
+            CallMonitorForegroundService.stop(context)
+        } catch (e: Exception) {
+            Logger.error("MonitoringManager", "Failed to stop foreground service: ${e.message}", e)
+        }
         
         _isActiveCall.value = false
         _isMonitoring.value = false
@@ -541,6 +612,13 @@ class MonitoringManager(private val context: Context) {
         if (!_isActiveCall.value) return
         
         Logger.info("MonitoringManager", "Call ended — returning to armed mode")
+
+        // Stop foreground service — no longer need to keep audio alive
+        try {
+            CallMonitorForegroundService.stop(context)
+        } catch (e: Exception) {
+            Logger.error("MonitoringManager", "Failed to stop foreground service: ${e.message}", e)
+        }
         
         // Flush pending database writes
         scope.launch(Dispatchers.IO) {
@@ -556,6 +634,9 @@ class MonitoringManager(private val context: Context) {
         
         // Stop audio capture
         audioCaptureService.stopCapture()
+        
+        // Stop on-device speech recognition
+        speechHelper.stop()
         
         // Disconnect WebSocket
         webSocketClient.disconnect()

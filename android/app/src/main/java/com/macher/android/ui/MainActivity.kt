@@ -7,8 +7,12 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
+import android.provider.CallLog
 import android.provider.Settings
+import android.telephony.PhoneStateListener
+import android.telephony.TelephonyCallback
 import android.telephony.TelephonyManager
+import java.util.concurrent.Executors
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -60,6 +64,8 @@ import com.macher.android.ui.components.ScenarioProgressCard
 import com.macher.android.ui.components.ScenarioSelectorCard
 import com.macher.android.ui.theme.*
 import com.macher.android.util.Config
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
@@ -75,7 +81,16 @@ class MainActivity : ComponentActivity() {
     private lateinit var monitoringManager: MonitoringManager
     private var callDetectionReceiver: BroadcastReceiver? = null
     private var phoneStateReceiver: BroadcastReceiver? = null
-    
+    // TelephonyManager.listen() — primary MIUI-safe call detector (non-broadcast)
+    private var telephonyManager: TelephonyManager? = null
+    @Suppress("DEPRECATION")
+    private var legacyPhoneStateListener: PhoneStateListener? = null
+    private var modernCallCallback: Any? = null // TelephonyCallback (API 31+)
+    // Cache number from RINGING so we have it at OFFHOOK (unified between all detectors)
+    private var cachedCallerNumber: String = ""
+    private var lastCallState: Int = TelephonyManager.CALL_STATE_IDLE
+    private var callStatePollingJob: Job? = null
+
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -99,6 +114,7 @@ class MainActivity : ComponentActivity() {
         val appPreferences = AppPreferences(this)
         requestPermissions()
         registerCallDetectionReceiver()
+        registerTelephonyListener()
         
         setContent {
             // Read theme preference from DataStore — recompose when it changes
@@ -161,9 +177,49 @@ class MainActivity : ComponentActivity() {
             try { unregisterReceiver(it) } catch (_: Exception) {}
         }
         phoneStateReceiver = null
+        callStatePollingJob?.cancel()
+        callStatePollingJob = null
+        unregisterTelephonyListener()
         monitoringManager.cleanup()
     }
-    
+
+    override fun onResume() {
+        super.onResume()
+        // MIUI fix: immediately check current call state (catches already-active calls)
+        val currentState = telephonyManager?.callState ?: TelephonyManager.CALL_STATE_IDLE
+        com.macher.android.util.Logger.info("MainActivity", "[Poll] onResume — callState=$currentState lastKnown=$lastCallState")
+        if (currentState != lastCallState) {
+            handleTelephonyCallState(currentState, "")
+        }
+        startCallStatePolling()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        callStatePollingJob?.cancel()
+        callStatePollingJob = null
+    }
+
+    /**
+     * Polls TelephonyManager.callState every 2 seconds as a MIUI fallback.
+     * On MIUI, TelephonyCallback.onCallStateChanged(OFFHOOK) is frequently not fired
+     * for outgoing VoLTE calls. Direct polling catches the state change reliably.
+     */
+    private fun startCallStatePolling() {
+        callStatePollingJob?.cancel()
+        callStatePollingJob = lifecycleScope.launch {
+            while (true) {
+                delay(2000L)
+                val state = telephonyManager?.callState ?: TelephonyManager.CALL_STATE_IDLE
+                if (state != lastCallState) {
+                    com.macher.android.util.Logger.info("MainActivity",
+                        "[Poll] State changed $lastCallState -> $state (MIUI fallback)")
+                    handleTelephonyCallState(state, "")
+                }
+            }
+        }
+    }
+
     private fun registerCallDetectionReceiver() {
         // Receiver for MACHER's own CallScreeningService broadcast (API 29+)
         callDetectionReceiver = object : BroadcastReceiver() {
@@ -184,54 +240,190 @@ class MainActivity : ComponentActivity() {
         }
         
         // PhoneStateReceiver: Detects incoming/outgoing calls on ALL API levels.
-        // This is the primary trigger for auto-starting monitoring when a call arrives.
+        // Routes through handleTelephonyCallState() so both sources share unified caching.
         phoneStateReceiver = object : BroadcastReceiver() {
-            private var lastState = TelephonyManager.CALL_STATE_IDLE
-            
             override fun onReceive(context: Context?, intent: Intent?) {
                 if (intent?.action != TelephonyManager.ACTION_PHONE_STATE_CHANGED) return
-                
                 val stateStr = intent.getStringExtra(TelephonyManager.EXTRA_STATE) ?: return
                 val phoneNumber = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER) ?: ""
-                
                 val state = when (stateStr) {
                     TelephonyManager.EXTRA_STATE_RINGING -> TelephonyManager.CALL_STATE_RINGING
                     TelephonyManager.EXTRA_STATE_OFFHOOK -> TelephonyManager.CALL_STATE_OFFHOOK
                     else -> TelephonyManager.CALL_STATE_IDLE
                 }
-                
-                when {
-                    // Call answered / outgoing call started → start real monitoring
-                    // Only if armed (isMonitoring=true) and no active call yet
-                    state == TelephonyManager.CALL_STATE_OFFHOOK && lastState != TelephonyManager.CALL_STATE_OFFHOOK -> {
-                        com.macher.android.util.Logger.info("MainActivity", "Call offhook — starting real monitoring")
-                        if (monitoringManager.isMonitoring.value && !monitoringManager.isActiveCall.value) {
-                            monitoringManager.startMonitoring(phoneNumber)
-                        }
-                    }
-                    // Call ended → return to armed mode (not full stop)
-                    state == TelephonyManager.CALL_STATE_IDLE && lastState != TelephonyManager.CALL_STATE_IDLE -> {
-                        com.macher.android.util.Logger.info("MainActivity", "Call ended — returning to armed mode")
-                        if (monitoringManager.isActiveCall.value) {
-                            monitoringManager.stopCallMonitoring()
-                        }
-                    }
-                }
-                lastState = state
+                com.macher.android.util.Logger.info("MainActivity", "[BroadcastReceiver] state=$stateStr number=$phoneNumber")
+                handleTelephonyCallState(state, phoneNumber)
             }
         }
         val phoneFilter = IntentFilter(TelephonyManager.ACTION_PHONE_STATE_CHANGED)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(phoneStateReceiver, phoneFilter, Context.RECEIVER_NOT_EXPORTED)
+            // System broadcasts require RECEIVER_EXPORTED to be delivered on Android 13+
+            registerReceiver(phoneStateReceiver, phoneFilter, Context.RECEIVER_EXPORTED)
         } else {
             registerReceiver(phoneStateReceiver, phoneFilter)
         }
+
+        // Listen for the internal forwarded broadcast from our manifest-declared PhoneStateManifestReceiver.
+        // This receiver fires even when MIUI blocks direct delivery to dynamically-registered receivers.
+        val manifestForwardReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                val stateStr = intent?.getStringExtra(TelephonyManager.EXTRA_STATE) ?: return
+                val state = when (stateStr) {
+                    TelephonyManager.EXTRA_STATE_RINGING -> TelephonyManager.CALL_STATE_RINGING
+                    TelephonyManager.EXTRA_STATE_OFFHOOK -> TelephonyManager.CALL_STATE_OFFHOOK
+                    else -> TelephonyManager.CALL_STATE_IDLE
+                }
+                com.macher.android.util.Logger.info("MainActivity",
+                    "[ManifestForward] state=$stateStr")
+                handleTelephonyCallState(state, "")
+            }
+        }
+        val internalFilter = IntentFilter(
+            com.macher.android.service.PhoneStateManifestReceiver.ACTION_INTERNAL_PHONE_STATE
+        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(manifestForwardReceiver, internalFilter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(manifestForwardReceiver, internalFilter)
+        }
     }
     
+    /**
+     * Register TelephonyManager listener — the PRIMARY and MOST RELIABLE method on MIUI/Xiaomi.
+     * Unlike ACTION_PHONE_STATE_CHANGED broadcasts (which MIUI blocks), this direct API call
+     * always delivers call state changes to the app.
+     *
+     * Uses TelephonyCallback on API 31+ (avoids deprecation lint), falls back to
+     * PhoneStateListener on older devices.
+     */
+    @Suppress("DEPRECATION")
+    private fun registerTelephonyListener() {
+        telephonyManager = getSystemService(TelephonyManager::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // API 31+ — TelephonyCallback (modern, non-deprecated)
+            val callback = object : TelephonyCallback(), TelephonyCallback.CallStateListener {
+                override fun onCallStateChanged(state: Int) {
+                    // TelephonyCallback doesn't provide phone number — resolved via CallLog
+                    handleTelephonyCallState(state, "")
+                }
+            }
+            telephonyManager?.registerTelephonyCallback(
+                Executors.newSingleThreadExecutor(), callback
+            )
+            modernCallCallback = callback
+            com.macher.android.util.Logger.info("MainActivity", "TelephonyCallback registered (API 31+)")
+        } else {
+            // API < 31 — PhoneStateListener (deprecated but works)
+            val listener = object : PhoneStateListener() {
+                override fun onCallStateChanged(state: Int, phoneNumber: String?) {
+                    handleTelephonyCallState(state, phoneNumber ?: "")
+                }
+            }
+            telephonyManager?.listen(listener, PhoneStateListener.LISTEN_CALL_STATE)
+            legacyPhoneStateListener = listener
+            com.macher.android.util.Logger.info("MainActivity", "PhoneStateListener registered (legacy)")
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun unregisterTelephonyListener() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                (modernCallCallback as? TelephonyCallback)?.let {
+                    telephonyManager?.unregisterTelephonyCallback(it)
+                }
+            } else {
+                legacyPhoneStateListener?.let {
+                    telephonyManager?.listen(it, PhoneStateListener.LISTEN_NONE)
+                }
+            }
+        } catch (_: Exception) {}
+        telephonyManager = null
+        modernCallCallback = null
+        legacyPhoneStateListener = null
+    }
+
+    /**
+     * Unified call state handler — called from BOTH TelephonyListener AND broadcast receiver.
+     * Guards against double-triggering with [lastCallState] check.
+     *
+     * On API 31+, phoneNumber will be empty (TelephonyCallback doesn't provide it).
+     * We resolve it by reading the most recent CallLog entry.
+     */
+    private fun handleTelephonyCallState(state: Int, phoneNumber: String) {
+        if (state == lastCallState) return // debounce duplicates
+
+        // If phone number is empty (API 31 TelephonyCallback path), read from CallLog
+        val resolvedNumber = if (phoneNumber.isNotEmpty()) {
+            phoneNumber
+        } else if (state == TelephonyManager.CALL_STATE_RINGING ||
+                   state == TelephonyManager.CALL_STATE_OFFHOOK) {
+            queryLatestCallLogNumber() ?: ""
+        } else ""
+
+        when (state) {
+            TelephonyManager.CALL_STATE_RINGING -> {
+                if (resolvedNumber.isNotEmpty()) cachedCallerNumber = resolvedNumber
+                com.macher.android.util.Logger.info("MainActivity",
+                    "[TelephonyListener] RINGING — caller: $cachedCallerNumber")
+            }
+            TelephonyManager.CALL_STATE_OFFHOOK -> {
+                if (cachedCallerNumber.isEmpty() && resolvedNumber.isNotEmpty()) {
+                    cachedCallerNumber = resolvedNumber
+                }
+                com.macher.android.util.Logger.info("MainActivity",
+                    "[TelephonyListener] OFFHOOK — starting monitoring for: $cachedCallerNumber")
+                // Auto-arm if shield wasn't pressed by the user yet
+                if (!monitoringManager.isMonitoring.value) {
+                    com.macher.android.util.Logger.info("MainActivity",
+                        "[TelephonyListener] Auto-arming monitoring (shield not manually pressed)")
+                    monitoringManager.startMonitoring()
+                }
+                if (!monitoringManager.isActiveCall.value) {
+                    monitoringManager.startMonitoring(cachedCallerNumber)
+                }
+            }
+            TelephonyManager.CALL_STATE_IDLE -> {
+                if (lastCallState != TelephonyManager.CALL_STATE_IDLE) {
+                    com.macher.android.util.Logger.info("MainActivity",
+                        "[TelephonyListener] IDLE — call ended")
+                    cachedCallerNumber = ""
+                    if (monitoringManager.isActiveCall.value) {
+                        monitoringManager.stopCallMonitoring()
+                    }
+                }
+            }
+        }
+        lastCallState = state
+    }
+
+    /**
+     * Query CallLog for the most recent incoming/outgoing call number.
+     * Used on API 31+ where TelephonyCallback doesn't provide the number.
+     * Requires READ_CALL_LOG permission.
+     */
+    private fun queryLatestCallLogNumber(): String? {
+        return try {
+            val cursor = contentResolver.query(
+                CallLog.Calls.CONTENT_URI,
+                arrayOf(CallLog.Calls.NUMBER),
+                null, null,
+                "${CallLog.Calls.DATE} DESC"
+            ) ?: return null
+            cursor.use { c ->
+                if (c.moveToFirst()) c.getString(0) else null
+            }
+        } catch (e: Exception) {
+            com.macher.android.util.Logger.warn("MainActivity", "CallLog query failed: ${e.message}")
+            null
+        }
+    }
+
     private fun requestPermissions() {
         val permissions = mutableListOf(
             Manifest.permission.RECORD_AUDIO,
             Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.READ_CALL_LOG,
             Manifest.permission.ANSWER_PHONE_CALLS,
             Manifest.permission.SEND_SMS
         )

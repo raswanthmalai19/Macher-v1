@@ -72,7 +72,8 @@ class AudioCaptureService {
         try {
             // Note: Caller must check RECORD_AUDIO permission before invoking startCapture.
 
-            // Initialize AudioRecord
+            // Initialize AudioRecord — try VOICE_COMMUNICATION first, fall back to MIC
+            // VOICE_COMMUNICATION can be locked by telephony on cellular calls
             audioRecord = AudioRecord(
                 MediaRecorder.AudioSource.VOICE_COMMUNICATION,
                 Config.Audio.SAMPLE_RATE,
@@ -82,7 +83,19 @@ class AudioCaptureService {
             )
             
             if (audioRecord?.state != AudioRecord.STATE_INITIALIZED) {
-                Logger.error("AudioCaptureService", "AudioRecord initialization failed")
+                Logger.warn("AudioCaptureService", "VOICE_COMMUNICATION source unavailable, falling back to MIC")
+                audioRecord?.release()
+                audioRecord = AudioRecord(
+                    MediaRecorder.AudioSource.MIC,
+                    Config.Audio.SAMPLE_RATE,
+                    Config.Audio.CHANNEL_CONFIG,
+                    Config.Audio.AUDIO_FORMAT,
+                    bufferSize
+                )
+            }
+            
+            if (audioRecord?.state != AudioRecord.STATE_INITIALIZED) {
+                Logger.error("AudioCaptureService", "AudioRecord initialization failed (both VOICE_COMMUNICATION and MIC)")
                 return
             }
             

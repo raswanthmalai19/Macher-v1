@@ -16,6 +16,7 @@ import com.macher.android.ui.MacherApp
 import com.macher.android.ui.theme.*
 import com.macher.android.util.AnnounceThreatLevel
 import com.macher.android.util.AnnounceDetectionMode
+import com.macher.android.util.Logger
 
 /**
  * Protected mode home screen
@@ -31,6 +32,15 @@ fun ProtectedHomeScreen(
     onNavigateToProfile: () -> Unit = {}
 ) {
     val isMonitoring by monitoringManager.isMonitoring.collectAsState()
+
+    // Auto-arm: automatically start monitoring when Protected user opens the app.
+    // The user should never have to manually press the shield to enable basic protection.
+    LaunchedEffect(Unit) {
+        if (!monitoringManager.isMonitoring.value) {
+            Logger.info("ProtectedHomeScreen", "Auto-arming call monitoring for Protected user")
+            monitoringManager.startMonitoring()
+        }
+    }
 
     val navItemColors = NavigationBarItemDefaults.colors(
         selectedIconColor = MacherElectricCyan,

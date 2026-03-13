@@ -163,9 +163,6 @@ class RealWebSocketClient {
                 _isReconnecting.value = false
                 _connectionState.value = ConnectionState.CONNECTED
                 reconnectAttempts = 0
-                
-                // Send initial connection message
-                sendConnectionMessage()
             }
             
             override fun onMessage(webSocket: WebSocket, text: String) {
@@ -254,6 +251,33 @@ class RealWebSocketClient {
             webSocket?.send(jsonString)
         } catch (e: Exception) {
             Logger.error("WebSocketClient", "Failed to send audio chunk", e)
+        }
+    }
+
+    /**
+     * Send transcript text from on-device speech recognition to Lambda.
+     */
+    fun sendTranscript(text: String, isFinal: Boolean) {
+        if (_connectionState.value != ConnectionState.CONNECTED) {
+            Logger.warn("WebSocketClient", "Cannot send transcript: not connected")
+            return
+        }
+        if (text.isBlank()) return
+
+        try {
+            val msg = TranscriptMessageOut(
+                action = "transcript",
+                callSessionId = currentCallSessionId,
+                timestamp = System.currentTimeMillis(),
+                text = text,
+                isFinal = isFinal,
+                sequenceNumber = sequenceCounter.getAndIncrement()
+            )
+            val jsonString = json.encodeToString(msg)
+            webSocket?.send(jsonString)
+            Logger.debug("WebSocketClient", "Transcript sent (${text.length} chars, final=$isFinal)")
+        } catch (e: Exception) {
+            Logger.error("WebSocketClient", "Failed to send transcript", e)
         }
     }
     
@@ -489,5 +513,18 @@ data class AudioMessageOut(
     val callSessionId: String,
     val timestamp: Long,
     val audioData: String,
+    val sequenceNumber: Int
+)
+
+/**
+ * Transcript message sent to Lambda from on-device speech recognition
+ */
+@Serializable
+data class TranscriptMessageOut(
+    val action: String,
+    val callSessionId: String,
+    val timestamp: Long,
+    val text: String,
+    val isFinal: Boolean,
     val sequenceNumber: Int
 )

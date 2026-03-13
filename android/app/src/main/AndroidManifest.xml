@@ -52,6 +52,23 @@
             </intent-filter>
         </service>
 
+        <!-- Foreground Service that keeps audio capture alive during phone calls -->
+        <service
+            android:name=".service.CallMonitorForegroundService"
+            android:foregroundServiceType="microphone"
+            android:exported="false" />
+
+        <!-- Manifest-declared PHONE_STATE receiver — wakes app even under MIUI background restrictions.
+             ACTION_PHONE_STATE_CHANGED is on Android's implicit-broadcast exemption list so
+             this works on API 26+ with READ_PHONE_STATE permission. -->
+        <receiver
+            android:name=".service.PhoneStateManifestReceiver"
+            android:exported="true">
+            <intent-filter android:priority="999">
+                <action android:name="android.intent.action.PHONE_STATE" />
+            </intent-filter>
+        </receiver>
+
         <!-- FileProvider for sharing exported files -->
         <provider
             android:name="androidx.core.content.FileProvider"
