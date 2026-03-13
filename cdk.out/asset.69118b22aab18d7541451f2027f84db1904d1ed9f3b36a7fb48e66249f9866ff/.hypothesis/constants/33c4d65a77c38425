@@ -1,4 +1,0 @@
-# file: /Users/raswanthmalaisamy/Downloads/AIDEA/lambda/fraud-detection/src/notification_trigger.py
-# hypothesis_version: 6.148.7
-
-[200, 201, 202, 'AnalysisResult', 'Content-Type', 'POST', 'User-Agent', 'analysis', 'application/json', 'call_id', 'confidence_score', 'fraud_alert', 'fraud_score', 'high', 'http://', 'https://', 'low', 'medium', 'notification_type', 'payload', 'priority', 'threat_level', 'timestamp', 'utf-8']

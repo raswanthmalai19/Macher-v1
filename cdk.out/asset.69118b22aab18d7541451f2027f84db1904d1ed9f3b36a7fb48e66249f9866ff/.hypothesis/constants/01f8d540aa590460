@@ -1,4 +1,0 @@
-# file: /Users/raswanthmalaisamy/Downloads/AIDEA/lambda/fraud-detection/src/guardrails_client.py
-# hypothesis_version: 6.148.7
-
-['Code', 'Error', 'GUARDRAIL_INTERVENED', 'INPUT', 'Message', 'NONE', 'UNKNOWN', 'Unknown', 'action', 'assessments', 'bedrock', 'bedrock-runtime', 'outputs', 'piiEntities', 'text', 'type', 'us-east-1']

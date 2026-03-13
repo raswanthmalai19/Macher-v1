@@ -23,6 +23,7 @@ android/.DS_Store
 *.d.ts
 *.js.map
 cdk.context.json
+cdk.out/
 
 # IDE
 .vscode/

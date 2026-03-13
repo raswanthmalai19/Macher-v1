@@ -1,4 +1,0 @@
-# file: /Users/raswanthmalaisamy/Downloads/AIDEA/lambda/fraud-detection/src/fraud_scoring.py
-# hypothesis_version: 6.148.7
-
-[0.0, 0.5, 100, 'Caution', 'ConversationSegment', 'Danger', 'Safe', 'bank', 'cash', 'cryptocurrency', 'gift card', 'government', 'irs', 'law_enforcement', 'money order', 'tech_support', 'utility', 'wire transfer']
