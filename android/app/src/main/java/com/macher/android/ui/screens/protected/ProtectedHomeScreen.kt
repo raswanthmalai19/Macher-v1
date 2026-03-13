@@ -44,6 +44,9 @@ fun ProtectedHomeScreen(
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             NavigationBar(
+                modifier = Modifier
+                    .navigationBarsPadding()
+                    .padding(bottom = 56.dp),
                 containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = MaterialTheme.colorScheme.onSurface,
                 tonalElevation = 0.dp

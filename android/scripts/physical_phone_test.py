@@ -100,12 +100,64 @@ def tap_text(text_variants, sleep_s=1.5):
 
 
 def tap_bottom_nav(index, sleep_s=1.5):
-    """Tap bottom nav by index: 0 Monitor, 1 History, 2 Settings, 3 Profile."""
+    """Tap bottom nav by index: 0 Monitor, 1 History, 2 Settings, 3 Profile.
+    Uses clickable bottom-row views when available to avoid gesture interception.
+    """
+    root = evaluate_screen()
+    bottom_views = []
+    for node in root.iter("node"):
+        cls = node.attrib.get("class") or ""
+        clickable = node.attrib.get("clickable") == "true"
+        b = node.attrib.get("bounds") or ""
+        c = center(b)
+        if not c:
+            continue
+        x, y = c
+        if clickable and cls == "android.view.View" and y > 1800:
+            bottom_views.append((x, y))
+
+    if bottom_views and index in (1, 2, 3):
+        expected_x = {1: 400, 2: 680, 3: 950}[index]
+        tx, ty = min(bottom_views, key=lambda p: abs(p[0] - expected_x))
+        adb(f"shell input tap {tx} {ty}")
+        time.sleep(sleep_s)
+        return
+
+    # Fallback coordinate taps
     w, h = get_display_size()
     x = int(((2 * index + 1) * w) / 8)
-    for y in (h - 220, h - 300):
+    for y in (h - 300, h - 360):
         adb(f"shell input tap {x} {y}")
         time.sleep(sleep_s)
+
+
+def is_monitor_home(root):
+    return has_exact_text(root, "START MONITORING") or has_exact_text(root, "STOP MONITORING")
+
+
+def ensure_monitor_home(max_steps=8):
+    for _ in range(max_steps):
+        root = evaluate_screen()
+        if is_monitor_home(root):
+            return True
+
+        # If in settings/profile/history details, back out to Monitor home
+        if has_text(root, "Enable Monitoring") or has_text(root, "Settings") or has_text(root, "YOUR ROLE") or has_text(root, "History"):
+            adb("shell input keyevent KEYCODE_BACK")
+            time.sleep(1.2)
+            continue
+
+        # If still in onboarding-like flow, complete setup
+        setup_to_home(max_steps=4)
+        root = evaluate_screen()
+        if is_monitor_home(root):
+            return True
+
+        # Last resort: relaunch and setup
+        launch_app()
+        setup_to_home(max_steps=4)
+
+    return False
 
 
 def find_edit_text_centers(root):
@@ -219,6 +271,9 @@ screenshot("home")
 home_ok = home_ready and (has_exact_text(root, "START MONITORING") or has_exact_text(root, "STOP MONITORING"))
 record("launch_home", home_ok, "App opened to main/home")
 
+ensure_monitor_home()
+root = evaluate_screen()
+
 # Monitoring
 started = tap_text(["START MONITORING", "Start Monitoring"])
 root = evaluate_screen()
@@ -233,6 +288,7 @@ monitor_stopped = has_text(root, "START MONITORING") or has_text(root, "Start Mo
 record("monitor_stop", stopped and monitor_stopped, "Stop toggles back to start")
 
 # Settings
+ensure_monitor_home()
 opened_settings = tap_text(["Settings"])
 if not opened_settings:
     tap_bottom_nav(2)
@@ -244,6 +300,7 @@ settings_ok = any(
 record("settings_screen", settings_ok, "Settings options visible")
 
 # Profile
+ensure_monitor_home()
 opened_profile = tap_text(["Profile"])
 if not opened_profile:
     tap_bottom_nav(3)
@@ -266,6 +323,7 @@ if has_text(root, "Cancel"):
     tap_text(["Cancel"])
 
 # History
+ensure_monitor_home()
 if not tap_text(["History"]):
     tap_bottom_nav(1)
 root = evaluate_screen()
@@ -274,6 +332,7 @@ history_ok = has_text(root, "History") or has_text(root, "No calls") or has_text
 record("history_screen", history_ok, "History reachable and rendered")
 
 # Offline mode
+ensure_monitor_home()
 adb("shell cmd connectivity airplane-mode enable", timeout=20)
 time.sleep(2)
 root = evaluate_screen()
