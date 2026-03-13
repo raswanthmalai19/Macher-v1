@@ -1,5 +1,5 @@
 /**
- * Rollback Manager for VocalShield CI/CD Pipeline
+ * Rollback Manager for MACHER CI/CD Pipeline
  * 
  * This module manages deployment rollbacks, including snapshot creation,
  * history management, and restoration of previous versions.

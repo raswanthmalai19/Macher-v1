@@ -9,49 +9,73 @@ object Config {
     /**
      * WebSocket API Gateway URL for real-time audio streaming.
      * 
-     * Format: wss://your-api-id.execute-api.region.amazonaws.com/production
-     * 
-     * To find your WebSocket URL:
-     * 1. Go to AWS Console → API Gateway
-     * 2. Find your WebSocket API
-     * 3. Copy the WebSocket URL from the Stages section
+     * CONFIGURED: Real AWS deployment
+     * Endpoint: wss://mg1nazug3m.execute-api.us-east-1.amazonaws.com/dev
+     * Stage 'dev' matches the CDK-deployed WebSocket stage name.
      */
-    const val WEBSOCKET_URL = "wss://YOUR_API_ID.execute-api.us-east-1.amazonaws.com/production"
+    const val WEBSOCKET_URL = "wss://mg1nazug3m.execute-api.us-east-1.amazonaws.com/dev"
     
     /**
      * REST API URL for mobile analytics and management.
      * 
-     * Format: https://your-api-id.execute-api.region.amazonaws.com/production
+     * CONFIGURED: Real AWS deployment
+     * Stage 'dev' matches the CDK-deployed API stage name.
      */
-    const val REST_API_URL = "https://YOUR_API_ID.execute-api.us-east-1.amazonaws.com/production"
-    
+    const val REST_API_URL = "https://mg1nazug3m.execute-api.us-east-1.amazonaws.com/dev"
+
     /**
-     * Authentication token for API access.
-     * 
-     * TODO: Implement proper authentication with AWS Cognito or API keys
-     * For now, using a placeholder
+     * WebSocket API key — passed as ?apiKey=<value> in the WSS connection URL.
+     *
+     * The Lambda connect handler (lambda/connect/index.ts) validates this from
+     * queryStringParameters?.apiKey — NOT from HTTP headers.
+     *
+     * Value retrieved from AWS Secrets Manager (macher/api-keys → websocketApiKey).
      */
-    const val AUTH_TOKEN = "demo-auth-token"
+    const val WEBSOCKET_API_KEY = "jeZDr<SRz4frUp@8%GR|^-rp]I-8l7Kw"
+
+    /**
+     * Authentication token for REST API access.
+     * 
+     * Loaded at runtime from secure storage (KeyManager).
+     * Fallback default is empty — the app will prompt the user to configure.
+     */
+    var AUTH_TOKEN: String = ""
+        private set
+
+    /**
+     * Set the auth token at runtime (loaded from KeyManager on app startup).
+     */
+    fun setAuthToken(token: String) {
+        AUTH_TOKEN = token
+    }
     
     /**
      * Enable demo mode for testing without real call audio.
-     * 
+     *
      * When true:
-     * - Simulates realistic scam scenarios
-     * - Uses preloaded conversation scripts
-     * - Shows all detection features
-     * - Demonstrates multi-layer risk analysis
-     * - No AWS backend required
-     * 
-     * When false:
-     * - Connects to real AWS backend
-     * - Captures real call audio
-     * - Performs live analysis
-     * - Requires AWS API Gateway URLs
-     * 
-     * Set to false for production use with real call audio.
+     * - Runs realistic scam-detection demo scenarios
+     * - No live audio capture required
+     * - No AWS backend connection needed
+     * - Full UI flow works end-to-end
+     *
+     * When false (DEFAULT — real mode):
+     * - Auto-detects incoming calls
+     * - Captures live audio via Accessibility Service
+     * - Streams to AWS for Bedrock analysis
+     * - Runs local ManipulationDetector in parallel
+     * - Auto-hangs up and notifies guardian on scam detection
+     *
+     * Toggle via Settings screen at runtime.
      */
-    const val DEMO_MODE = true
+    var DEMO_MODE: Boolean = false
+        private set
+
+    /**
+     * Toggle demo mode at runtime from settings UI.
+     */
+    fun setDemoMode(enabled: Boolean) {
+        DEMO_MODE = enabled
+    }
     
     /**
      * Audio configuration
@@ -69,9 +93,23 @@ object Config {
     object WebSocket {
         const val CONNECT_TIMEOUT_MS = 10000L  // 10 seconds
         const val PING_INTERVAL_MS = 30000L    // 30 seconds
-        const val MAX_RECONNECT_ATTEMPTS = 5
-        const val RECONNECT_DELAY_MS = 1000L   // Start with 1 second
-        const val MAX_RECONNECT_DELAY_MS = 30000L  // Max 30 seconds
+        const val MAX_RECONNECT_ATTEMPTS = 3   // Reduced: save AWS credits on failures
+        const val RECONNECT_DELAY_MS = 2000L   // Start with 2 seconds (less aggressive)
+        const val MAX_RECONNECT_DELAY_MS = 60000L  // Max 60 seconds between retries
+    }
+    
+    /**
+     * AWS Credit Efficiency — reduces unnecessary backend calls
+     */
+    object CreditSaver {
+        /** Health check interval in ms. Higher = fewer AWS hits, slower failover */
+        const val HEALTH_CHECK_INTERVAL_MS = 60000L     // 60s instead of 30s
+        /** Only do health checks while actively monitoring a call */
+        const val HEALTH_CHECK_ONLY_DURING_CALLS = true
+        /** Batch audio chunks to reduce WebSocket messages. e.g. 3 = send every 300ms */
+        const val AUDIO_CHUNK_BATCH_SIZE = 3
+        /** Skip transcription requests for the first N seconds of a call (usually greetings) */
+        const val SKIP_FIRST_SECONDS = 5
     }
     
     /**

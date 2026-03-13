@@ -1,5 +1,5 @@
 /**
- * Android Builder for VocalShield CI/CD Pipeline
+ * Android Builder for MACHER CI/CD Pipeline
  * 
  * This module handles Android APK building, signing, verification,
  * and artifact upload operations.

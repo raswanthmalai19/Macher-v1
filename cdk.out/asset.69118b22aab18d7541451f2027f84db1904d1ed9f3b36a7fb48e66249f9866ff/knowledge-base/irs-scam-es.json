@@ -1,0 +1,62 @@
+{
+  "pattern_id": "irs-scam-es-001",
+  "pattern_type": "IRS Scam",
+  "language": "es",
+  "description": "El llamante se hace pasar por un agente del IRS exigiendo pago inmediato por impuestos atrasados con amenazas de arresto o acción legal",
+  "indicators": [
+    "amenazando con arresto o acción legal",
+    "exigiendo pago inmediato",
+    "solicitando tarjetas de regalo o transferencia bancaria",
+    "reclamando deuda de impuestos o impuestos no pagados",
+    "usando tono agresivo o amenazante",
+    "mencionando órdenes de arresto o policía",
+    "reclamando suspensión del número de Seguro Social",
+    "negándose a proporcionar número de devolución de llamada o número de placa",
+    "exigiendo pago por teléfono",
+    "amenazando con deportación o suspensión de licencia"
+  ],
+  "example_scripts": [
+    "Llamo del IRS sobre sus impuestos no pagados. Debe $5,000 y debe pagar inmediatamente o será arrestado.",
+    "Tenemos una orden de arresto por fraude fiscal. Pague ahora para evitar consecuencias legales.",
+    "Su número de Seguro Social será suspendido si no paga su deuda de impuestos hoy.",
+    "Este es su aviso final del Servicio de Impuestos Internos. Tiene 24 horas para pagar o enfrentar cargos criminales.",
+    "Estamos enviando la policía a su dirección ahora mismo a menos que pague el monto de impuestos pendiente inmediatamente.",
+    "Necesita comprar tarjetas de regalo de iTunes por valor de $2,000 para liquidar su deuda con el IRS hoy.",
+    "Sus cuentas bancarias serán congeladas y sus activos embargados si no transfiere el dinero dentro de una hora.",
+    "Soy el Oficial Johnson de la división de cumplimiento del IRS. Está bajo investigación por evasión de impuestos.",
+    "Si no paga ahora, será deportado y perderá su estatus migratorio.",
+    "Debe ir a la tienda y comprar tarjetas de regalo para pagar sus impuestos inmediatamente."
+  ],
+  "urgency_phrases": [
+    "inmediatamente",
+    "ahora mismo",
+    "dentro de 24 horas",
+    "aviso final",
+    "última advertencia",
+    "acción urgente requerida",
+    "asunto urgente",
+    "antes del fin del día"
+  ],
+  "financial_demands": [
+    "tarjetas de regalo",
+    "tarjetas iTunes",
+    "tarjetas Google Play",
+    "transferencia bancaria",
+    "tarjetas de débito prepagadas",
+    "criptomoneda",
+    "MoneyGram",
+    "Western Union"
+  ],
+  "red_flags": [
+    "El IRS nunca llama para exigir pago inmediato",
+    "El IRS nunca amenaza con arresto por teléfono",
+    "El IRS nunca solicita tarjetas de regalo como pago",
+    "El IRS siempre envía aviso por escrito primero",
+    "El IRS nunca exige métodos de pago específicos",
+    "Los agentes reales del IRS proporcionan números de devolución de llamada y números de placa"
+  ],
+  "severity": "high",
+  "common_payment_methods": ["tarjetas de regalo", "transferencia bancaria", "tarjetas de débito prepagadas", "criptomoneda"],
+  "target_demographics": ["ancianos", "inmigrantes", "víctimas de temporada de impuestos"],
+  "seasonal_patterns": ["enero-abril (temporada de impuestos)", "octubre-diciembre (fin de año)"]
+}

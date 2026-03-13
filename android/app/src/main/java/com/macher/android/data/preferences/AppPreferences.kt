@@ -11,11 +11,12 @@ import kotlinx.coroutines.flow.map
  * MACHER App-level settings preferences using DataStore.
  * Controls monitoring, protection, and notification settings.
  */
-class AppPreferences(private val context: Context) {
+// Top-level singleton delegate – guarantees only one DataStore instance per process
+private val Context.appSettingsStore: DataStore<Preferences> by preferencesDataStore(
+    name = "app_settings"
+)
 
-    private val Context.appSettingsStore: DataStore<Preferences> by preferencesDataStore(
-        name = "app_settings"
-    )
+class AppPreferences(private val context: Context) {
 
     companion object {
         // Protection settings
@@ -60,7 +61,7 @@ class AppPreferences(private val context: Context) {
     }
 
     val autoDisconnect: Flow<Boolean> = context.appSettingsStore.data.map { prefs ->
-        prefs[KEY_AUTO_DISCONNECT] ?: false
+        prefs[KEY_AUTO_DISCONNECT] ?: true
     }
 
     val enableNotifications: Flow<Boolean> = context.appSettingsStore.data.map { prefs ->
@@ -120,7 +121,7 @@ class AppPreferences(private val context: Context) {
         prefs[KEY_ENABLE_OVERLAY]        = true
         prefs[KEY_ENABLE_TRANSCRIPTION]  = true
         prefs[KEY_AUTO_START_MONITORING] = false
-        prefs[KEY_AUTO_DISCONNECT]       = false
+        prefs[KEY_AUTO_DISCONNECT]       = true
         prefs[KEY_ENABLE_NOTIFICATIONS]  = true
         prefs[KEY_ALERT_GUARDIAN]        = true
         prefs[KEY_AI_SENSITIVITY]        = DEFAULT_SENSITIVITY

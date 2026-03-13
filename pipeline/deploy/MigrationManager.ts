@@ -1,5 +1,5 @@
 /**
- * Migration Manager for VocalShield CI/CD Pipeline
+ * Migration Manager for MACHER CI/CD Pipeline
  * 
  * This module manages database migrations, including detection,
  * validation, execution, and rollback of schema changes.

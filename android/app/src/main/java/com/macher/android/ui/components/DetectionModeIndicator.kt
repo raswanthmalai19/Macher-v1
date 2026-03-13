@@ -27,16 +27,21 @@ import com.macher.android.ui.theme.*
  * Accessibility (Task 12.1): Content descriptions for screen readers
  * 
  * @param mode Current detection mode
+ * @param isActiveCall Whether a phone call is actively being monitored (vs just armed/listening)
  * @param modifier Modifier for customizing the indicator appearance
  */
 @Composable
 fun DetectionModeIndicator(
     mode: DetectionMode,
+    isActiveCall: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val modeDescription = when (mode) {
-        DetectionMode.REAL_FULL -> "Full protection active with all detection layers operational"
-        DetectionMode.REAL_METADATA_ONLY -> "Metadata-only mode: AWS unavailable, using call pattern analysis only"
+        DetectionMode.REAL_FULL -> if (isActiveCall)
+            "Live call analysis active — all detection layers operational"
+        else
+            "Armed and ready — all detection layers will activate on incoming call"
+        DetectionMode.REAL_METADATA_ONLY -> "Local AI protection active — cloud analysis unavailable, using on-device detection"
         DetectionMode.DEMO -> "Demo mode: demonstrating detection with preloaded scenarios"
     }
     
@@ -82,8 +87,8 @@ fun DetectionModeIndicator(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = when (mode) {
-                        DetectionMode.REAL_FULL -> "Full Protection Active"
-                        DetectionMode.REAL_METADATA_ONLY -> "Metadata-Only Mode"
+                        DetectionMode.REAL_FULL -> if (isActiveCall) "Live Analysis Active" else "Full Protection Armed"
+                        DetectionMode.REAL_METADATA_ONLY -> "Local AI Protection Active"
                         DetectionMode.DEMO -> "Demo Mode"
                     },
                     style = MaterialTheme.typography.titleSmall,
@@ -95,8 +100,11 @@ fun DetectionModeIndicator(
                 
                 Text(
                     text = when (mode) {
-                        DetectionMode.REAL_FULL -> "All detection layers operational"
-                        DetectionMode.REAL_METADATA_ONLY -> "AWS unavailable - using call pattern analysis only"
+                        DetectionMode.REAL_FULL -> if (isActiveCall)
+                            "All detection layers operational"
+                        else
+                            "All layers ready — activates automatically on incoming call"
+                        DetectionMode.REAL_METADATA_ONLY -> "Cloud unreachable — on-device AI protecting you"
                         DetectionMode.DEMO -> "Demonstrating detection with preloaded scenarios"
                     },
                     style = MaterialTheme.typography.bodySmall,

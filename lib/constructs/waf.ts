@@ -12,11 +12,14 @@ export interface WafConstructProps {
  * AWS WAF Web ACL Construct
  * 
  * Creates a Web ACL with:
- * - Rate limiting: 100 requests per 5 minutes per IP
+ * - Rate limiting: 100 requests per minute per IP (Requirement 12.4)
  * - AWS managed Core Rule Set
  * - AWS managed Known Bad Inputs Rule Set
  * 
  * Associates with API Gateway for protection
+ * 
+ * Note: WAF rate limiting is per IP address, not per API key. This provides
+ * protection against abuse while being simpler to implement than per-key limiting.
  */
 export class WafConstruct extends Construct {
   public readonly webAcl: wafv2.CfnWebACL;
@@ -33,13 +36,16 @@ export class WafConstruct extends Construct {
       defaultAction: { allow: {} },
       description: 'WAF protection for MACHER WebSocket API',
       rules: [
-        // Rule 1: Rate Limiting
+        // Rule 1: Rate Limiting (Requirement 12.4)
+        // Limit: 100 requests per minute per IP
+        // WAF rate limiting is specified per 5-minute window
+        // 100 requests/minute = 500 requests per 5 minutes
         {
           name: 'RateLimitRule',
           priority: 1,
           statement: {
             rateBasedStatement: {
-              limit: 100,
+              limit: 500, // 100 requests/min * 5 min = 500 requests per 5-minute window
               aggregateKeyType: 'IP',
             },
           },

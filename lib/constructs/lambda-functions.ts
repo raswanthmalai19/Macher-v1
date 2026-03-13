@@ -11,6 +11,8 @@ export interface LambdaFunctionsConstructProps {
   connectionsTableArn: string;
   metadataTableName: string;
   metadataTableArn: string;
+  guardianLinksTableName: string;
+  guardianLinksTableArn: string;
 }
 
 /**
@@ -33,11 +35,12 @@ export class LambdaFunctionsConstruct extends Construct {
   public readonly disconnectHandler: lambda.Function;
   public readonly audioProcessor: lambda.Function;
   public readonly investigationHandler: lambda.Function;
+  public readonly guardianSyncHandler: lambda.Function;
 
   constructor(scope: Construct, id: string, props: LambdaFunctionsConstructProps) {
     super(scope, id);
 
-    const { config, connectionsTableName, connectionsTableArn, metadataTableName, metadataTableArn } = props;
+    const { config, connectionsTableName, connectionsTableArn, metadataTableName, metadataTableArn, guardianLinksTableName, guardianLinksTableArn } = props;
 
     // Create Connect Handler Lambda (Task 5.1)
     this.connectHandler = new lambda.Function(this, 'ConnectHandler', {
@@ -52,12 +55,15 @@ export class LambdaFunctionsConstruct extends Construct {
       environment: {
         CONNECTIONS_TABLE_NAME: connectionsTableName,
         ENVIRONMENT: config.tags.Environment,
+        LOG_LEVEL: 'INFO',
+        API_KEYS_SECRET_NAME: 'macher/api-keys',
       },
       logRetention: logs.RetentionDays.ONE_WEEK,
       description: 'Handles WebSocket $connect route - validates and stores connection metadata',
     });
 
-    // Grant DynamoDB PutItem permission on Connections Table only
+    // Grant DynamoDB PutItem permission on Connections Table only (Requirement 7.5)
+    // Connection Manager needs PutItem to store connection records
     this.connectHandler.addToRolePolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
@@ -65,6 +71,21 @@ export class LambdaFunctionsConstruct extends Construct {
         resources: [connectionsTableArn],
       })
     );
+
+    // Grant Secrets Manager permissions for Connect Handler (Requirement 12.1)
+    // Connect Handler needs to retrieve API keys for authentication
+    this.connectHandler.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['secretsmanager:GetSecretValue'],
+        resources: [
+          `arn:aws:secretsmanager:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:secret:macher/api-keys-*`,
+        ],
+      })
+    );
+
+    // CloudWatch Logs permissions are automatically granted by Lambda construct
+    // X-Ray permissions are automatically granted when tracing is enabled
 
     // Create Disconnect Handler Lambda (Task 5.2)
     this.disconnectHandler = new lambda.Function(this, 'DisconnectHandler', {
@@ -79,19 +100,25 @@ export class LambdaFunctionsConstruct extends Construct {
       environment: {
         CONNECTIONS_TABLE_NAME: connectionsTableName,
         ENVIRONMENT: config.tags.Environment,
+        LOG_LEVEL: 'INFO',
       },
       logRetention: logs.RetentionDays.ONE_WEEK,
       description: 'Handles WebSocket $disconnect route - updates connection status to disconnected',
     });
 
-    // Grant DynamoDB UpdateItem permission on Connections Table only
+    // Grant DynamoDB UpdateItem and DeleteItem permissions on Connections Table only (Requirement 7.5)
+    // Disconnect Handler needs UpdateItem to mark connections as disconnected
+    // and DeleteItem to remove connection records
     this.disconnectHandler.addToRolePolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
-        actions: ['dynamodb:UpdateItem'],
+        actions: ['dynamodb:UpdateItem', 'dynamodb:DeleteItem'],
         resources: [connectionsTableArn],
       })
     );
+
+    // CloudWatch Logs permissions are automatically granted by Lambda construct
+    // X-Ray permissions are automatically granted when tracing is enabled
 
     // Create Audio Processor Lambda (Task 5.3)
     this.audioProcessor = new lambda.Function(this, 'AudioProcessor', {
@@ -107,13 +134,16 @@ export class LambdaFunctionsConstruct extends Construct {
         CONNECTIONS_TABLE_NAME: connectionsTableName,
         METADATA_TABLE_NAME: metadataTableName,
         ENVIRONMENT: config.tags.Environment,
+        LOG_LEVEL: 'INFO',
         // SNS_TOPIC_ARN and EVENT_BUS_NAME will be added when those resources are created (Task 9, 10)
       },
       logRetention: logs.RetentionDays.ONE_WEEK,
       description: 'Processes audio data, detects fraud, stores metadata, and publishes events',
     });
 
-    // Grant DynamoDB permissions for Audio Processor
+    // Grant DynamoDB permissions for Audio Processor (Requirement 7.5)
+    // Audio Processor needs PutItem to store call metadata
+    // Query permission for GSI access if needed
     this.audioProcessor.addToRolePolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
@@ -121,6 +151,50 @@ export class LambdaFunctionsConstruct extends Construct {
         resources: [
           metadataTableArn,
           `${metadataTableArn}/index/*`, // GSI access
+        ],
+      })
+    );
+
+    // Grant Amazon Transcribe Streaming permissions (Requirement 7.5)
+    // Audio Processor needs to stream audio for real-time transcription
+    this.audioProcessor.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'transcribe:StartStreamTranscription',
+        ],
+        resources: ['*'], // Transcribe streaming doesn't support resource-level permissions
+      })
+    );
+
+    // Grant Amazon Bedrock permissions (Requirement 7.5)
+    // Audio Processor needs to invoke Bedrock Agent for fraud detection
+    // Restrict to specific agent and model if possible
+    this.audioProcessor.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'bedrock:InvokeAgent',
+          'bedrock:InvokeModel',
+        ],
+        resources: [
+          // Allow access to Bedrock agents in this account
+          `arn:aws:bedrock:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:agent/*`,
+          // Allow access to Claude 3.5 Sonnet model
+          `arn:aws:bedrock:${cdk.Stack.of(this).region}::foundation-model/anthropic.claude-3-5-sonnet-*`,
+        ],
+      })
+    );
+
+    // Grant Bedrock Knowledge Base permissions (Requirement 7.5)
+    this.audioProcessor.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'bedrock:Retrieve',
+        ],
+        resources: [
+          `arn:aws:bedrock:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:knowledge-base/*`,
         ],
       })
     );
@@ -149,7 +223,16 @@ export class LambdaFunctionsConstruct extends Construct {
       })
     );
 
-    // SNS and EventBridge permissions will be added when those resources are created (Task 9, 10)
+    // SNS and EventBridge permissions
+    this.audioProcessor.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['events:PutEvents'],
+        resources: [
+          `arn:aws:events:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:event-bus/default`,
+        ],
+      })
+    );
 
     // Create Investigation Handler Lambda (Task 9.4)
     this.investigationHandler = new lambda.Function(this, 'InvestigationHandler', {
@@ -168,10 +251,47 @@ export class LambdaFunctionsConstruct extends Construct {
       description: 'Performs deep fraud investigation analysis for high-severity cases',
     });
 
+    // Create Guardian Sync Handler Lambda
+    this.guardianSyncHandler = new lambda.Function(this, 'GuardianSyncHandler', {
+      functionName: `MACHER-GuardianSync-${config.tags.Environment}`,
+      runtime: lambda.Runtime.NODEJS_20_X,
+      architecture: lambda.Architecture.ARM_64,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/guardian-sync'),
+      memorySize: 512,
+      timeout: cdk.Duration.seconds(15),
+      tracing: lambda.Tracing.ACTIVE,
+      environment: {
+        GUARDIAN_LINKS_TABLE_NAME: guardianLinksTableName,
+        ENVIRONMENT: config.tags.Environment,
+        LOG_LEVEL: 'INFO',
+      },
+      logRetention: logs.RetentionDays.ONE_WEEK,
+      description: 'Handles guardian-protected user link CRUD and sync operations',
+    });
+
+    // Grant DynamoDB permissions for Guardian Sync
+    this.guardianSyncHandler.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'dynamodb:PutItem',
+          'dynamodb:GetItem',
+          'dynamodb:UpdateItem',
+          'dynamodb:Query',
+        ],
+        resources: [
+          guardianLinksTableArn,
+          `${guardianLinksTableArn}/index/*`,
+        ],
+      })
+    );
+
     // Apply tags to all Lambda functions
     cdk.Tags.of(this.connectHandler).add('Component', 'ConnectHandler');
     cdk.Tags.of(this.disconnectHandler).add('Component', 'DisconnectHandler');
     cdk.Tags.of(this.audioProcessor).add('Component', 'AudioProcessor');
     cdk.Tags.of(this.investigationHandler).add('Component', 'InvestigationHandler');
+    cdk.Tags.of(this.guardianSyncHandler).add('Component', 'GuardianSyncHandler');
   }
 }

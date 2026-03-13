@@ -171,5 +171,5 @@ object Logger {
  * In a real build, this would come from the generated BuildConfig class.
  */
 private object BuildConfig {
-    const val DEBUG = true
+    val DEBUG = com.macher.android.BuildConfig.DEBUG
 }

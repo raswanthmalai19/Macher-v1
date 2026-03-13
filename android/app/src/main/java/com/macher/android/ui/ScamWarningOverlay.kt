@@ -71,6 +71,7 @@ fun ScamWarningOverlay(
         ) {
             var visibleWarnings by remember { mutableIntStateOf(0) }
             var countdown by remember { mutableIntStateOf(10) }
+            var countdownCancelled by remember { mutableStateOf(false) }
             
             LaunchedEffect(Unit) {
                 // Stagger warning items by 120ms each
@@ -80,13 +81,15 @@ fun ScamWarningOverlay(
                 }
             }
             
-            LaunchedEffect(Unit) {
+            LaunchedEffect(countdownCancelled) {
+                if (countdownCancelled) return@LaunchedEffect
                 // 10-second auto hang-up countdown
                 for (i in 9 downTo 0) {
                     delay(1000)
+                    if (countdownCancelled) return@LaunchedEffect
                     countdown = i
                 }
-                onDisconnect()
+                if (!countdownCancelled) onDisconnect()
             }
             Box(
                 modifier = Modifier
@@ -261,9 +264,12 @@ fun ScamWarningOverlay(
                     
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // Dismiss Button - Subtle outline
+                    // Dismiss Button - Subtle outline (cancels countdown too)
                     OutlinedButton(
-                        onClick = onDismiss,
+                        onClick = {
+                            countdownCancelled = true
+                            onDismiss()
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(48.dp),

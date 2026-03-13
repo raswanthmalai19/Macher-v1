@@ -19,6 +19,9 @@
     <uses-permission android:name="android.permission.ANSWER_PHONE_CALLS" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
+    
+    <!-- Foreground service type for audio capture (Android 14+) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
 
     <application
         android:allowBackup="false"
@@ -39,18 +42,26 @@
             </intent-filter>
         </activity>
 
-        <!-- Accessibility Service for Audio Capture -->
+        <!-- Call Screening Service for OS-level incoming call detection (API 29+) -->
         <service
-            android:name=".domain.AudioCaptureService"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:name=".service.MacherCallScreeningService"
+            android:permission="android.permission.BIND_SCREENING_SERVICE"
             android:exported="true">
             <intent-filter>
-                <action android:name="android.accessibilityservice.AccessibilityService" />
+                <action android:name="android.telecom.CallScreeningService" />
             </intent-filter>
-            <meta-data
-                android:name="android.accessibilityservice"
-                android:resource="@xml/accessibility_service_config" />
         </service>
+
+        <!-- FileProvider for sharing exported files -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
     </application>
 

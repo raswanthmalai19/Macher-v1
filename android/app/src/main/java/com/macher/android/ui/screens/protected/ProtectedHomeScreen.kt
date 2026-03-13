@@ -2,16 +2,12 @@ package com.macher.android.ui.screens.protected
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,7 +30,6 @@ fun ProtectedHomeScreen(
     onNavigateToSettings: () -> Unit,
     onNavigateToProfile: () -> Unit = {}
 ) {
-    var selectedTab by remember { mutableIntStateOf(0) }
     val isMonitoring by monitoringManager.isMonitoring.collectAsState()
 
     val navItemColors = NavigationBarItemDefaults.colors(
@@ -69,48 +64,34 @@ fun ProtectedHomeScreen(
                         }
                     },
                     label = { Text("Monitor", fontSize = 12.sp) },
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
+                    selected = true,
+                    onClick = { /* already on this screen */ },
                     colors = navItemColors
                 )
                 NavigationBarItem(
                     icon = {
-                        BadgedBox(
-                            badge = {
-                                Badge(containerColor = DangerRed) {
-                                    Text("3", color = Color.White, fontSize = 10.sp)
-                                }
-                            }
-                        ) {
-                            Icon(Icons.Default.History, contentDescription = "History")
-                        }
+                        // Badge count comes from real DB — no hardcoded number
+                        Icon(Icons.Default.History, contentDescription = "History")
                     },
                     label = { Text("History", fontSize = 12.sp) },
-                    selected = selectedTab == 1,
-                    onClick = {
-                        selectedTab = 1
-                        onNavigateToHistory()
-                    },
+                    // History/Settings/Profile navigate to separate screens so they are
+                    // never truly "selected" while we are on ProtectedHomeScreen.
+                    selected = false,
+                    onClick = { onNavigateToHistory() },
                     colors = navItemColors
                 )
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
                     label = { Text("Settings", fontSize = 12.sp) },
-                    selected = selectedTab == 2,
-                    onClick = {
-                        selectedTab = 2
-                        onNavigateToSettings()
-                    },
+                    selected = false,
+                    onClick = { onNavigateToSettings() },
                     colors = navItemColors
                 )
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.AccountCircle, contentDescription = "Profile") },
                     label = { Text("Profile", fontSize = 12.sp) },
-                    selected = selectedTab == 3,
-                    onClick = {
-                        selectedTab = 3
-                        onNavigateToProfile()
-                    },
+                    selected = false,
+                    onClick = { onNavigateToProfile() },
                     colors = navItemColors
                 )
             }

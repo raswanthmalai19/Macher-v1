@@ -38,15 +38,16 @@ export class SecretsManagerConstruct extends Construct {
     super(scope, id);
 
     // Create secret for API keys
+    // Generate a secure WebSocket API key for mobile client authentication
     this.apiKeysSecret = new secretsmanager.Secret(this, 'ApiKeysSecret', {
       secretName: `macher/api-keys`,
-      description: 'API keys for MACHER external service integrations',
+      description: 'API keys for MACHER external service integrations and WebSocket authentication',
       generateSecretString: {
         secretStringTemplate: JSON.stringify({
           mlServiceApiKey: 'PLACEHOLDER_ML_API_KEY',
           thirdPartyIntegrationKey: 'PLACEHOLDER_INTEGRATION_KEY',
         }),
-        generateStringKey: 'placeholder',
+        generateStringKey: 'websocketApiKey', // This will be auto-generated as a secure random string
       },
     });
 

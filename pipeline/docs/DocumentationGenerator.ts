@@ -1,5 +1,5 @@
 /**
- * DocumentationGenerator - Automated documentation generation for VocalShield
+ * DocumentationGenerator - Automated documentation generation for MACHER
  * 
  * Generates API documentation from OpenAPI specs, architecture diagrams from CDK code,
  * changelogs from commit messages, validates documentation links, and publishes
@@ -424,7 +424,7 @@ export class DocumentationGenerator {
     // In production, this would parse CDK code and generate a proper diagram
     // For now, return a template diagram
     return `graph TB
-    subgraph "VocalShield Architecture"
+    subgraph "MACHER Architecture"
         Mobile[Android App]
         APIGW[API Gateway WebSocket]
         Lambda1[Audio Processor Lambda]
@@ -457,11 +457,11 @@ export class DocumentationGenerator {
    * @returns Markdown string
    */
   private generateArchitectureMarkdown(mermaidDiagram: string): string {
-    return `# VocalShield Architecture
+    return `# MACHER Architecture
 
 ## Overview
 
-VocalShield is a real-time voice fraud detection system built on AWS serverless architecture.
+MACHER is a real-time voice fraud detection system built on AWS serverless architecture.
 
 ## Architecture Diagram
 
@@ -511,7 +511,7 @@ ${mermaidDiagram}
 
 ## Data Flow
 
-1. User activates VocalShield during a phone call
+1. User activates MACHER during a phone call
 2. Mobile app captures audio and streams to API Gateway
 3. Audio Processor Lambda receives audio chunks
 4. Transcribe converts audio to text in real-time
@@ -712,7 +712,7 @@ ${mermaidDiagram}
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VocalShield Documentation - v${metadata.version}</title>
+  <title>MACHER Documentation - v${metadata.version}</title>
   <style>
     body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 1200px; margin: 0 auto; padding: 20px; }
     h1 { color: #2c3e50; }
@@ -726,7 +726,7 @@ ${mermaidDiagram}
   </style>
 </head>
 <body>
-  <h1>VocalShield Documentation</h1>
+  <h1>MACHER Documentation</h1>
   
   <div class="metadata">
     <h2>Documentation Metadata</h2>
@@ -744,8 +744,8 @@ ${mermaidDiagram}
     <a href="CHANGELOG.md">Changelog</a>
   </nav>
   
-  <h2>About VocalShield</h2>
-  <p>VocalShield is a real-time, privacy-first voice firewall that protects vulnerable users from financial fraud and social engineering attacks.</p>
+  <h2>About MACHER</h2>
+  <p>MACHER is a real-time, privacy-first voice firewall that protects vulnerable users from financial fraud and social engineering attacks.</p>
   
   <h3>Key Features</h3>
   <ul>

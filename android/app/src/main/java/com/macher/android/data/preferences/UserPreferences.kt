@@ -8,12 +8,13 @@ import com.macher.android.data.model.UserRole
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
+// Top-level singleton delegate – guarantees only one DataStore instance per process
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_prefs")
+
 /**
  * User preferences using DataStore
  */
 class UserPreferences(private val context: Context) {
-    
-    private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_prefs")
     
     companion object {
         private val USER_ID = stringPreferencesKey("user_id")
@@ -24,6 +25,11 @@ class UserPreferences(private val context: Context) {
         private val ONBOARDING_COMPLETE = booleanPreferencesKey("onboarding_complete")
         private val CURRENT_APP_MODE = stringPreferencesKey("current_app_mode")
         private val IS_DARK_THEME = booleanPreferencesKey("is_dark_theme")
+        // Role-scoped name/phone so Guardian and Protected profiles stay separate
+        private val GUARDIAN_NAME = stringPreferencesKey("guardian_name")
+        private val GUARDIAN_PHONE = stringPreferencesKey("guardian_phone")
+        private val PROTECTED_NAME = stringPreferencesKey("protected_name")
+        private val PROTECTED_PHONE = stringPreferencesKey("protected_phone")
     }
     
     /**
@@ -175,6 +181,52 @@ class UserPreferences(private val context: Context) {
     suspend fun clear() {
         context.dataStore.edit { prefs ->
             prefs.clear()
+        }
+    }
+
+    // ── Role-specific profile ─────────────────────────────────────────────────
+
+    /** Returns the name stored for the given role (falls back to generic USER_NAME). */
+    fun userNameForRole(role: UserRole): Flow<String?> = context.dataStore.data.map { prefs ->
+        when (role) {
+            UserRole.GUARDIAN  -> prefs[GUARDIAN_NAME]  ?: prefs[USER_NAME]
+            UserRole.PROTECTED -> prefs[PROTECTED_NAME] ?: prefs[USER_NAME]
+            else               -> prefs[USER_NAME]
+        }
+    }
+
+    /** Returns the phone stored for the given role (falls back to generic USER_PHONE). */
+    fun userPhoneForRole(role: UserRole): Flow<String?> = context.dataStore.data.map { prefs ->
+        when (role) {
+            UserRole.GUARDIAN  -> prefs[GUARDIAN_PHONE]  ?: prefs[USER_PHONE]
+            UserRole.PROTECTED -> prefs[PROTECTED_PHONE] ?: prefs[USER_PHONE]
+            else               -> prefs[USER_PHONE]
+        }
+    }
+
+    /**
+     * Save name + phone for the given role AND to the generic key.
+     * Also generates a userId if one hasn't been assigned yet.
+     */
+    suspend fun saveProfileForRole(name: String, phone: String, role: UserRole) {
+        context.dataStore.edit { prefs ->
+            prefs[USER_NAME] = name
+            prefs[USER_PHONE] = phone
+            when (role) {
+                UserRole.GUARDIAN -> {
+                    prefs[GUARDIAN_NAME]  = name
+                    prefs[GUARDIAN_PHONE] = phone
+                }
+                UserRole.PROTECTED -> {
+                    prefs[PROTECTED_NAME]  = name
+                    prefs[PROTECTED_PHONE] = phone
+                }
+                else -> {}
+            }
+            // Ensure every user has a stable ID
+            if (prefs[USER_ID] == null) {
+                prefs[USER_ID] = java.util.UUID.randomUUID().toString()
+            }
         }
     }
 }

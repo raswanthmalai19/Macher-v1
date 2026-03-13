@@ -1,0 +1,16 @@
+{
+  "name": "investigation-handler",
+  "version": "1.0.0",
+  "description": "VocalShield Investigation Handler Lambda",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@types/aws-lambda": "^8.10.119"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

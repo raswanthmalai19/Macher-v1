@@ -1,320 +1,211 @@
-# VocalShield - Quick Reference Guide
+# 🛡️ MACHER Quick Reference - Real Mode Testing
 
-**Last Updated**: March 1, 2026  
-**Status**: Ready for Competition Submission
+## ⚡ FASTEST WAY TO TEST (3 Steps)
 
----
-
-## 🚀 Quick Start
-
-### Build APK
+### Step 1: Install APK
 ```bash
-cd android
-./gradlew assembleDebug
+# On your Mac terminal:
+chmod +x /Users/raswanthmalaisamy/Downloads/AIDEA/install-apk.sh
+/Users/raswanthmalaisamy/Downloads/AIDEA/install-apk.sh
 ```
 
-### Install on Device
+**What the script does**:
+✅ Checks for connected Android device  
+✅ Uninstalls old version (if exists)  
+✅ Installs MACHER APK  
+✅ Shows success message  
+
+---
+
+### Step 2: Launch on Phone
+1. Look for **MACHER** app icon (blue shield) on your phone
+2. Tap to open
+3. Grant permissions when prompted
+4. You should see: **"🛡️ Protection active. Monitoring incoming calls..."**
+
+---
+
+### Step 3: Test Complete Flow
+1. **Tap "START MONITORING"** button (top)
+   - Shield turns green
+   - Status: Armed mode ✅
+
+2. **Have friend call you**
+   - App auto-detects call ✅
+   - Transcription shows live text ✅
+   - Threat level displayed ✅
+
+3. **Friend says scam content** (test text below)
+   - Real-time analysis runs ✅
+   - Threat rises to DANGER ✅
+   - Call auto-hangs up ✅
+   - Guardian SMS received ✅
+
+---
+
+## 📞 Test Call Scripts
+
+### Script A: Danger (Will Auto-Disconnect)
+```
+"This is urgent from the IRS Tax Department. We've detected fraud 
+on your account. Immediate legal action will be taken if you don't 
+verify your information right now. What is your social security number?"
+```
+**Expected**: Auto-disconnect, red alert, SMS sent ✅
+
+---
+
+### Script B: Caution (Will Show Warning)
+```
+"Hi, this is your bank calling to verify some transactions. 
+Can you confirm your PIN and mother's maiden name to proceed?"
+```
+**Expected**: Yellow overlay appears, no disconnect ✅
+
+---
+
+### Script C: Safe (Normal Call)
+```
+"Hey, how are you doing? I'm calling from the office. 
+Did you get my email about the meeting tomorrow?"
+```
+**Expected**: Green, no alerts, normal call ✅
+
+---
+
+## 🔍 Real-Time Monitoring
+
+### Watch Live Logs (While Testing)
 ```bash
-adb install app/build/outputs/apk/debug/app-debug.apk
-```
+# Terminal command (keep running):
+adb logcat -s "MACHER" -v brief
 
-### Run Demo Mode
-1. Launch app
-2. Complete onboarding
-3. Select "Protected" role
-4. Tap "START MONITORING"
-5. Watch demo simulation
-
----
-
-## 📁 Project Structure
-
-```
-VocalShield/
-├── android/                    # Android app
-│   ├── app/src/main/
-│   │   ├── java/com/vocalshield/android/
-│   │   │   ├── ui/            # UI screens & components
-│   │   │   ├── service/       # Business logic services
-│   │   │   ├── network/       # WebSocket client
-│   │   │   ├── data/          # Database & repositories
-│   │   │   └── util/          # Utilities & config
-│   │   └── AndroidManifest.xml
-│   └── build.gradle.kts
-├── infrastructure/             # AWS CDK code
-├── docs/                      # Documentation
-└── README.md
+# Key events to watch for:
+✅ "Call offhook — starting real monitoring"
+✅ "Connected to WebSocket"
+✅ "Transcription: [live text appears]"
+✅ "Threat level: DANGER"
+✅ "Level 3: Autonomous disconnect"
+✅ "Guardian alert sent"
 ```
 
 ---
 
-## 🔑 Key Files
+## 🎯 Testing Checklist
 
-### Configuration
-- `android/app/src/main/java/com/vocalshield/android/util/Config.kt`
-  - WebSocket URL
-  - REST API URL
-  - Demo mode toggle
-  - Feature flags
+### Before Test:
+- [ ] Phone connected to internet (WiFi or 4G)
+- [ ] Phone unlocked and screen on
+- [ ] MACHER app installed and open
+- [ ] "START MONITORING" button tapped (green armed mode)
+- [ ] Terminal running `adb logcat` (optional but helpful)
 
-### Main Services
-- `MonitoringManager.kt` - Central coordinator
-- `RealWebSocketClient.kt` - AWS connection
-- `AudioCaptureService.kt` - Audio recording
-- `InterventionEngine.kt` - Progressive alerts
-- `FamilyLoopService.kt` - Guardian notifications
+### During Danger Test:
+- [ ] Call received and answered ✅
+- [ ] Audio waveform shows levels ✅
+- [ ] Transcription updates in real-time ✅
+- [ ] Threat indicator changes ✅
+- [ ] Call auto-disconnects after scam detected ✅
+- [ ] Red overlay appears briefly ✅
+- [ ] Haptic feedback felt (3 pulses) ✅
 
-### UI Screens
-- `ProtectedHomeScreen.kt` - Monitoring interface
-- `GuardianDashboardScreen.kt` - Guardian overview
-- `TrustedContactsScreen.kt` - Contact management
-- `AlertHistoryScreen.kt` - Threat history
-- `GuardianSettingsScreen.kt` - Settings
-
----
-
-## ⚙️ Configuration
-
-### Switch to Real Mode
-Edit `Config.kt`:
-```kotlin
-const val WEBSOCKET_URL = "wss://YOUR_API_ID.execute-api.us-east-1.amazonaws.com/production"
-const val REST_API_URL = "https://YOUR_API_ID.execute-api.us-east-1.amazonaws.com/production"
-const val DEMO_MODE = false  // Change to false
-```
-
-### Enable/Disable Features
-```kotlin
-object Features {
-    const val ENABLE_TRANSCRIPTION_DISPLAY = true
-    const val ENABLE_HAPTIC_FEEDBACK = true
-    const val ENABLE_NOTIFICATIONS = true
-    const val ENABLE_FAMILY_LOOP = true
-}
-```
+### After Test:
+- [ ] Check phone for SMS from guardian
+- [ ] Check logs for all success messages
+- [ ] Tap "STOP MONITORING" to disable
+- [ ] App returns to standby mode ✅
 
 ---
 
-## 🧪 Testing Commands
+## 🚀 Expected First Test Results
 
-### View Logs
+| Component | Expected | Time |
+|-----------|----------|------|
+| Call Detection | Auto (OFFHOOK) | <1s |
+| WebSocket Connect | Connected (green) | 1-2s |
+| Audio Streaming | Waveform appears | 0.5s |
+| Transcription | Text appears | 1-3s (lag) |
+| Scam Pattern Detection | Rising threat | 3-5s |
+| HIGH Risk + Conf ≥0.8 | Auto-disconnect | 2-4s |
+| Guardian SMS | Received | 5-10s |
+| **Total Response Time** | **~10-20s** | ✅ |
+
+---
+
+## 🐛 Quick Fixes
+
+| Problem | Solution |
+|---------|----------|
+| "Device not found" | `adb devices -l` then restart ADB: `adb killed-server` |
+| "Permission denied" | Grant via Settings > Apps > MACHER > Permissions |
+| "Can't connect to AWS" | Check WiFi, verify backend is running |
+| "Call not detected" | Ensure "START MONITORING" tapped (armed mode) |
+| "No auto-disconnect" | Check ANSWER_PHONE_CALLS permission |
+| "SMS not received" | Set guardian phone in Settings, grant SMS perm |
+
+---
+
+## 📊 File Locations
+
+| File | Path | Purpose |
+|------|------|---------|
+| **APK** | `/Downloads/AIDEA/android/app/build/outputs/apk/debug/app-debug.apk` | Install on phone |
+| **Install Script** | `/Downloads/AIDEA/install-apk.sh` | Automate installation |
+| **Testing Guide** | `/Downloads/AIDEA/REAL_MODE_TESTING_GUIDE.md` | Detailed test cases |
+| **This File** | `/Downloads/AIDEA/QUICK_REFERENCE.md` | Quick start |
+| **Config** | `/android/app/src/main/java/com/macher/android/util/Config.kt` | AWS URLs (verified ✅) |
+
+---
+
+## 🎬 Command Reference
+
 ```bash
-# All logs
-adb logcat | grep VocalShield
+# Install automatically:
+/Users/raswanthmalaisamy/Downloads/AIDEA/install-apk.sh
 
-# Specific component
-adb logcat | grep "WebSocketClient"
-adb logcat | grep "AudioCaptureService"
-adb logcat | grep "MonitoringManager"
-```
+# Manual install:
+adb install -r /Users/raswanthmalaisamy/Downloads/AIDEA/android/app/build/outputs/apk/debug/app-debug.apk
 
-### Screen Recording
-```bash
-# Start recording
-adb shell screenrecord /sdcard/demo.mp4
+# Watch logs:
+adb logcat -s "MACHER"
 
-# Stop with Ctrl+C
+# Uninstall:
+adb uninstall com.macher.android
 
-# Pull to Mac
-adb pull /sdcard/demo.mp4 ~/Desktop/
-```
+# List installed apps:
+adb shell pm list packages | grep macher
 
-### Performance Monitoring
-```bash
-# CPU usage
-adb shell top | grep vocalshield
-
-# Memory usage
-adb shell dumpsys meminfo com.vocalshield.android
-
-# Battery stats
-adb shell dumpsys battery
+# Clear app data:
+adb shell pm clear com.macher.android
 ```
 
 ---
 
-## 🐛 Troubleshooting
+## ℹ️ Important Config (Already Set)
 
-### App Won't Install
-```bash
-# Uninstall first
-adb uninstall com.vocalshield.android
-
-# Reinstall
-adb install app/build/outputs/apk/debug/app-debug.apk
-```
-
-### Build Fails
-```bash
-# Clean build
-./gradlew clean
-
-# Rebuild
-./gradlew assembleDebug
-```
-
-### WebSocket Won't Connect
-1. Check AWS URL in Config.kt
-2. Verify internet connection
-3. Check AWS infrastructure deployed
-4. Review logs: `adb logcat | grep WebSocketClient`
-
-### No Audio Capture
-1. Grant microphone permission
-2. Check AudioRecord initialization
-3. Review logs: `adb logcat | grep AudioCaptureService`
+✅ **DEMO_MODE** = `false` (Real mode enabled)  
+✅ **WEBSOCKET_URL** = `wss://mg1nazug3m.execute-api.us-east-1.amazonaws.com/dev` (AWS live)  
+✅ **REST_API_URL** = `https://mg1nazug3m.execute-api.us-east-1.amazonaws.com/dev` (AWS live)  
+✅ **AUTO_DISCONNECT** = `true` (Default enabled)  
+✅ **AUDIO_CONFIG** = 16kHz PCM mono (AWS-ready)  
 
 ---
 
-## 📊 Project Status
+## 🏁 Success Indicators
 
-### Completion: 90%
-
-| Component | Status |
-|-----------|--------|
-| Android App | ✅ 100% |
-| AWS Backend | ✅ 100% |
-| Documentation | ✅ 95% |
-| Testing | ⏳ 20% |
-| Demo Video | ⏳ 0% |
-
-### Next Steps
-1. Create demo video (2-3 hours)
-2. Device testing (1-2 hours)
-3. Bug fixes (1-2 hours)
-4. Submit to competition
+You'll know it's working when:
+1. ✅ App starts without errors
+2. ✅ Shield shows "Active" with green color
+3. ✅ Phone calls auto-detected (no manual action needed)
+4. ✅ Transcription shows live text real-time
+5. ✅ Threat levels change as you speak
+6. ✅ Danger calls auto-disconnect within 10-20 seconds
+7. ✅ Guardian phone receives SMS alerts
+8. ✅ App smoothly returns to armed mode after call
+9. ✅ Multiple calls in sequence work properly
 
 ---
 
-## 🏆 Competition Checklist
+## ❓ Still Have Questions?
 
-### Technical Innovation (34%)
-- [x] Real-time audio streaming
-- [x] AWS Transcribe integration
-- [x] AWS Bedrock AI detection
-- [x] Progressive interventions
-- [x] Zero-retention privacy
-
-### Implementation Quality (33%)
-- [x] Production-ready code
-- [x] Clean architecture
-- [x] Modern tech stack
-- [x] Comprehensive docs
-- [ ] Demo video
-
-### Market Impact (33%)
-- [x] $80B problem addressed
-- [x] Protects vulnerable users
-- [x] Free & accessible
-- [x] Privacy-first
-- [x] Social good focus
-
-**Score: 90/100** ✅
-
----
-
-## 📚 Documentation
-
-### User Guides
-- `README.md` - Project overview
-- `QUICK_START.md` - Getting started
-- `ANDROID_SETUP_GUIDE.md` - Development setup
-- `DEVICE_TESTING_GUIDE.md` - Testing procedures
-
-### Technical Docs
-- `UNIFIED_APP_IMPLEMENTATION_PLAN.md` - Implementation plan
-- `PHASE_A_COMPLETE.md` - Navigation & UI
-- `PHASE_B_COMPLETE.md` - Backend integration
-- `UNIFIED_APP_COMPLETE.md` - Overall status
-- `PROJECT_FINAL_STATUS.md` - Final status
-
-### Competition Docs
-- `DEMO_VIDEO_SCRIPT.md` - Video script
-- `PROJECT_FINAL_STATUS.md` - Submission ready
-
----
-
-## 🎬 Demo Video
-
-### Duration: 4-5 minutes
-
-**Sections:**
-1. Opening (30s) - Problem statement
-2. Solution (45s) - VocalShield overview
-3. Protected Mode (90s) - Core demo
-4. Guardian Mode (60s) - Dashboard features
-5. Architecture (45s) - Technical innovation
-6. Impact (30s) - Social good & conclusion
-
-**Recording:**
-```bash
-adb shell screenrecord --bit-rate 8000000 /sdcard/demo.mp4
-# Perform demo
-# Ctrl+C to stop
-adb pull /sdcard/demo.mp4 ~/Desktop/
-```
-
----
-
-## 💡 Key Features
-
-### Protected Mode
-- One-tap monitoring
-- Traffic light indicator
-- Live transcription
-- Progressive interventions
-- Simple, elderly-friendly UI
-
-### Guardian Mode
-- Dashboard overview
-- Trusted contacts management
-- Alert history
-- Settings & controls
-- Family Loop alerts
-
-### Technical
-- Real-time audio streaming
-- AWS Transcribe + Bedrock
-- <500ms latency
-- Zero audio storage
-- Progressive 3-level interventions
-
----
-
-## 🔗 Quick Links
-
-### Build & Run
-- Build: `./gradlew assembleDebug`
-- Install: `adb install -r app/build/outputs/apk/debug/app-debug.apk`
-- Logs: `adb logcat | grep VocalShield`
-
-### Configuration
-- Config file: `android/app/src/main/java/com/vocalshield/android/util/Config.kt`
-- Manifest: `android/app/src/main/AndroidManifest.xml`
-- Build config: `android/app/build.gradle.kts`
-
-### Documentation
-- All docs in project root
-- Code docs in source files
-- Architecture in README.md
-
----
-
-## 📞 Support
-
-### Issues
-- Check logs: `adb logcat | grep VocalShield`
-- Review documentation
-- Check troubleshooting section
-
-### Resources
-- GitHub: `github.com/vocalshield`
-- Docs: Project root directory
-- AWS: `aws.amazon.com/documentation`
-
----
-
-**Status**: ✅ Ready for Competition  
-**Next**: Create Demo Video  
-**Timeline**: 2-3 hours to completion
-
+See the full guide: `REAL_MODE_TESTING_GUIDE.md`

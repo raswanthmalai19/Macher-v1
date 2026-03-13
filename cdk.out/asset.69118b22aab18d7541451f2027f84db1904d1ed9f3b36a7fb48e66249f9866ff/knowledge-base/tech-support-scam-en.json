@@ -1,0 +1,62 @@
+{
+  "pattern_id": "tech-support-scam-en-001",
+  "pattern_type": "Tech Support Scam",
+  "language": "en",
+  "description": "Caller claims to be from Microsoft, Apple, Google, or other tech company reporting computer virus or security issue",
+  "indicators": [
+    "claiming computer has virus or malware",
+    "requesting remote access to computer",
+    "asking for payment for tech support services",
+    "using technical jargon to confuse victim",
+    "creating sense of urgency about computer security",
+    "claiming to be from Microsoft, Apple, Google, or Windows",
+    "mentioning error messages or warnings",
+    "requesting credit card or banking information",
+    "offering lifetime protection or warranty",
+    "threatening data loss or identity theft"
+  ],
+  "example_scripts": [
+    "This is Microsoft tech support. We detected a virus on your computer and need remote access to fix it.",
+    "Your computer is sending us error messages. We need to connect remotely to resolve the issue.",
+    "We've detected suspicious activity on your Windows license. Pay $299 for our protection service.",
+    "This is Apple security. Your iCloud account has been compromised. We need to verify your information.",
+    "Your computer has been infected with a dangerous virus. Allow us remote access immediately to prevent data loss.",
+    "We're calling from Windows technical department. Your computer is at risk and needs immediate attention.",
+    "Your antivirus subscription has expired. Renew now for $399 or your computer will be vulnerable.",
+    "We detected illegal activity from your IP address. Pay $500 to avoid legal action and secure your system.",
+    "This is Google support. Your account will be suspended unless you verify your payment information now.",
+    "Your computer is part of a botnet. We need to install our security software immediately."
+  ],
+  "urgency_phrases": [
+    "immediately",
+    "right now",
+    "urgent security threat",
+    "critical error",
+    "system at risk",
+    "data will be lost",
+    "account will be suspended",
+    "before it's too late"
+  ],
+  "financial_demands": [
+    "credit card payment",
+    "gift cards",
+    "wire transfer",
+    "tech support subscription",
+    "lifetime warranty",
+    "security software purchase",
+    "remote access fee",
+    "annual protection plan"
+  ],
+  "red_flags": [
+    "Microsoft/Apple/Google never cold-call customers",
+    "Legitimate tech companies don't request remote access unsolicited",
+    "Real tech support doesn't demand immediate payment",
+    "Companies don't detect viruses on your computer remotely",
+    "Legitimate services don't require gift card payments",
+    "Real tech support provides verifiable contact information"
+  ],
+  "severity": "high",
+  "common_payment_methods": ["credit card", "gift cards", "wire transfer", "cryptocurrency"],
+  "target_demographics": ["elderly", "non-technical users", "home computer users"],
+  "seasonal_patterns": ["year-round", "increased during major software updates"]
+}

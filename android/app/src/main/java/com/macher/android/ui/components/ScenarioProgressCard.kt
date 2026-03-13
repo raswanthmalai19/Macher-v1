@@ -48,6 +48,7 @@ fun ScenarioProgressCard(
         RiskLevel.HIGH -> "high"
         RiskLevel.MEDIUM -> "medium"
         RiskLevel.LOW -> "low"
+        else -> "unknown"
     }
     
     Card(

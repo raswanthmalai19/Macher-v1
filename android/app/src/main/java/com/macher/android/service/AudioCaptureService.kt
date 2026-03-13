@@ -17,8 +17,13 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 /**
- * Service for capturing audio from phone calls.
+ * Audio capture handler for phone call monitoring.
  * Uses AudioRecord API to capture PCM audio at 16kHz.
+ * 
+ * Note: This is a regular class (not a Service). It is instantiated and
+ * managed by MonitoringManager. On non-rooted Android devices, only the
+ * local microphone can be captured — the remote caller's audio is not
+ * accessible to third-party apps.
  */
 class AudioCaptureService {
     
@@ -65,6 +70,8 @@ class AudioCaptureService {
         audioChunkCallback = onAudioChunk
         
         try {
+            // Note: Caller must check RECORD_AUDIO permission before invoking startCapture.
+
             // Initialize AudioRecord
             audioRecord = AudioRecord(
                 MediaRecorder.AudioSource.VOICE_COMMUNICATION,

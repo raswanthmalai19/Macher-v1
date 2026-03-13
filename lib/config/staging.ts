@@ -5,7 +5,7 @@ export const stagingConfig: EnvironmentConfig = {
   region: 'us-east-1',
   
   // Stack configuration
-  stackName: 'MACHER-staging',
+  stackName: 'VocalShield-staging',
   
   // VPC configuration
   vpcCidr: '10.0.0.0/16',
@@ -62,9 +62,9 @@ export const stagingConfig: EnvironmentConfig = {
   
   // Tags
   tags: {
-    Project: 'MACHER',
+    Project: 'VocalShield',
     Environment: 'staging',
     ManagedBy: 'CDK',
-    CostCenter: 'MACHER-Infrastructure'
+    CostCenter: 'VocalShield-Infrastructure'
   }
 };

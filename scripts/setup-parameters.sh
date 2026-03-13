@@ -68,62 +68,62 @@ create_parameter() {
 
 # Audio Processor Configuration
 create_parameter \
-    "/vocalshield/$ENVIRONMENT/audio-processor/fraud-threshold" \
+    "/macher/$ENVIRONMENT/audio-processor/fraud-threshold" \
     "70" \
     "Fraud detection threshold score (0-100)"
 
 create_parameter \
-    "/vocalshield/$ENVIRONMENT/audio-processor/max-processing-time" \
+    "/macher/$ENVIRONMENT/audio-processor/max-processing-time" \
     "3000" \
     "Maximum audio processing time in milliseconds"
 
 # Notification Configuration
 create_parameter \
-    "/vocalshield/$ENVIRONMENT/notifications/enabled" \
+    "/macher/$ENVIRONMENT/notifications/enabled" \
     "true" \
     "Enable/disable fraud detection notifications"
 
 # Feature Flags
 create_parameter \
-    "/vocalshield/$ENVIRONMENT/features/wavelength-enabled" \
+    "/macher/$ENVIRONMENT/features/wavelength-enabled" \
     "false" \
     "Enable/disable Wavelength Zone integration"
 
 create_parameter \
-    "/vocalshield/$ENVIRONMENT/features/enhanced-logging" \
+    "/macher/$ENVIRONMENT/features/enhanced-logging" \
     "false" \
     "Enable/disable enhanced debug logging"
 
 # Connection Configuration
 create_parameter \
-    "/vocalshield/$ENVIRONMENT/websocket/idle-timeout" \
+    "/macher/$ENVIRONMENT/websocket/idle-timeout" \
     "600" \
     "WebSocket connection idle timeout in seconds"
 
 create_parameter \
-    "/vocalshield/$ENVIRONMENT/websocket/max-connections" \
+    "/macher/$ENVIRONMENT/websocket/max-connections" \
     "900" \
     "Maximum concurrent WebSocket connections"
 
 # DynamoDB Configuration
 create_parameter \
-    "/vocalshield/$ENVIRONMENT/dynamodb/connection-ttl" \
+    "/macher/$ENVIRONMENT/dynamodb/connection-ttl" \
     "86400" \
     "Connection record TTL in seconds (24 hours)"
 
 create_parameter \
-    "/vocalshield/$ENVIRONMENT/dynamodb/metadata-ttl" \
+    "/macher/$ENVIRONMENT/dynamodb/metadata-ttl" \
     "2592000" \
     "Metadata record TTL in seconds (30 days)"
 
 # Monitoring Configuration
 create_parameter \
-    "/vocalshield/$ENVIRONMENT/monitoring/log-retention-days" \
+    "/macher/$ENVIRONMENT/monitoring/log-retention-days" \
     "7" \
     "CloudWatch Logs retention period in days"
 
 create_parameter \
-    "/vocalshield/$ENVIRONMENT/monitoring/xray-sampling-rate" \
+    "/macher/$ENVIRONMENT/monitoring/xray-sampling-rate" \
     "0.1" \
     "X-Ray trace sampling rate (0.0-1.0)"
 
@@ -132,7 +132,7 @@ echo -e "${GREEN}✓ Parameter Store setup complete!${NC}"
 echo ""
 echo "Created parameters:"
 aws ssm get-parameters-by-path \
-    --path "/vocalshield/$ENVIRONMENT" \
+    --path "/macher/$ENVIRONMENT" \
     --recursive \
     --region "$REGION" \
     --query 'Parameters[*].[Name,Value]' \

@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.macher.android.BuildConfig
 import com.macher.android.data.model.UserRole
 import com.macher.android.ui.theme.*
 
@@ -45,9 +46,14 @@ fun ProfileScreen(
 ) {
     var showRoleSwitchDialog by remember { mutableStateOf(false) }
     var showResetDialog by remember { mutableStateOf(false) }
-    var editName by remember(userName) { mutableStateOf(userName) }
-    var editPhone by remember(userPhone) { mutableStateOf(userPhone) }
+    // isEditingProfile must be declared first so the LaunchedEffects below can read it
     var isEditingProfile by remember { mutableStateOf(false) }
+    // Use plain remember (no key) to avoid resetting while the user is typing.
+    // LaunchedEffect keeps the field in sync when the stored value changes externally.
+    var editName by remember { mutableStateOf(userName) }
+    var editPhone by remember { mutableStateOf(userPhone) }
+    LaunchedEffect(userName) { if (!isEditingProfile) editName = userName }
+    LaunchedEffect(userPhone) { if (!isEditingProfile) editPhone = userPhone }
 
     // Semantic colors that work in both light and dark themes
     val bg = MaterialTheme.colorScheme.background
@@ -84,7 +90,9 @@ fun ProfileScreen(
                 Button(
                     onClick = {
                         showRoleSwitchDialog = false
-                        onRoleSwitch(newRole)
+                        try {
+                            onRoleSwitch(newRole)
+                        } catch (_: Exception) {}
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (newRole == UserRole.GUARDIAN) MacherViolet else MacherElectricCyan
@@ -125,7 +133,9 @@ fun ProfileScreen(
                 Button(
                     onClick = {
                         showResetDialog = false
-                        onResetApp()
+                        try {
+                            onResetApp()
+                        } catch (_: Exception) {}
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = DangerRed)
                 ) {
@@ -164,7 +174,9 @@ fun ProfileScreen(
                 actions = {
                     if (isEditingProfile) {
                         TextButton(onClick = {
-                            onSaveProfile(editName, editPhone)
+                            try {
+                                onSaveProfile(editName, editPhone)
+                            } catch (_: Exception) {}
                             isEditingProfile = false
                         }) {
                             Text("Save", color = primary, fontWeight = FontWeight.Bold)
@@ -489,7 +501,7 @@ fun ProfileScreen(
                     ProfileInfoRow(
                         icon = Icons.Default.Info,
                         label = "Version",
-                        value = "1.0.0",
+                        value = BuildConfig.VERSION_NAME,
                         iconTint = primary,
                         textColor = onSurface,
                         subtextColor = MaterialTheme.colorScheme.onSurfaceVariant

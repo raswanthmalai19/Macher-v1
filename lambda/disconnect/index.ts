@@ -1,6 +1,6 @@
 import { APIGatewayProxyWebsocketEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { captureAWSv3Client } from 'aws-xray-sdk-core';
 
 // Initialize DynamoDB client with X-Ray tracing
@@ -72,24 +72,45 @@ export async function handler(
     }
 
     // Update connection status in DynamoDB
+    // Table has composite key (connectionId + connectedAt), so query first
     const disconnectedAt = Date.now();
 
-    await docClient.send(
-      new UpdateCommand({
+    const queryResult = await docClient.send(
+      new QueryCommand({
         TableName: CONNECTIONS_TABLE,
-        Key: {
-          connectionId,
-        },
-        UpdateExpression: 'SET #status = :status, disconnectedAt = :disconnectedAt',
-        ExpressionAttributeNames: {
-          '#status': 'status',
-        },
-        ExpressionAttributeValues: {
-          ':status': 'disconnected',
-          ':disconnectedAt': disconnectedAt,
-        },
+        KeyConditionExpression: 'connectionId = :cid',
+        ExpressionAttributeValues: { ':cid': connectionId },
+        Limit: 1,
       })
     );
+
+    if (queryResult.Items && queryResult.Items.length > 0) {
+      const connectedAt = queryResult.Items[0].connectedAt;
+
+      await docClient.send(
+        new UpdateCommand({
+          TableName: CONNECTIONS_TABLE,
+          Key: {
+            connectionId,
+            connectedAt,
+          },
+          UpdateExpression: 'SET #status = :status, disconnectedAt = :disconnectedAt',
+          ExpressionAttributeNames: {
+            '#status': 'status',
+          },
+          ExpressionAttributeValues: {
+            ':status': 'disconnected',
+            ':disconnectedAt': disconnectedAt,
+          },
+        })
+      );
+    } else {
+      log({
+        level: 'WARN',
+        message: 'Connection not found in database for disconnect',
+        connectionId,
+      });
+    }
 
     const duration = Date.now() - startTime;
 

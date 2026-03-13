@@ -1,0 +1,4 @@
+# file: /Users/raswanthmalaisamy/Downloads/AIDEA/lambda/fraud-detection/src/models.py
+# hypothesis_version: 6.148.7
+
+[0.8, 100, 200, 'Caution', 'Danger', 'Grandparent Scam', 'IRS Scam', 'Lottery Scam', 'Phishing', 'Romance Scam', 'Safe', 'Tech Support Scam', 'call_id', 'confidence', 'confidence_score', 'description', 'detected_patterns', 'detected_pii_types', 'en', 'error_code', 'error_message', 'explanation', 'fraud_score', 'language', 'matched_indicators', 'pattern_id', 'pattern_type', 'processing_time_ms', 'redacted_text', 'redaction_count', 'response_text', 'retry_possible', 'segment_id', 'segments', 'session_id', 'threat_level', 'timestamp', 'trace', 'transcript_text', 'urgency_detected']

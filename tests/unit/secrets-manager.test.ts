@@ -21,15 +21,15 @@ describe('SecretsManagerConstruct', () => {
   describe('Secret Creation', () => {
     test('creates API keys secret with correct name', () => {
       template.hasResourceProperties('AWS::SecretsManager::Secret', {
-        Name: 'vocalshield/api-keys',
-        Description: 'API keys for VocalShield external service integrations',
+        Name: 'macher/api-keys',
+        Description: 'API keys for MACHER external service integrations and WebSocket authentication',
       });
     });
 
     test('creates config secret with correct name', () => {
       template.hasResourceProperties('AWS::SecretsManager::Secret', {
-        Name: 'vocalshield/config',
-        Description: 'Sensitive configuration for VocalShield',
+        Name: 'macher/config',
+        Description: 'Sensitive configuration for MACHER',
       });
     });
 
@@ -41,20 +41,20 @@ describe('SecretsManagerConstruct', () => {
   describe('Secret Content', () => {
     test('API keys secret has correct structure', () => {
       template.hasResourceProperties('AWS::SecretsManager::Secret', {
-        Name: 'vocalshield/api-keys',
+        Name: 'macher/api-keys',
         GenerateSecretString: {
           SecretStringTemplate: JSON.stringify({
             mlServiceApiKey: 'PLACEHOLDER_ML_API_KEY',
             thirdPartyIntegrationKey: 'PLACEHOLDER_INTEGRATION_KEY',
           }),
-          GenerateStringKey: 'placeholder',
+          GenerateStringKey: 'websocketApiKey',
         },
       });
     });
 
     test('config secret has correct structure', () => {
       template.hasResourceProperties('AWS::SecretsManager::Secret', {
-        Name: 'vocalshield/config',
+        Name: 'macher/config',
         GenerateSecretString: {
           SecretStringTemplate: JSON.stringify({
             fraudThreshold: 70,
@@ -83,7 +83,7 @@ describe('SecretsManagerConstruct', () => {
     test('API keys secret has all required tags', () => {
       const secrets = template.findResources('AWS::SecretsManager::Secret', {
         Properties: {
-          Name: 'vocalshield/api-keys',
+          Name: 'macher/api-keys',
         },
       });
       
@@ -93,16 +93,16 @@ describe('SecretsManagerConstruct', () => {
       const secret = secrets[secretKeys[0]];
       const tags = secret.Properties.Tags;
       
-      expect(tags).toContainEqual({ Key: 'Project', Value: 'VocalShield' });
+      expect(tags).toContainEqual({ Key: 'Project', Value: 'MACHER' });
       expect(tags).toContainEqual({ Key: 'Environment', Value: 'dev' });
       expect(tags).toContainEqual({ Key: 'ManagedBy', Value: 'CDK' });
-      expect(tags).toContainEqual({ Key: 'CostCenter', Value: 'VocalShield-Infrastructure' });
+      expect(tags).toContainEqual({ Key: 'CostCenter', Value: 'MACHER-Infrastructure' });
     });
 
     test('config secret has all required tags', () => {
       const secrets = template.findResources('AWS::SecretsManager::Secret', {
         Properties: {
-          Name: 'vocalshield/config',
+          Name: 'macher/config',
         },
       });
       
@@ -112,10 +112,10 @@ describe('SecretsManagerConstruct', () => {
       const secret = secrets[secretKeys[0]];
       const tags = secret.Properties.Tags;
       
-      expect(tags).toContainEqual({ Key: 'Project', Value: 'VocalShield' });
+      expect(tags).toContainEqual({ Key: 'Project', Value: 'MACHER' });
       expect(tags).toContainEqual({ Key: 'Environment', Value: 'dev' });
       expect(tags).toContainEqual({ Key: 'ManagedBy', Value: 'CDK' });
-      expect(tags).toContainEqual({ Key: 'CostCenter', Value: 'VocalShield-Infrastructure' });
+      expect(tags).toContainEqual({ Key: 'CostCenter', Value: 'MACHER-Infrastructure' });
     });
   });
 

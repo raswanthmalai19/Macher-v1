@@ -1,0 +1,4 @@
+# file: /Users/raswanthmalaisamy/Downloads/AIDEA/lambda/fraud-detection/src/bedrock_agent.py
+# hypothesis_version: 6.148.7
+
+[1000, 'Code', 'Error', 'Fraud Score: [0-100]', 'Max retries exceeded', 'Message', 'ThrottlingException', 'Unknown', 'act now', 'bank account', 'bedrock-agent', 'bitcoin', 'bytes', 'cash', 'cash payment', 'chunk', 'completion', 'credit card', 'cryptocurrency', 'en', 'gift card', 'hurry', 'immediate', 'limited time', 'money', 'money transfer', 'payment', 'pressure', 'quickly', 'rush', 'trace', 'urgency', 'urgent', 'us-east-1', 'utf-8', 'wire transfer']

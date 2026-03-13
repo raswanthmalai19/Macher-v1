@@ -50,7 +50,7 @@ export class FraudDetectionConstruct extends Construct {
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       timeToLiveAttribute: 'ttl',
       pointInTimeRecovery: false, // Cost optimization
-      removalPolicy: config.tags.Environment === 'prod' 
+      removalPolicy: config.tags.Environment === 'production' 
         ? cdk.RemovalPolicy.RETAIN 
         : cdk.RemovalPolicy.DESTROY,
       encryption: dynamodb.TableEncryption.AWS_MANAGED,
@@ -75,7 +75,6 @@ export class FraudDetectionConstruct extends Construct {
         KNOWLEDGE_BASE_ID: knowledgeBaseId,
         NOTIFICATION_SERVICE_URL: notificationServiceUrl || '',
         ENVIRONMENT: config.tags.Environment,
-        AWS_REGION: cdk.Stack.of(this).region,
       },
       logRetention: logs.RetentionDays.ONE_WEEK,
       description: 'Analyzes phone call transcripts for fraud indicators using Amazon Bedrock',
@@ -109,7 +108,7 @@ export class FraudDetectionConstruct extends Construct {
       deployOptions: {
         stageName: config.tags.Environment,
         tracingEnabled: true,
-        loggingLevel: apigateway.MethodLoggingLevel.INFO,
+        loggingLevel: apigateway.MethodLoggingLevel.OFF,
         dataTraceEnabled: false, // Don't log request/response bodies (PII)
         metricsEnabled: true,
         throttlingRateLimit: 100, // 100 requests per second

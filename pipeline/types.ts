@@ -1,5 +1,5 @@
 /**
- * Core type definitions for VocalShield CI/CD Pipeline
+ * Core type definitions for MACHER CI/CD Pipeline
  * 
  * This module defines the foundational types and interfaces used throughout
  * the pipeline system, ensuring type safety and consistency across all components.

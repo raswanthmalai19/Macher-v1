@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# VocalShield - Deployment Script
+# MACHER - Deployment Script
 # Wrapper script for CDK deployment with validation and error handling
 
 set -e
@@ -21,7 +21,7 @@ AUTO_APPROVE="${AUTO_APPROVE:-false}"
 # Display banner
 echo -e "${BLUE}"
 echo "╔═══════════════════════════════════════════════════════════╗"
-echo "║         VocalShield Infrastructure Deployment             ║"
+echo "║         MACHER Infrastructure Deployment             ║"
 echo "╚═══════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 echo "Environment: $ENVIRONMENT"
@@ -78,8 +78,12 @@ echo -e "${YELLOW}Installing dependencies...${NC}"
 if [ ! -d "node_modules" ]; then
     npm install
 else
-    echo "Dependencies already installed"
+    echo "Root dependencies already installed"
 fi
+
+# Install Lambda dependencies (required for CDK Code.fromAsset bundling)
+echo -e "${YELLOW}Installing Lambda dependencies...${NC}"
+(cd lambda/audio-processor && npm install --production)
 echo -e "${GREEN}✓ Dependencies ready${NC}"
 echo ""
 
@@ -194,7 +198,7 @@ echo ""
 # Display stack outputs
 echo -e "${YELLOW}Stack Outputs:${NC}"
 aws cloudformation describe-stacks \
-    --stack-name "VocalShield-$ENVIRONMENT" \
+    --stack-name "MACHER-$ENVIRONMENT" \
     --region "$REGION" \
     --query 'Stacks[0].Outputs[*].[OutputKey,OutputValue]' \
     --output table
@@ -208,8 +212,8 @@ echo "     ./scripts/setup-secrets.sh"
 echo "  2. Configure Parameter Store values:"
 echo "     ./scripts/setup-parameters.sh"
 echo "  3. Test WebSocket connectivity:"
-echo "     wscat -c \$(aws cloudformation describe-stacks --stack-name VocalShield-$ENVIRONMENT --query 'Stacks[0].Outputs[?OutputKey==\`WebSocketApiEndpoint\`].OutputValue' --output text)"
+    echo "     wscat -c $(aws cloudformation describe-stacks --stack-name MACHER-$ENVIRONMENT --query 'Stacks[0].Outputs[?OutputKey==`WebSocketApiEndpoint`].OutputValue' --output text)"
 echo "  4. Monitor the deployment:"
-echo "     aws cloudformation describe-stack-events --stack-name VocalShield-$ENVIRONMENT"
+    echo "     aws cloudformation describe-stack-events --stack-name MACHER-$ENVIRONMENT"
 echo ""
 echo -e "${BLUE}Happy coding! 🚀${NC}"

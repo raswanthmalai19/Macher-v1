@@ -1,10 +1,19 @@
 package com.macher.android.service
 
 import android.content.Context
+import com.macher.android.data.database.MacherDatabase
 import com.macher.android.detection.*
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -18,13 +27,26 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class MonitoringManagerStateTest {
     
+    private val testDispatcher = StandardTestDispatcher()
     private lateinit var mockContext: Context
     private lateinit var monitoringManager: MonitoringManager
     
     @Before
     fun setup() {
+        Dispatchers.setMain(testDispatcher)
         mockContext = mockk(relaxed = true)
+        
+        // Mock MacherDatabase companion object to avoid loading SQLCipher native lib
+        mockkObject(MacherDatabase.Companion)
+        every { MacherDatabase.getDatabase(any()) } returns mockk(relaxed = true)
+        
         monitoringManager = MonitoringManager(mockContext)
+    }
+    
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+        unmockkObject(MacherDatabase.Companion)
     }
     
     @Test

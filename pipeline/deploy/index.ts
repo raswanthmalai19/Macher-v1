@@ -1,5 +1,5 @@
 /**
- * Deployment utilities for VocalShield CI/CD Pipeline
+ * Deployment utilities for MACHER CI/CD Pipeline
  * 
  * This module exports deployment-related classes and utilities.
  */

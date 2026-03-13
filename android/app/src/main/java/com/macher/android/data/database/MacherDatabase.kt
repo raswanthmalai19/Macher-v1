@@ -14,6 +14,9 @@ import com.macher.android.data.model.UserRole
  * - RiskAssessmentEntity: Detection results and risk scores
  * - RiskTriggerEntity: Individual threat patterns
  * - HistoricalRiskEntity: Phone number reputation tracking
+ *
+ * Version 3 adds:
+ * - GuardianProtectedLinkEntity: Guardian-protected user pairing
  */
 @Database(
     entities = [
@@ -24,9 +27,10 @@ import com.macher.android.data.model.UserRole
         CallRecordEntity::class,
         RiskAssessmentEntity::class,
         RiskTriggerEntity::class,
-        HistoricalRiskEntity::class
+        HistoricalRiskEntity::class,
+        GuardianProtectedLinkEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -39,6 +43,7 @@ abstract class MacherDatabase : RoomDatabase() {
     abstract fun riskAssessmentDao(): RiskAssessmentDao
     abstract fun riskTriggerDao(): RiskTriggerDao
     abstract fun historicalRiskDao(): HistoricalRiskDao
+    abstract fun guardianProtectedLinkDao(): GuardianProtectedLinkDao
     
     companion object {
         @Volatile
@@ -70,23 +75,35 @@ abstract class MacherDatabase : RoomDatabase() {
          * @return Encrypted MacherDatabase instance
          */
         private fun buildEncryptedDatabase(context: android.content.Context): MacherDatabase {
-            // Get secure passphrase from KeyManager
-            val passphrase = com.macher.android.util.KeyManager.getDatabasePassphrase(context)
-            
-            // Create SQLCipher SupportFactory
-            val factory = net.sqlcipher.database.SupportFactory(
-                net.sqlcipher.database.SQLiteDatabase.getBytes(passphrase.toCharArray())
-            )
-            
-            // Build Room database with SQLCipher
-            return androidx.room.Room.databaseBuilder(
-                context,
-                MacherDatabase::class.java,
-                "macher_database"
-            )
-                .openHelperFactory(factory) // Enable SQLCipher encryption
-                .fallbackToDestructiveMigration() // For development; use proper migrations in production
-                .build()
+            return try {
+                // Get secure passphrase from KeyManager
+                val passphrase = com.macher.android.util.KeyManager.getDatabasePassphrase(context)
+                
+                // Create SQLCipher SupportFactory
+                val factory = net.sqlcipher.database.SupportFactory(
+                    net.sqlcipher.database.SQLiteDatabase.getBytes(passphrase.toCharArray())
+                )
+                
+                // Build Room database with SQLCipher
+                androidx.room.Room.databaseBuilder(
+                    context,
+                    MacherDatabase::class.java,
+                    "macher_database"
+                )
+                    .openHelperFactory(factory) // Enable SQLCipher encryption
+                    .fallbackToDestructiveMigration() // For development; use proper migrations in production
+                    .build()
+            } catch (e: Exception) {
+                com.macher.android.util.Logger.error("MacherDatabase", "Encrypted DB failed, building unencrypted fallback", e)
+                // Fallback to unencrypted database so the app doesn't crash
+                androidx.room.Room.databaseBuilder(
+                    context,
+                    MacherDatabase::class.java,
+                    "macher_database_fallback"
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
+            }
         }
         
         /**

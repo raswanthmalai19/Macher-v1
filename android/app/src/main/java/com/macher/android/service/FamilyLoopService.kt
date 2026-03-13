@@ -97,6 +97,12 @@ class FamilyLoopService(private val context: Context) {
         threatType: String,
         confidence: Float
     ) {
+        // Check SMS permission before attempting to send
+        if (!hasSmsPermission()) {
+            Logger.warn("FamilyLoopService", "SMS permission not granted, skipping SMS alert")
+            return
+        }
+
         try {
             val message = buildSmsMessage(threatLevel, threatType, confidence)
             

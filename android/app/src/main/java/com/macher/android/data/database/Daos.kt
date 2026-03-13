@@ -40,6 +40,9 @@ interface TrustedContactDao {
     
     @Query("SELECT * FROM trusted_contacts WHERE phoneNumber = :phoneNumber AND protectedUserId = :protectedUserId")
     suspend fun getTrustedContactByPhone(phoneNumber: String, protectedUserId: String): TrustedContactEntity?
+
+    @Query("SELECT * FROM trusted_contacts WHERE phoneNumber = :phoneNumber LIMIT 1")
+    suspend fun findByPhone(phoneNumber: String): TrustedContactEntity?
     
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTrustedContact(contact: TrustedContactEntity)

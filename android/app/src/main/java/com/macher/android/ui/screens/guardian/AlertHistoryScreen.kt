@@ -18,6 +18,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
+import com.macher.android.data.database.AlertHistoryEntity
+import com.macher.android.data.database.MacherDatabase
+import com.macher.android.data.preferences.UserPreferences
 import com.macher.android.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -27,33 +31,24 @@ import java.util.*
 fun AlertHistoryScreen(
     onNavigateBack: () -> Unit
 ) {
-    // Sample data
-    val alerts = remember {
-        listOf(
-            AlertItem(
-                id = "1",
-                timestamp = System.currentTimeMillis() - 3600000,
-                threatLevel = "DANGER",
-                threatType = "OTP Request - IRS Impersonation",
-                confidence = 0.92f,
-                actionTaken = "Call Disconnected"
-            ),
-            AlertItem(
-                id = "2",
-                timestamp = System.currentTimeMillis() - 7200000,
-                threatLevel = "CAUTION",
-                threatType = "Urgency Pattern Detected",
-                confidence = 0.68f,
-                actionTaken = "Haptic Warning"
-            ),
-            AlertItem(
-                id = "3",
-                timestamp = System.currentTimeMillis() - 86400000,
-                threatLevel = "DANGER",
-                threatType = "Gift Card Coercion",
-                confidence = 0.85f,
-                actionTaken = "Screen Overlay"
-            )
+    val context = LocalContext.current
+    val db = remember { MacherDatabase.getDatabase(context) }
+    val userPrefs = remember { UserPreferences(context) }
+    val userId by userPrefs.userId.collectAsState(initial = "")
+
+    // Load real alert history from Room DB, keyed on resolved userId
+    val dbAlerts by remember(userId) {
+        db.alertHistoryDao().getAlertHistory(userId ?: "", limit = 100)
+    }.collectAsState(initial = emptyList())
+
+    val alerts = dbAlerts.map { entity ->
+        AlertItem(
+            id = entity.id,
+            timestamp = entity.timestamp,
+            threatLevel = entity.threatLevel,
+            threatType = entity.threatType,
+            confidence = entity.confidence,
+            actionTaken = entity.actionTaken
         )
     }
     

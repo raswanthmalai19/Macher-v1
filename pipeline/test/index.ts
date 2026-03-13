@@ -1,5 +1,5 @@
 /**
- * Test module exports for VocalShield CI/CD Pipeline
+ * Test module exports for MACHER CI/CD Pipeline
  */
 
 export { TestExecutor } from './TestExecutor';

@@ -22,14 +22,28 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("../macher-release.keystore")
+            storePassword = "macher2024"
+            keyAlias = "macher"
+            keyPassword = "macher2024"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
+    }
+
+    testOptions {
+        unitTests.isReturnDefaultValues = true
     }
 
     compileOptions {
@@ -43,6 +57,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     composeOptions {
@@ -52,6 +67,8 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "/META-INF/LICENSE.md"
+            excludes += "/META-INF/LICENSE-notice.md"
         }
     }
 }
@@ -122,6 +139,11 @@ dependencies {
     // Android Testing
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    androidTestImplementation("androidx.test.espresso:espresso-intents:3.5.1")
+    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
+    androidTestImplementation("androidx.test:runner:1.5.2")
+    androidTestImplementation("androidx.test:rules:1.5.0")
+    androidTestImplementation("androidx.test.ext:junit-ktx:1.1.5")
     androidTestImplementation(platform("androidx.compose:compose-bom:2024.01.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     androidTestImplementation("io.mockk:mockk-android:1.13.9")

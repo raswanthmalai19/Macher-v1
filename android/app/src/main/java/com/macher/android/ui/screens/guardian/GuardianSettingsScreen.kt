@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 
 import androidx.compose.material3.*
+import com.macher.android.BuildConfig
 import com.macher.android.data.preferences.AppPreferences
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.*
@@ -90,7 +91,7 @@ fun GuardianSettingsScreen(
                         Slider(
                             value = sensitivity,
                             onValueChange = { sensitivity = it },
-                            onValueChangeFinished = { scope.launch { appPreferences.setAiSensitivity(sensitivity) } },
+                            onValueChangeFinished = { scope.launch { try { appPreferences.setAiSensitivity(sensitivity) } catch (_: Exception) {} } },
                             valueRange = 0f..2f,
                             steps = 1,
                             colors = SliderDefaults.colors(
@@ -121,14 +122,14 @@ fun GuardianSettingsScreen(
                             title = "Haptic Feedback",
                             description = "Vibrate phone when threat detected",
                             checked = enableHaptic,
-                            onCheckedChange = { scope.launch { appPreferences.setEnableHaptic(it) } }
+                            onCheckedChange = { scope.launch { try { appPreferences.setEnableHaptic(it) } catch (_: Exception) {} } }
                         )
                         
                         SettingsToggle(
                             title = "Screen Overlay",
                             description = "Show warning overlay on screen",
                             checked = enableOverlay,
-                            onCheckedChange = { scope.launch { appPreferences.setEnableOverlay(it) } }
+                            onCheckedChange = { scope.launch { try { appPreferences.setEnableOverlay(it) } catch (_: Exception) {} } }
                         )
                         
                         SettingsToggle(
@@ -139,7 +140,7 @@ fun GuardianSettingsScreen(
                                 if (newValue) {
                                     showAutoDisconnectConfirm = true
                                 } else {
-                                    scope.launch { appPreferences.setAutoDisconnect(false) }
+                                    scope.launch { try { appPreferences.setAutoDisconnect(false) } catch (_: Exception) {} }
                                 }
                             },
                             dangerous = true
@@ -158,7 +159,7 @@ fun GuardianSettingsScreen(
                                 confirmButton = {
                                     Button(
                                         onClick = {
-                                            scope.launch { appPreferences.setAutoDisconnect(true) }
+                                            scope.launch { try { appPreferences.setAutoDisconnect(true) } catch (_: Exception) {} }
                                             showAutoDisconnectConfirm = false
                                         },
                                         colors = ButtonDefaults.buttonColors(containerColor = DangerRed)
@@ -189,7 +190,7 @@ fun GuardianSettingsScreen(
                             title = "Send Me Alerts",
                             description = "Notify me when threats are detected",
                             checked = enableAlerts,
-                            onCheckedChange = { scope.launch { appPreferences.setAlertGuardian(it) } }
+                            onCheckedChange = { scope.launch { try { appPreferences.setAlertGuardian(it) } catch (_: Exception) {} } }
                         )
                     }
                 }
@@ -200,9 +201,8 @@ fun GuardianSettingsScreen(
                     icon = Icons.Default.Info
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        InfoRow("Version", "1.0.0")
-                        InfoRow("Protected Users", "1")
-                        InfoRow("Total Alerts", "3")
+                        InfoRow("Version", BuildConfig.VERSION_NAME)
+                        InfoRow("Build", BuildConfig.VERSION_CODE.toString())
                     }
                 }
             }

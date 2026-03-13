@@ -12,23 +12,61 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Message
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.macher.android.data.database.GuardianProtectedLinkEntity
+import com.macher.android.data.database.MacherDatabase
+import com.macher.android.data.repository.GuardianRepository
+import com.macher.android.data.preferences.UserPreferences
+import com.macher.android.data.model.UserRole
 import com.macher.android.ui.theme.*
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ProtectedUsersScreen(
     onNavigateBack: () -> Unit
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val db = remember { MacherDatabase.getDatabase(context) }
+    val guardianRepo = remember { GuardianRepository(db.guardianProtectedLinkDao(), db.userDao()) }
+    val userPrefs = remember { UserPreferences(context) }
+
+    // Use the stored userId for the guardian — falls back to a stable default
+    val rawGuardianId by userPrefs.userId.collectAsState(initial = null)
+    val guardianId = rawGuardianId ?: "default_guardian"
+    val guardianDisplayName by userPrefs.userNameForRole(UserRole.GUARDIAN).collectAsState(initial = "")
+
+    val links by remember(guardianId) {
+        guardianRepo.getProtectedUsers(guardianId)
+    }.collectAsState(initial = emptyList())
+
+    // Map DB entities to UI model
+    val protectedUsers = remember(links) {
+        links.map { link ->
+            ProtectedUser(
+                id = link.id,
+                name = link.protectedName.ifEmpty { "Pending" },
+                phoneNumber = link.protectedPhone.ifEmpty { link.linkCode },
+                relationship = link.relationship,
+                isActive = link.isActive
+            )
+        }
+    }
+
     var showAddDialog by remember { mutableStateOf(false) }
-    var protectedUsers by remember { mutableStateOf(listOf<ProtectedUser>()) }
+    var showEditDialog by remember { mutableStateOf<ProtectedUser?>(null) }
+    var showDetailsDialog by remember { mutableStateOf<ProtectedUser?>(null) }
     
     Scaffold(
         topBar = {
@@ -77,8 +115,29 @@ fun ProtectedUsersScreen(
                         Box(modifier = Modifier.animateItemPlacement()) {
                             ProtectedUserCard(
                                 user = user,
-                                onViewDetails = { /* TODO */ },
-                                onRemove = { protectedUsers = protectedUsers - user }
+                                onViewDetails = { showDetailsDialog = user },
+                                onEdit = { showEditDialog = user },
+                                onCall = {
+                                    try {
+                                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${user.phoneNumber}"))
+                                        context.startActivity(intent)
+                                    } catch (_: Exception) {
+                                        android.widget.Toast.makeText(context, "Unable to open dialer", android.widget.Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                onMessage = {
+                                    try {
+                                        val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("sms:${user.phoneNumber}"))
+                                        context.startActivity(intent)
+                                    } catch (_: Exception) {
+                                        android.widget.Toast.makeText(context, "Unable to open messaging", android.widget.Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                onRemove = {
+                                    scope.launch {
+                                        try { guardianRepo.removeLink(user.id) } catch (_: Exception) { }
+                                    }
+                                }
                             )
                         }
                     }
@@ -91,9 +150,55 @@ fun ProtectedUsersScreen(
         AddProtectedUserDialog(
             onDismiss = { showAddDialog = false },
             onAdd = { user ->
-                protectedUsers = protectedUsers + user
+                scope.launch {
+                    try {
+                        val link = guardianRepo.createLinkAsGuardian(
+                            guardianId = guardianId,
+                            guardianName = guardianDisplayName?.ifEmpty { "Guardian" } ?: "Guardian",
+                            guardianPhone = ""
+                        )
+                        guardianRepo.completeLinkAsProtected(
+                            linkCode = link.linkCode,
+                            protectedId = user.id,
+                            protectedName = user.name,
+                            protectedPhone = user.phoneNumber,
+                            relationship = user.relationship
+                        )
+                    } catch (_: Exception) { }
+                }
                 showAddDialog = false
             }
+        )
+    }
+
+    showEditDialog?.let { user ->
+        EditProtectedUserDialog(
+            user = user,
+            onDismiss = { showEditDialog = null },
+            onSave = { updated ->
+                scope.launch {
+                    try {
+                        val link = db.guardianProtectedLinkDao().getLinkById(updated.id)
+                        if (link != null) {
+                            db.guardianProtectedLinkDao().updateLink(
+                                link.copy(
+                                    protectedName = updated.name,
+                                    protectedPhone = updated.phoneNumber,
+                                    relationship = updated.relationship
+                                )
+                            )
+                        }
+                    } catch (_: Exception) { }
+                }
+                showEditDialog = null
+            }
+        )
+    }
+
+    showDetailsDialog?.let { user ->
+        UserDetailsDialog(
+            user = user,
+            onDismiss = { showDetailsDialog = null }
         )
     }
 }
@@ -148,6 +253,9 @@ fun EmptyProtectedUsersState(onAddClick: () -> Unit) {
 fun ProtectedUserCard(
     user: ProtectedUser,
     onViewDetails: () -> Unit,
+    onEdit: () -> Unit = {},
+    onCall: () -> Unit = {},
+    onMessage: () -> Unit = {},
     onRemove: () -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
@@ -181,7 +289,7 @@ fun ProtectedUserCard(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = user.name.first().uppercase(),
+                        text = if (user.name.isNotEmpty()) user.name.first().uppercase() else "?",
                         style = MaterialTheme.typography.headlineMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Bold
@@ -253,7 +361,7 @@ fun ProtectedUserCard(
                             text = { Text("Edit") },
                             onClick = {
                                 showMenu = false
-                                // TODO: Edit
+                                onEdit()
                             },
                             leadingIcon = {
                                 Icon(Icons.Default.Edit, contentDescription = null)
@@ -310,7 +418,7 @@ fun ProtectedUserCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedButton(
-                    onClick = { /* TODO: Call */ },
+                    onClick = onCall,
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = MaterialTheme.colorScheme.onSurface
@@ -322,7 +430,7 @@ fun ProtectedUserCard(
                 }
                 
                 OutlinedButton(
-                    onClick = { /* TODO: Message */ },
+                    onClick = onMessage,
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = MaterialTheme.colorScheme.onSurface
@@ -507,3 +615,99 @@ data class ProtectedUser(
     val threatsDetected: Int = 0,
     val callsBlocked: Int = 0
 )
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditProtectedUserDialog(
+    user: ProtectedUser,
+    onDismiss: () -> Unit,
+    onSave: (ProtectedUser) -> Unit
+) {
+    var name by remember { mutableStateOf(user.name) }
+    var phoneNumber by remember { mutableStateOf(user.phoneNumber) }
+    var relationship by remember { mutableStateOf(user.relationship) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Edit Protected User") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = phoneNumber,
+                    onValueChange = { phoneNumber = it },
+                    label = { Text("Phone Number") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = relationship,
+                    onValueChange = { relationship = it },
+                    label = { Text("Relationship (optional)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onSave(user.copy(name = name, phoneNumber = phoneNumber, relationship = relationship))
+                },
+                enabled = name.isNotEmpty() && phoneNumber.isNotEmpty()
+            ) { Text("Save") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
+}
+
+@Composable
+fun UserDetailsDialog(
+    user: ProtectedUser,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(user.name) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                DetailRow("Phone", user.phoneNumber)
+                DetailRow("Relationship", user.relationship.ifEmpty { "Not specified" })
+                DetailRow("Status", if (user.isActive) "Active" else "Inactive")
+                DetailRow("Total Calls", user.totalCalls.toString())
+                DetailRow("Threats Detected", user.threatsDetected.toString())
+                DetailRow("Calls Blocked", user.callsBlocked.toString())
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Close") }
+        }
+    )
+}
+
+@Composable
+private fun DetailRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
+}

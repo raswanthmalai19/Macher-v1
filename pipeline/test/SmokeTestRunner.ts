@@ -1,5 +1,5 @@
 /**
- * Smoke Test Runner for VocalShield CI/CD Pipeline
+ * Smoke Test Runner for MACHER CI/CD Pipeline
  * 
  * This module executes post-deployment smoke tests to verify
  * critical functionality of API Gateway, Lambda, and DynamoDB.
@@ -239,7 +239,7 @@ export class SmokeTestRunner {
   }
 
   /**
-   * Creates a default smoke test suite for VocalShield.
+   * Creates a default smoke test suite for MACHER.
    * 
    * @param baseEndpoint - Base API endpoint
    * @returns Array of smoke tests

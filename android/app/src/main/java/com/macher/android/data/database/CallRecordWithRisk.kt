@@ -1,7 +1,5 @@
 package com.macher.android.data.database
 
-import androidx.room.Embedded
-import androidx.room.Relation
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -13,20 +11,13 @@ import java.util.concurrent.TimeUnit
  * Joins call record with its risk assessment and triggers for
  * comprehensive display in call history and detail screens.
  * 
- * Uses Room's @Relation annotation for automatic joining.
+ * Note: Room @Relation annotations were removed because the actual
+ * data loading is done manually via getCallHistory() queries —
+ * the relations are assembled in code, not via Room's automatic join.
  */
 data class CallRecordWithRisk(
-    @Embedded val call: CallRecordEntity,
-    @Relation(
-        parentColumn = "id",
-        entityColumn = "callId"
-    )
+    val call: CallRecordEntity,
     val risk: RiskAssessmentEntity?,
-    @Relation(
-        parentColumn = "id",
-        entityColumn = "riskAssessmentId",
-        entity = RiskTriggerEntity::class
-    )
     val triggers: List<RiskTriggerEntity> = emptyList()
 ) {
     /**

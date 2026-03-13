@@ -1,5 +1,5 @@
 /**
- * Configuration Management System for VocalShield CI/CD Pipeline
+ * Configuration Management System for MACHER CI/CD Pipeline
  * 
  * This module provides configuration loading, validation, merging, and
  * Free Tier compliance checking for environment-specific deployments.

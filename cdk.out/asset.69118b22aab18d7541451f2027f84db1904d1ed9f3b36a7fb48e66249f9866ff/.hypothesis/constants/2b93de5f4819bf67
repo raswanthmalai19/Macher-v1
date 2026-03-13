@@ -1,0 +1,4 @@
+# file: /Users/raswanthmalaisamy/Downloads/AIDEA/lambda/fraud-detection/src/lambda_handler.py
+# hypothesis_version: 6.148.7
+
+[200, 400, 500, '*', '1', 'AGENT_ERROR', 'AWS_REGION', 'BEDROCK_AGENT_ID', 'CONTEXT_ERROR', 'CONTEXT_TABLE_NAME', 'Content-Type', 'GUARDRAILS_ERROR', 'GUARDRAIL_ID', 'GUARDRAIL_VERSION', 'INFO', 'INTERNAL_ERROR', 'INVALID_REQUEST', 'KNOWLEDGE_BASE_ID', 'LOG_LEVEL', 'UNSUPPORTED_LANGUAGE', 'VALIDATION_ERROR', 'application/json', 'body', 'call_id', 'en', 'handler', 'headers', 'language', 'segment_id', 'statusCode', 'timestamp', 'transcript_text', 'unknown', 'us-east-1']

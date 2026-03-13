@@ -39,7 +39,7 @@ class CostTrend(str, Enum):
 
 @dataclass
 class FreeTierLimits:
-    """AWS Free Tier limits for VocalShield services"""
+    """AWS Free Tier limits for MACHER services"""
     lambda_invocations: int = 1_000_000  # 1M requests/month
     lambda_gb_seconds: int = 400_000  # 400K GB-seconds/month
     dynamodb_read_units: int = 25  # 25 RCU
@@ -105,7 +105,7 @@ class DataPoint:
 
 class CostMonitor:
     """
-    Monitors AWS costs and Free Tier usage for VocalShield deployments
+    Monitors AWS costs and Free Tier usage for MACHER deployments
     
     Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6
     """

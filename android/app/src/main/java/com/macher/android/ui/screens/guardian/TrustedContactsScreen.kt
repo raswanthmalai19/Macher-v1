@@ -17,17 +17,44 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.macher.android.data.database.MacherDatabase
+import com.macher.android.data.database.TrustedContactEntity
+import com.macher.android.data.preferences.UserPreferences
 import com.macher.android.ui.theme.*
+import kotlinx.coroutines.launch
+import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun TrustedContactsScreen(
     onNavigateBack: () -> Unit
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val db = remember { MacherDatabase.getDatabase(context) }
+    val trustedDao = remember { db.trustedContactDao() }
+    val userPrefs = remember { UserPreferences(context) }
+    val guardianId by userPrefs.userId.collectAsState(initial = null)
+    val resolvedGuardianId = guardianId ?: "default_guardian"
+
+    // Load trusted contacts from Room DB
+    val dbContacts by remember(resolvedGuardianId) {
+        trustedDao.getTrustedContacts(resolvedGuardianId)
+    }.collectAsState(initial = emptyList())
+
+    val contacts = dbContacts.map { entity ->
+        TrustedContact(
+            id = entity.id,
+            name = entity.name,
+            phoneNumber = entity.phoneNumber,
+            relationship = entity.relationship
+        )
+    }
+
     var showAddDialog by remember { mutableStateOf(false) }
-    var contacts by remember { mutableStateOf(listOf<TrustedContact>()) }
     
     Scaffold(
         topBar = {
@@ -76,7 +103,14 @@ fun TrustedContactsScreen(
                         Box(modifier = Modifier.animateItemPlacement()) {
                             TrustedContactCard(
                                 contact = contact,
-                                onDelete = { contacts = contacts - contact }
+                                onDelete = {
+                                    scope.launch {
+                                        try {
+                                            val entity = trustedDao.getTrustedContact(contact.id)
+                                            if (entity != null) trustedDao.deleteTrustedContact(entity)
+                                        } catch (_: Exception) { }
+                                    }
+                                }
                             )
                         }
                     }
@@ -89,7 +123,21 @@ fun TrustedContactsScreen(
         AddContactDialog(
             onDismiss = { showAddDialog = false },
             onAdd = { contact ->
-                contacts = contacts + contact
+                scope.launch {
+                    try {
+                        trustedDao.insertTrustedContact(
+                            TrustedContactEntity(
+                                id = UUID.randomUUID().toString(),
+                                phoneNumber = contact.phoneNumber,
+                                name = contact.name,
+                                relationship = contact.relationship,
+                                addedBy = resolvedGuardianId,
+                                protectedUserId = resolvedGuardianId,
+                                createdAt = System.currentTimeMillis()
+                            )
+                        )
+                    } catch (_: Exception) { }
+                }
                 showAddDialog = false
             }
         )

@@ -12,11 +12,13 @@ import { MonitoringSnsTopicsConstruct } from './constructs/monitoring-sns-topics
 import { CloudWatchDashboardConstruct } from './constructs/cloudwatch-dashboard';
 import { CloudWatchAlarmsConstruct } from './constructs/cloudwatch-alarms';
 import { FraudDetectionConstruct } from './constructs/fraud-detection';
+import { KnowledgeBaseConstruct } from './constructs/knowledge-base';
+import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 
 /**
- * MACHER Infrastructure Stack
+ * VocalShield Infrastructure Stack
  * 
- * This stack defines the AWS infrastructure for MACHER, a real-time
+ * This stack defines the AWS infrastructure for VocalShield, a real-time
  * conversation firewall that protects users from voice-based financial fraud.
  * 
  * The infrastructure includes:
@@ -28,7 +30,7 @@ import { FraudDetectionConstruct } from './constructs/fraud-detection';
  * - CloudWatch for monitoring and observability
  * - VPC for future Wavelength Zone support
  */
-export class MACHERStack extends cdk.Stack {
+export class VocalShieldStack extends cdk.Stack {
   public readonly vpc: VpcConstruct;
   public readonly dynamoDbTables: DynamoDbTablesConstruct;
   public readonly secretsManager: SecretsManagerConstruct;
@@ -40,6 +42,7 @@ export class MACHERStack extends cdk.Stack {
   public readonly cloudWatchDashboard: CloudWatchDashboardConstruct;
   public readonly cloudWatchAlarms: CloudWatchAlarmsConstruct;
   public readonly fraudDetection?: FraudDetectionConstruct;
+  public readonly knowledgeBase: KnowledgeBaseConstruct;
 
   constructor(scope: Construct, id: string, config: EnvironmentConfig, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -52,6 +55,10 @@ export class MACHERStack extends cdk.Stack {
 
     // Create VPC and network foundation (Task 2.1)
     this.vpc = new VpcConstruct(this, 'VpcConstruct', config);
+
+    // Create Knowledge Base S3 bucket and IAM roles (Task 2.5)
+    // Note: Bedrock Knowledge Base, Agent, and Guardrails must be created manually
+    this.knowledgeBase = new KnowledgeBaseConstruct(this, 'KnowledgeBase', { config });
 
     // Create DynamoDB tables (Task 3.1, 3.2)
     this.dynamoDbTables = new DynamoDbTablesConstruct(this, 'DynamoDbTables', config);
@@ -68,6 +75,8 @@ export class MACHERStack extends cdk.Stack {
       connectionsTableArn: this.dynamoDbTables.connectionsTable.tableArn,
       metadataTableName: this.dynamoDbTables.metadataTable.tableName,
       metadataTableArn: this.dynamoDbTables.metadataTable.tableArn,
+      guardianLinksTableName: this.dynamoDbTables.guardianLinksTable.tableName,
+      guardianLinksTableArn: this.dynamoDbTables.guardianLinksTable.tableArn,
     });
 
     // Create SQS queues (Task 9.2 - created early for WebSocket API integration)
@@ -119,6 +128,75 @@ export class MACHERStack extends cdk.Stack {
         ],
       })
     );
+
+    // Add WebSocket endpoint and EventBridge bus name to Audio Processor environment
+    this.lambdaFunctions.audioProcessor.addEnvironment(
+      'WEBSOCKET_ENDPOINT',
+      this.webSocketApi.webSocketStage.url.replace('wss://', 'https://'),
+    );
+    this.lambdaFunctions.audioProcessor.addEnvironment(
+      'EVENT_BUS_NAME',
+      'default',
+    );
+
+    // Create Guardian Sync REST API
+    const guardianApi = new apigateway.RestApi(this, 'GuardianSyncApi', {
+      restApiName: `MACHER-GuardianSync-${config.tags.Environment}`,
+      description: 'REST API for guardian-protected user link management and sync',
+      deployOptions: {
+        stageName: config.tags.Environment,
+        tracingEnabled: true,
+        metricsEnabled: true,
+        throttlingRateLimit: 50,
+        throttlingBurstLimit: 100,
+      },
+      defaultCorsPreflightOptions: {
+        allowOrigins: ['https://macher.app'],
+        allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowHeaders: ['Content-Type', 'Authorization', 'X-Api-Key'],
+      },
+    });
+
+    // API Key authentication for Guardian API
+    const guardianApiKey = guardianApi.addApiKey('GuardianApiKey', {
+      apiKeyName: `MACHER-GuardianKey-${config.tags.Environment}`,
+    });
+    const usagePlan = guardianApi.addUsagePlan('GuardianUsagePlan', {
+      name: `MACHER-GuardianPlan-${config.tags.Environment}`,
+      throttle: { rateLimit: 50, burstLimit: 100 },
+      apiStages: [{ api: guardianApi, stage: guardianApi.deploymentStage }],
+    });
+    usagePlan.addApiKey(guardianApiKey);
+
+    const guardianIntegration = new apigateway.LambdaIntegration(
+      this.lambdaFunctions.guardianSyncHandler, { proxy: true }
+    );
+
+    // /links resource
+    const linksResource = guardianApi.root.addResource('links');
+    linksResource.addMethod('GET', guardianIntegration, { apiKeyRequired: true });
+    linksResource.addMethod('POST', guardianIntegration, { apiKeyRequired: true });
+
+    // /links/sync resource
+    const syncResource = linksResource.addResource('sync');
+    syncResource.addMethod('POST', guardianIntegration, { apiKeyRequired: true });
+
+    // /links/{linkId} resource
+    const linkIdResource = linksResource.addResource('{linkId}');
+    linkIdResource.addMethod('GET', guardianIntegration, { apiKeyRequired: true });
+    linkIdResource.addMethod('PUT', guardianIntegration, { apiKeyRequired: true });
+    linkIdResource.addMethod('DELETE', guardianIntegration, { apiKeyRequired: true });
+
+    // /alerts resource
+    const alertsResource = guardianApi.root.addResource('alerts');
+    alertsResource.addMethod('GET', guardianIntegration, { apiKeyRequired: true });
+    alertsResource.addMethod('POST', guardianIntegration, { apiKeyRequired: true });
+
+    new cdk.CfnOutput(this, 'GuardianSyncApiUrl', {
+      value: guardianApi.url,
+      description: 'Guardian Sync REST API URL',
+      exportName: `${config.tags.Environment}-VocalShield-GuardianSyncApiUrl`,
+    });
 
     // Create CloudWatch Dashboard (Task 12.1)
     this.cloudWatchDashboard = new CloudWatchDashboardConstruct(this, 'CloudWatchDashboard', {
@@ -188,43 +266,59 @@ export class MACHERStack extends cdk.Stack {
     // - AWS Backup (Task 18)
     // - Stack outputs (Task 21)
 
-    // Stack outputs (Task 21.1)
+    // Stack outputs (Task 2.6, 21.1)
+    // WebSocket API endpoint for mobile app configuration
     new cdk.CfnOutput(this, 'WebSocketApiEndpoint', {
       value: this.webSocketApi.webSocketApi.apiEndpoint,
-      description: 'WebSocket API endpoint URL (wss://)',
-      exportName: `${config.tags.Environment}-MACHER-WebSocketEndpoint`,
+      description: 'WebSocket API endpoint URL for mobile app (wss://)',
+      exportName: `${config.tags.Environment}-VocalShield-WebSocketEndpoint`,
     });
 
     new cdk.CfnOutput(this, 'WebSocketApiId', {
       value: this.webSocketApi.webSocketApi.apiId,
       description: 'WebSocket API ID',
-      exportName: `${config.tags.Environment}-MACHER-WebSocketApiId`,
+      exportName: `${config.tags.Environment}-VocalShield-WebSocketApiId`,
     });
 
+    // API Keys stored in Secrets Manager (Requirement 12.2, 12.7)
+    new cdk.CfnOutput(this, 'ApiKeysSecretArn', {
+      value: this.secretsManager.apiKeysSecret.secretArn,
+      description: 'Secrets Manager ARN for API keys (includes auto-generated WebSocket API key)',
+      exportName: `${config.tags.Environment}-VocalShield-ApiKeysSecret`,
+    });
+
+    new cdk.CfnOutput(this, 'ApiKeysSecretName', {
+      value: this.secretsManager.apiKeysSecret.secretName,
+      description: 'Secrets Manager secret name for API keys (use with AWS CLI to retrieve)',
+    });
+
+    // DynamoDB Tables
     new cdk.CfnOutput(this, 'ConnectionsTableName', {
       value: this.dynamoDbTables.connectionsTable.tableName,
       description: 'DynamoDB Connections Table name',
-      exportName: `${config.tags.Environment}-MACHER-ConnectionsTable`,
+      exportName: `${config.tags.Environment}-VocalShield-ConnectionsTable`,
     });
 
     new cdk.CfnOutput(this, 'MetadataTableName', {
       value: this.dynamoDbTables.metadataTable.tableName,
       description: 'DynamoDB Metadata Table name',
-      exportName: `${config.tags.Environment}-MACHER-MetadataTable`,
+      exportName: `${config.tags.Environment}-VocalShield-MetadataTable`,
     });
 
+    // SNS and SQS
     new cdk.CfnOutput(this, 'FamilyLoopTopicArn', {
       value: this.snsTopic.familyLoopTopic.topicArn,
       description: 'SNS Family Loop Topic ARN',
-      exportName: `${config.tags.Environment}-MACHER-FamilyLoopTopic`,
+      exportName: `${config.tags.Environment}-VocalShield-FamilyLoopTopic`,
     });
 
     new cdk.CfnOutput(this, 'AudioQueueUrl', {
       value: this.sqsQueues.audioQueue.queueUrl,
       description: 'SQS Audio Queue URL',
-      exportName: `${config.tags.Environment}-MACHER-AudioQueue`,
+      exportName: `${config.tags.Environment}-VocalShield-AudioQueue`,
     });
 
+    // Lambda Functions
     new cdk.CfnOutput(this, 'ConnectHandlerArn', {
       value: this.lambdaFunctions.connectHandler.functionArn,
       description: 'Connect Handler Lambda ARN',
@@ -240,9 +334,31 @@ export class MACHERStack extends cdk.Stack {
       description: 'Audio Processor Lambda ARN',
     });
 
+    new cdk.CfnOutput(this, 'GuardianSyncHandlerArn', {
+      value: this.lambdaFunctions.guardianSyncHandler.functionArn,
+      description: 'Guardian Sync Handler Lambda ARN',
+    });
+
+    // Monitoring
     new cdk.CfnOutput(this, 'DashboardUrl', {
       value: `https://console.aws.amazon.com/cloudwatch/home?region=${this.region}#dashboards:name=${this.cloudWatchDashboard.dashboard.dashboardName}`,
       description: 'CloudWatch Dashboard URL',
+    });
+
+    // Deployment Information (Requirement 7.7, 7.8)
+    new cdk.CfnOutput(this, 'Region', {
+      value: this.region,
+      description: 'AWS Region where stack is deployed (us-east-1)',
+    });
+
+    new cdk.CfnOutput(this, 'Environment', {
+      value: config.tags.Environment,
+      description: 'Deployment environment (dev, staging, production)',
+    });
+
+    new cdk.CfnOutput(this, 'StackName', {
+      value: this.stackName,
+      description: 'CloudFormation stack name',
     });
   }
 }

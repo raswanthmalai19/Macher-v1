@@ -1,5 +1,5 @@
 """
-Cost monitoring module for VocalShield CI/CD Pipeline
+Cost monitoring module for MACHER CI/CD Pipeline
 """
 
 from .cost_monitor import (

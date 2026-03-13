@@ -1,0 +1,5737 @@
+{
+ "Description": "VocalShield Infrastructure - dev environment - Real-time fraud detection system",
+ "Resources": {
+  "VpcConstructMACHERVpcCAA5F27B": {
+   "Type": "AWS::EC2::VPC",
+   "Properties": {
+    "CidrBlock": "10.0.0.0/16",
+    "EnableDnsHostnames": true,
+    "EnableDnsSupport": true,
+    "InstanceTenancy": "default",
+    "Tags": [
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Name",
+      "Value": "VocalShield-dev-VPC"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     },
+     {
+      "Key": "WavelengthReady",
+      "Value": "true"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/VpcConstruct/MACHERVpc/Resource"
+   }
+  },
+  "VpcConstructMACHERVpcPublicSubnet1Subnet6A536A76": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "us-east-1a",
+    "CidrBlock": "10.0.0.0/24",
+    "MapPublicIpOnLaunch": true,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Public"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Public"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Name",
+      "Value": "VocalShield-dev-Public-1"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     },
+     {
+      "Key": "WavelengthReady",
+      "Value": "true"
+     }
+    ],
+    "VpcId": {
+     "Ref": "VpcConstructMACHERVpcCAA5F27B"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/VpcConstruct/MACHERVpc/PublicSubnet1/Subnet"
+   }
+  },
+  "VpcConstructMACHERVpcPublicSubnet1RouteTableAEA32FA1": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Name",
+      "Value": "VocalShield-dev-Public-1"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     },
+     {
+      "Key": "WavelengthReady",
+      "Value": "true"
+     }
+    ],
+    "VpcId": {
+     "Ref": "VpcConstructMACHERVpcCAA5F27B"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/VpcConstruct/MACHERVpc/PublicSubnet1/RouteTable"
+   }
+  },
+  "VpcConstructMACHERVpcPublicSubnet1RouteTableAssociation8E27FA2E": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "VpcConstructMACHERVpcPublicSubnet1RouteTableAEA32FA1"
+    },
+    "SubnetId": {
+     "Ref": "VpcConstructMACHERVpcPublicSubnet1Subnet6A536A76"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/VpcConstruct/MACHERVpc/PublicSubnet1/RouteTableAssociation"
+   }
+  },
+  "VpcConstructMACHERVpcPublicSubnet1DefaultRoute83056B63": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "GatewayId": {
+     "Ref": "VpcConstructMACHERVpcIGW454B9FC0"
+    },
+    "RouteTableId": {
+     "Ref": "VpcConstructMACHERVpcPublicSubnet1RouteTableAEA32FA1"
+    }
+   },
+   "DependsOn": [
+    "VpcConstructMACHERVpcVPCGW9388F8F7"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/VpcConstruct/MACHERVpc/PublicSubnet1/DefaultRoute"
+   }
+  },
+  "VpcConstructMACHERVpcPublicSubnet2SubnetA9993AD2": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "us-east-1b",
+    "CidrBlock": "10.0.1.0/24",
+    "MapPublicIpOnLaunch": true,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Public"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Public"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Name",
+      "Value": "VocalShield-dev-Public-2"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     },
+     {
+      "Key": "WavelengthReady",
+      "Value": "true"
+     }
+    ],
+    "VpcId": {
+     "Ref": "VpcConstructMACHERVpcCAA5F27B"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/VpcConstruct/MACHERVpc/PublicSubnet2/Subnet"
+   }
+  },
+  "VpcConstructMACHERVpcPublicSubnet2RouteTableDC496258": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Name",
+      "Value": "VocalShield-dev-Public-2"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     },
+     {
+      "Key": "WavelengthReady",
+      "Value": "true"
+     }
+    ],
+    "VpcId": {
+     "Ref": "VpcConstructMACHERVpcCAA5F27B"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/VpcConstruct/MACHERVpc/PublicSubnet2/RouteTable"
+   }
+  },
+  "VpcConstructMACHERVpcPublicSubnet2RouteTableAssociationB3E73927": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "VpcConstructMACHERVpcPublicSubnet2RouteTableDC496258"
+    },
+    "SubnetId": {
+     "Ref": "VpcConstructMACHERVpcPublicSubnet2SubnetA9993AD2"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/VpcConstruct/MACHERVpc/PublicSubnet2/RouteTableAssociation"
+   }
+  },
+  "VpcConstructMACHERVpcPublicSubnet2DefaultRoute4476C5C9": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "GatewayId": {
+     "Ref": "VpcConstructMACHERVpcIGW454B9FC0"
+    },
+    "RouteTableId": {
+     "Ref": "VpcConstructMACHERVpcPublicSubnet2RouteTableDC496258"
+    }
+   },
+   "DependsOn": [
+    "VpcConstructMACHERVpcVPCGW9388F8F7"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/VpcConstruct/MACHERVpc/PublicSubnet2/DefaultRoute"
+   }
+  },
+  "VpcConstructMACHERVpcPrivateSubnet1Subnet6122712D": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "us-east-1a",
+    "CidrBlock": "10.0.2.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Private"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Isolated"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Name",
+      "Value": "VocalShield-dev-Private-1"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     },
+     {
+      "Key": "WavelengthReady",
+      "Value": "true"
+     }
+    ],
+    "VpcId": {
+     "Ref": "VpcConstructMACHERVpcCAA5F27B"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/VpcConstruct/MACHERVpc/PrivateSubnet1/Subnet"
+   }
+  },
+  "VpcConstructMACHERVpcPrivateSubnet1RouteTableADA80DFA": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Name",
+      "Value": "VocalShield-dev-Private-1"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     },
+     {
+      "Key": "WavelengthReady",
+      "Value": "true"
+     }
+    ],
+    "VpcId": {
+     "Ref": "VpcConstructMACHERVpcCAA5F27B"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/VpcConstruct/MACHERVpc/PrivateSubnet1/RouteTable"
+   }
+  },
+  "VpcConstructMACHERVpcPrivateSubnet1RouteTableAssociationA187D9B5": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "VpcConstructMACHERVpcPrivateSubnet1RouteTableADA80DFA"
+    },
+    "SubnetId": {
+     "Ref": "VpcConstructMACHERVpcPrivateSubnet1Subnet6122712D"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/VpcConstruct/MACHERVpc/PrivateSubnet1/RouteTableAssociation"
+   }
+  },
+  "VpcConstructMACHERVpcPrivateSubnet2Subnet9046D296": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "us-east-1b",
+    "CidrBlock": "10.0.3.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Private"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Isolated"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Name",
+      "Value": "VocalShield-dev-Private-2"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     },
+     {
+      "Key": "WavelengthReady",
+      "Value": "true"
+     }
+    ],
+    "VpcId": {
+     "Ref": "VpcConstructMACHERVpcCAA5F27B"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/VpcConstruct/MACHERVpc/PrivateSubnet2/Subnet"
+   }
+  },
+  "VpcConstructMACHERVpcPrivateSubnet2RouteTable03A94DE8": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Name",
+      "Value": "VocalShield-dev-Private-2"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     },
+     {
+      "Key": "WavelengthReady",
+      "Value": "true"
+     }
+    ],
+    "VpcId": {
+     "Ref": "VpcConstructMACHERVpcCAA5F27B"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/VpcConstruct/MACHERVpc/PrivateSubnet2/RouteTable"
+   }
+  },
+  "VpcConstructMACHERVpcPrivateSubnet2RouteTableAssociation3E9FAF14": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "VpcConstructMACHERVpcPrivateSubnet2RouteTable03A94DE8"
+    },
+    "SubnetId": {
+     "Ref": "VpcConstructMACHERVpcPrivateSubnet2Subnet9046D296"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/VpcConstruct/MACHERVpc/PrivateSubnet2/RouteTableAssociation"
+   }
+  },
+  "VpcConstructMACHERVpcIGW454B9FC0": {
+   "Type": "AWS::EC2::InternetGateway",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Name",
+      "Value": "VocalShield-dev-VPC"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     },
+     {
+      "Key": "WavelengthReady",
+      "Value": "true"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/VpcConstruct/MACHERVpc/IGW"
+   }
+  },
+  "VpcConstructMACHERVpcVPCGW9388F8F7": {
+   "Type": "AWS::EC2::VPCGatewayAttachment",
+   "Properties": {
+    "InternetGatewayId": {
+     "Ref": "VpcConstructMACHERVpcIGW454B9FC0"
+    },
+    "VpcId": {
+     "Ref": "VpcConstructMACHERVpcCAA5F27B"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/VpcConstruct/MACHERVpc/VPCGW"
+   }
+  },
+  "VpcConstructMACHERVpcRestrictDefaultSecurityGroupCustomResource6DBB5D17": {
+   "Type": "Custom::VpcRestrictDefaultSG",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "CustomVpcRestrictDefaultSGCustomResourceProviderHandlerDC833E5E",
+      "Arn"
+     ]
+    },
+    "DefaultSecurityGroupId": {
+     "Fn::GetAtt": [
+      "VpcConstructMACHERVpcCAA5F27B",
+      "DefaultSecurityGroup"
+     ]
+    },
+    "Account": "902883117404"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/VpcConstruct/MACHERVpc/RestrictDefaultSecurityGroupCustomResource/Default"
+   }
+  },
+  "VpcConstructMACHERVpcDynamoDbEndpoint8ED48144": {
+   "Type": "AWS::EC2::VPCEndpoint",
+   "Properties": {
+    "RouteTableIds": [
+     {
+      "Ref": "VpcConstructMACHERVpcPrivateSubnet1RouteTableADA80DFA"
+     },
+     {
+      "Ref": "VpcConstructMACHERVpcPrivateSubnet2RouteTable03A94DE8"
+     }
+    ],
+    "ServiceName": {
+     "Fn::Join": [
+      "",
+      [
+       "com.amazonaws.",
+       {
+        "Ref": "AWS::Region"
+       },
+       ".dynamodb"
+      ]
+     ]
+    },
+    "Tags": [
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Name",
+      "Value": "VocalShield-dev-VPC"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     },
+     {
+      "Key": "WavelengthReady",
+      "Value": "true"
+     }
+    ],
+    "VpcEndpointType": "Gateway",
+    "VpcId": {
+     "Ref": "VpcConstructMACHERVpcCAA5F27B"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/VpcConstruct/MACHERVpc/DynamoDbEndpoint/Resource"
+   }
+  },
+  "CustomVpcRestrictDefaultSGCustomResourceProviderRole26592FE0": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Version": "2012-10-17",
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ]
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Sub": "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+     }
+    ],
+    "Policies": [
+     {
+      "PolicyName": "Inline",
+      "PolicyDocument": {
+       "Version": "2012-10-17",
+       "Statement": [
+        {
+         "Effect": "Allow",
+         "Action": [
+          "ec2:AuthorizeSecurityGroupIngress",
+          "ec2:AuthorizeSecurityGroupEgress",
+          "ec2:RevokeSecurityGroupIngress",
+          "ec2:RevokeSecurityGroupEgress"
+         ],
+         "Resource": [
+          {
+           "Fn::Join": [
+            "",
+            [
+             "arn:aws:ec2:us-east-1:902883117404:security-group/",
+             {
+              "Fn::GetAtt": [
+               "VpcConstructMACHERVpcCAA5F27B",
+               "DefaultSecurityGroup"
+              ]
+             }
+            ]
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/Custom::VpcRestrictDefaultSGCustomResourceProvider/Role"
+   }
+  },
+  "CustomVpcRestrictDefaultSGCustomResourceProviderHandlerDC833E5E": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-902883117404-us-east-1",
+     "S3Key": "7fa1e366ee8a9ded01fc355f704cff92bfd179574e6f9cfee800a3541df1b200.zip"
+    },
+    "Timeout": 900,
+    "MemorySize": 128,
+    "Handler": "__entrypoint__.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "CustomVpcRestrictDefaultSGCustomResourceProviderRole26592FE0",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs22.x",
+    "Description": "Lambda function for removing all inbound/outbound rules from the VPC default security group"
+   },
+   "DependsOn": [
+    "CustomVpcRestrictDefaultSGCustomResourceProviderRole26592FE0"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/Custom::VpcRestrictDefaultSGCustomResourceProvider/Handler",
+    "aws:asset:path": "asset.7fa1e366ee8a9ded01fc355f704cff92bfd179574e6f9cfee800a3541df1b200",
+    "aws:asset:property": "Code"
+   }
+  },
+  "KnowledgeBaseKnowledgeBaseBucket08D28449": {
+   "Type": "AWS::S3::Bucket",
+   "Properties": {
+    "BucketEncryption": {
+     "ServerSideEncryptionConfiguration": [
+      {
+       "ServerSideEncryptionByDefault": {
+        "SSEAlgorithm": "AES256"
+       }
+      }
+     ]
+    },
+    "BucketName": "vocalshield-knowledge-base-902883117404",
+    "LifecycleConfiguration": {
+     "Rules": [
+      {
+       "NoncurrentVersionExpiration": {
+        "NoncurrentDays": 30
+       },
+       "Status": "Enabled"
+      }
+     ]
+    },
+    "PublicAccessBlockConfiguration": {
+     "BlockPublicAcls": true,
+     "BlockPublicPolicy": true,
+     "IgnorePublicAcls": true,
+     "RestrictPublicBuckets": true
+    },
+    "Tags": [
+     {
+      "Key": "aws-cdk:auto-delete-objects",
+      "Value": "true"
+     },
+     {
+      "Key": "aws-cdk:cr-owned:scam-patterns/:4e9148b1",
+      "Value": "true"
+     },
+     {
+      "Key": "Component",
+      "Value": "KnowledgeBase"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ],
+    "VersioningConfiguration": {
+     "Status": "Enabled"
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/KnowledgeBase/KnowledgeBaseBucket/Resource"
+   }
+  },
+  "KnowledgeBaseKnowledgeBaseBucketPolicy0173CEAD": {
+   "Type": "AWS::S3::BucketPolicy",
+   "Properties": {
+    "Bucket": {
+     "Ref": "KnowledgeBaseKnowledgeBaseBucket08D28449"
+    },
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:DeleteObject*",
+        "s3:GetBucket*",
+        "s3:List*",
+        "s3:PutBucketPolicy"
+       ],
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": {
+         "Fn::GetAtt": [
+          "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+          "Arn"
+         ]
+        }
+       },
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "KnowledgeBaseKnowledgeBaseBucket08D28449",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "KnowledgeBaseKnowledgeBaseBucket08D28449",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/KnowledgeBase/KnowledgeBaseBucket/Policy/Resource"
+   }
+  },
+  "KnowledgeBaseKnowledgeBaseBucketAutoDeleteObjectsCustomResource0AE38DB7": {
+   "Type": "Custom::S3AutoDeleteObjects",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
+      "Arn"
+     ]
+    },
+    "BucketName": {
+     "Ref": "KnowledgeBaseKnowledgeBaseBucket08D28449"
+    }
+   },
+   "DependsOn": [
+    "KnowledgeBaseKnowledgeBaseBucketPolicy0173CEAD"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/KnowledgeBase/KnowledgeBaseBucket/AutoDeleteObjectsCustomResource/Default"
+   }
+  },
+  "KnowledgeBaseDeployScamPatternsAwsCliLayerCAFC3871": {
+   "Type": "AWS::Lambda::LayerVersion",
+   "Properties": {
+    "Content": {
+     "S3Bucket": "cdk-hnb659fds-assets-902883117404-us-east-1",
+     "S3Key": "0cfdecad2260a3a84ad0c2d08a77e03c9d25e26c7b52f26b1e1faf97aef92f18.zip"
+    },
+    "Description": "/opt/awscli/aws"
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/KnowledgeBase/DeployScamPatterns/AwsCliLayer/Resource",
+    "aws:asset:path": "asset.0cfdecad2260a3a84ad0c2d08a77e03c9d25e26c7b52f26b1e1faf97aef92f18.zip",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Content"
+   }
+  },
+  "KnowledgeBaseDeployScamPatternsCustomResource55DDBD55": {
+   "Type": "Custom::CDKBucketDeployment",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C81C01536",
+      "Arn"
+     ]
+    },
+    "SourceBucketNames": [
+     "cdk-hnb659fds-assets-902883117404-us-east-1"
+    ],
+    "SourceObjectKeys": [
+     "db6a66161768e43dfd7c04c6018983bc461661c1dafe8d1d1235815bf88444a2.zip"
+    ],
+    "DestinationBucketName": {
+     "Ref": "KnowledgeBaseKnowledgeBaseBucket08D28449"
+    },
+    "DestinationBucketKeyPrefix": "scam-patterns/",
+    "WaitForDistributionInvalidation": true,
+    "RetainOnDelete": false,
+    "Prune": false,
+    "OutputObjectKeys": true
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/KnowledgeBase/DeployScamPatterns/CustomResource/Default"
+   }
+  },
+  "KnowledgeBaseBedrockKnowledgeBaseRole27C6F571": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "bedrock.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "IAM role for Bedrock Knowledge Base to access S3 bucket",
+    "RoleName": "VocalShield-BedrockKB-dev",
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "KnowledgeBase"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/KnowledgeBase/BedrockKnowledgeBaseRole/Resource"
+   }
+  },
+  "KnowledgeBaseBedrockKnowledgeBaseRoleDefaultPolicyE6AEE663": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "KnowledgeBaseKnowledgeBaseBucket08D28449",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "KnowledgeBaseKnowledgeBaseBucket08D28449",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "bedrock:Retrieve",
+        "bedrock:RetrieveAndGenerate"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:bedrock:us-east-1:902883117404:knowledge-base/*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "KnowledgeBaseBedrockKnowledgeBaseRoleDefaultPolicyE6AEE663",
+    "Roles": [
+     {
+      "Ref": "KnowledgeBaseBedrockKnowledgeBaseRole27C6F571"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/KnowledgeBase/BedrockKnowledgeBaseRole/DefaultPolicy/Resource"
+   }
+  },
+  "KnowledgeBaseBedrockAgentRole5717B63A": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "bedrock.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "IAM role for Bedrock Agent to invoke models and access Knowledge Base",
+    "RoleName": "VocalShield-BedrockAgent-dev",
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "KnowledgeBase"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/KnowledgeBase/BedrockAgentRole/Resource"
+   }
+  },
+  "KnowledgeBaseBedrockAgentRoleDefaultPolicy25B02CFB": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0",
+        "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0"
+       ]
+      },
+      {
+       "Action": [
+        "bedrock:Retrieve",
+        "bedrock:RetrieveAndGenerate"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:bedrock:us-east-1:902883117404:knowledge-base/*"
+      },
+      {
+       "Action": "bedrock:ApplyGuardrail",
+       "Effect": "Allow",
+       "Resource": "arn:aws:bedrock:us-east-1:902883117404:guardrail/*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "KnowledgeBaseBedrockAgentRoleDefaultPolicy25B02CFB",
+    "Roles": [
+     {
+      "Ref": "KnowledgeBaseBedrockAgentRole5717B63A"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/KnowledgeBase/BedrockAgentRole/DefaultPolicy/Resource"
+   }
+  },
+  "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Version": "2012-10-17",
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ]
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Sub": "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/Custom::S3AutoDeleteObjectsCustomResourceProvider/Role"
+   }
+  },
+  "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-902883117404-us-east-1",
+     "S3Key": "faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6.zip"
+    },
+    "Timeout": 900,
+    "MemorySize": 128,
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs22.x",
+    "Description": {
+     "Fn::Join": [
+      "",
+      [
+       "Lambda function for auto-deleting objects in ",
+       {
+        "Ref": "KnowledgeBaseKnowledgeBaseBucket08D28449"
+       },
+       " S3 bucket."
+      ]
+     ]
+    }
+   },
+   "DependsOn": [
+    "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/Custom::S3AutoDeleteObjectsCustomResourceProvider/Handler",
+    "aws:asset:path": "asset.faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6",
+    "aws:asset:property": "Code"
+   }
+  },
+  "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/ServiceRole/Resource"
+   }
+  },
+  "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRoleDefaultPolicy88902FDF": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        "arn:aws:s3:::cdk-hnb659fds-assets-902883117404-us-east-1",
+        "arn:aws:s3:::cdk-hnb659fds-assets-902883117404-us-east-1/*"
+       ]
+      },
+      {
+       "Action": [
+        "s3:Abort*",
+        "s3:DeleteObject*",
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "KnowledgeBaseKnowledgeBaseBucket08D28449",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "KnowledgeBaseKnowledgeBaseBucket08D28449",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRoleDefaultPolicy88902FDF",
+    "Roles": [
+     {
+      "Ref": "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C81C01536": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-902883117404-us-east-1",
+     "S3Key": "3423a042b818e31c1e34a19d6689ab2e5f9b70fcbe9e71df66f241b20a200bd9.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "AWS_CA_BUNDLE": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"
+     }
+    },
+    "Handler": "index.handler",
+    "Layers": [
+     {
+      "Ref": "KnowledgeBaseDeployScamPatternsAwsCliLayerCAFC3871"
+     }
+    ],
+    "Role": {
+     "Fn::GetAtt": [
+      "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.13",
+    "Tags": [
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ],
+    "Timeout": 900
+   },
+   "DependsOn": [
+    "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRoleDefaultPolicy88902FDF",
+    "CustomCDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756CServiceRole89A01265"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/Resource",
+    "aws:asset:path": "asset.3423a042b818e31c1e34a19d6689ab2e5f9b70fcbe9e71df66f241b20a200bd9",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "DynamoDbTablesConnectionsTableF3C7B7C2": {
+   "Type": "AWS::DynamoDB::Table",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "connectionId",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "connectedAt",
+      "AttributeType": "N"
+     }
+    ],
+    "BillingMode": "PAY_PER_REQUEST",
+    "DeletionProtectionEnabled": false,
+    "KeySchema": [
+     {
+      "AttributeName": "connectionId",
+      "KeyType": "HASH"
+     },
+     {
+      "AttributeName": "connectedAt",
+      "KeyType": "RANGE"
+     }
+    ],
+    "PointInTimeRecoverySpecification": {
+     "PointInTimeRecoveryEnabled": false
+    },
+    "SSESpecification": {
+     "SSEEnabled": true
+    },
+    "TableName": "VocalShield-dev-Connections",
+    "Tags": [
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "DataType",
+      "Value": "ConnectionMetadata"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Name",
+      "Value": "VocalShield-dev-Connections"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     },
+     {
+      "Key": "TTL",
+      "Value": "24 hours"
+     }
+    ],
+    "TimeToLiveSpecification": {
+     "AttributeName": "ttl",
+     "Enabled": true
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/DynamoDbTables/ConnectionsTable/Resource"
+   }
+  },
+  "DynamoDbTablesMetadataTable5D201506": {
+   "Type": "AWS::DynamoDB::Table",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "callSessionId",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "timestamp",
+      "AttributeType": "N"
+     },
+     {
+      "AttributeName": "connectionId",
+      "AttributeType": "S"
+     }
+    ],
+    "BillingMode": "PAY_PER_REQUEST",
+    "DeletionProtectionEnabled": false,
+    "GlobalSecondaryIndexes": [
+     {
+      "IndexName": "connectionId-timestamp-index",
+      "KeySchema": [
+       {
+        "AttributeName": "connectionId",
+        "KeyType": "HASH"
+       },
+       {
+        "AttributeName": "timestamp",
+        "KeyType": "RANGE"
+       }
+      ],
+      "Projection": {
+       "ProjectionType": "ALL"
+      }
+     }
+    ],
+    "KeySchema": [
+     {
+      "AttributeName": "callSessionId",
+      "KeyType": "HASH"
+     },
+     {
+      "AttributeName": "timestamp",
+      "KeyType": "RANGE"
+     }
+    ],
+    "PointInTimeRecoverySpecification": {
+     "PointInTimeRecoveryEnabled": false
+    },
+    "SSESpecification": {
+     "SSEEnabled": true
+    },
+    "TableName": "VocalShield-dev-Metadata",
+    "Tags": [
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "DataType",
+      "Value": "CallMetadata"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Name",
+      "Value": "VocalShield-dev-Metadata"
+     },
+     {
+      "Key": "Privacy",
+      "Value": "NoAudioStorage"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     },
+     {
+      "Key": "TTL",
+      "Value": "24 hours"
+     }
+    ],
+    "TimeToLiveSpecification": {
+     "AttributeName": "ttl",
+     "Enabled": true
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/DynamoDbTables/MetadataTable/Resource"
+   }
+  },
+  "DynamoDbTablesGuardianLinksTable1C64D44A": {
+   "Type": "AWS::DynamoDB::Table",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "linkId",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "linkCode",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "guardianId",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "createdAt",
+      "AttributeType": "N"
+     }
+    ],
+    "BillingMode": "PAY_PER_REQUEST",
+    "DeletionProtectionEnabled": false,
+    "GlobalSecondaryIndexes": [
+     {
+      "IndexName": "linkCode-index",
+      "KeySchema": [
+       {
+        "AttributeName": "linkCode",
+        "KeyType": "HASH"
+       }
+      ],
+      "Projection": {
+       "ProjectionType": "ALL"
+      }
+     },
+     {
+      "IndexName": "guardianId-index",
+      "KeySchema": [
+       {
+        "AttributeName": "guardianId",
+        "KeyType": "HASH"
+       },
+       {
+        "AttributeName": "createdAt",
+        "KeyType": "RANGE"
+       }
+      ],
+      "Projection": {
+       "ProjectionType": "ALL"
+      }
+     }
+    ],
+    "KeySchema": [
+     {
+      "AttributeName": "linkId",
+      "KeyType": "HASH"
+     }
+    ],
+    "SSESpecification": {
+     "SSEEnabled": true
+    },
+    "TableName": "VocalShield-dev-GuardianLinks",
+    "Tags": [
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "DataType",
+      "Value": "GuardianPairing"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Name",
+      "Value": "VocalShield-dev-GuardianLinks"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/DynamoDbTables/GuardianLinksTable/Resource"
+   }
+  },
+  "SecretsManagerApiKeysSecret42385DCB": {
+   "Type": "AWS::SecretsManager::Secret",
+   "Properties": {
+    "Description": "API keys for MACHER external service integrations and WebSocket authentication",
+    "GenerateSecretString": {
+     "GenerateStringKey": "websocketApiKey",
+     "SecretStringTemplate": "{\"mlServiceApiKey\":\"PLACEHOLDER_ML_API_KEY\",\"thirdPartyIntegrationKey\":\"PLACEHOLDER_INTEGRATION_KEY\"}"
+    },
+    "Name": "macher/api-keys",
+    "Tags": [
+     {
+      "Key": "CostCenter",
+      "Value": "MACHER-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "MACHER"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/SecretsManager/ApiKeysSecret/Resource"
+   }
+  },
+  "SecretsManagerConfigSecretCFCDFC3F": {
+   "Type": "AWS::SecretsManager::Secret",
+   "Properties": {
+    "Description": "Sensitive configuration for MACHER",
+    "GenerateSecretString": {
+     "GenerateStringKey": "placeholder",
+     "SecretStringTemplate": "{\"fraudThreshold\":70,\"processingTimeout\":3000}"
+    },
+    "Name": "macher/config",
+    "Tags": [
+     {
+      "Key": "CostCenter",
+      "Value": "MACHER-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "MACHER"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/SecretsManager/ConfigSecret/Resource"
+   }
+  },
+  "LambdaFunctionsConnectHandlerServiceRole34E62251": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "ConnectHandler"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/LambdaFunctions/ConnectHandler/ServiceRole/Resource"
+   }
+  },
+  "LambdaFunctionsConnectHandlerServiceRoleDefaultPolicy2F7CE0F6": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "xray:PutTelemetryRecords",
+        "xray:PutTraceSegments"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": "dynamodb:PutItem",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "DynamoDbTablesConnectionsTableF3C7B7C2",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": "secretsmanager:GetSecretValue",
+       "Effect": "Allow",
+       "Resource": "arn:aws:secretsmanager:us-east-1:902883117404:secret:macher/api-keys-*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "LambdaFunctionsConnectHandlerServiceRoleDefaultPolicy2F7CE0F6",
+    "Roles": [
+     {
+      "Ref": "LambdaFunctionsConnectHandlerServiceRole34E62251"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/LambdaFunctions/ConnectHandler/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "LambdaFunctionsConnectHandlerE7CD30E9": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Architectures": [
+     "arm64"
+    ],
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-902883117404-us-east-1",
+     "S3Key": "e56c9f389331f1803ac03b2398102a8c501fc86aa9fe7a08735d334cbd3c5611.zip"
+    },
+    "Description": "Handles WebSocket $connect route - validates and stores connection metadata",
+    "Environment": {
+     "Variables": {
+      "CONNECTIONS_TABLE_NAME": {
+       "Ref": "DynamoDbTablesConnectionsTableF3C7B7C2"
+      },
+      "ENVIRONMENT": "dev",
+      "LOG_LEVEL": "INFO",
+      "API_KEYS_SECRET_NAME": "macher/api-keys"
+     }
+    },
+    "FunctionName": "MACHER-ConnectHandler-dev",
+    "Handler": "index.handler",
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "LambdaFunctionsConnectHandlerServiceRole34E62251",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs20.x",
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "ConnectHandler"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ],
+    "Timeout": 10,
+    "TracingConfig": {
+     "Mode": "Active"
+    }
+   },
+   "DependsOn": [
+    "LambdaFunctionsConnectHandlerServiceRoleDefaultPolicy2F7CE0F6",
+    "LambdaFunctionsConnectHandlerServiceRole34E62251"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/LambdaFunctions/ConnectHandler/Resource",
+    "aws:asset:path": "asset.e56c9f389331f1803ac03b2398102a8c501fc86aa9fe7a08735d334cbd3c5611",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "LambdaFunctionsConnectHandlerLogRetentionF9A1A201": {
+   "Type": "Custom::LogRetention",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+      "Arn"
+     ]
+    },
+    "LogGroupName": {
+     "Fn::Join": [
+      "",
+      [
+       "/aws/lambda/",
+       {
+        "Ref": "LambdaFunctionsConnectHandlerE7CD30E9"
+       }
+      ]
+     ]
+    },
+    "RetentionInDays": 7
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/LambdaFunctions/ConnectHandler/LogRetention/Resource"
+   }
+  },
+  "LambdaFunctionsConnectHandlerInvokeoVGxj5VEFPSnAe5xNjrFpMLXEbYGH3X6zgLgIQj1RwF1F51C78": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "LambdaFunctionsConnectHandlerE7CD30E9",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:us-east-1:902883117404:",
+       {
+        "Ref": "WebSocketApi32E01B6B"
+       },
+       "/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/LambdaFunctions/ConnectHandler/InvokeoVGxj5VEFPSnAe5xNjrFpMLXEbYGH3--X6zgLgIQj1Rw="
+   }
+  },
+  "LambdaFunctionsDisconnectHandlerServiceRole1DF87986": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "DisconnectHandler"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/LambdaFunctions/DisconnectHandler/ServiceRole/Resource"
+   }
+  },
+  "LambdaFunctionsDisconnectHandlerServiceRoleDefaultPolicy40ADD9DE": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "xray:PutTelemetryRecords",
+        "xray:PutTraceSegments"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "dynamodb:DeleteItem",
+        "dynamodb:UpdateItem"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "DynamoDbTablesConnectionsTableF3C7B7C2",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "LambdaFunctionsDisconnectHandlerServiceRoleDefaultPolicy40ADD9DE",
+    "Roles": [
+     {
+      "Ref": "LambdaFunctionsDisconnectHandlerServiceRole1DF87986"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/LambdaFunctions/DisconnectHandler/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "LambdaFunctionsDisconnectHandlerB1A35A73": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Architectures": [
+     "arm64"
+    ],
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-902883117404-us-east-1",
+     "S3Key": "6b8af7e052aab781764643c2b379ec37c5e87fcdfec18bda6412321d4910d0bf.zip"
+    },
+    "Description": "Handles WebSocket $disconnect route - updates connection status to disconnected",
+    "Environment": {
+     "Variables": {
+      "CONNECTIONS_TABLE_NAME": {
+       "Ref": "DynamoDbTablesConnectionsTableF3C7B7C2"
+      },
+      "ENVIRONMENT": "dev",
+      "LOG_LEVEL": "INFO"
+     }
+    },
+    "FunctionName": "MACHER-DisconnectHandler-dev",
+    "Handler": "index.handler",
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "LambdaFunctionsDisconnectHandlerServiceRole1DF87986",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs20.x",
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "DisconnectHandler"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ],
+    "Timeout": 10,
+    "TracingConfig": {
+     "Mode": "Active"
+    }
+   },
+   "DependsOn": [
+    "LambdaFunctionsDisconnectHandlerServiceRoleDefaultPolicy40ADD9DE",
+    "LambdaFunctionsDisconnectHandlerServiceRole1DF87986"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/LambdaFunctions/DisconnectHandler/Resource",
+    "aws:asset:path": "asset.6b8af7e052aab781764643c2b379ec37c5e87fcdfec18bda6412321d4910d0bf",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "LambdaFunctionsDisconnectHandlerLogRetention5FF36E2F": {
+   "Type": "Custom::LogRetention",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+      "Arn"
+     ]
+    },
+    "LogGroupName": {
+     "Fn::Join": [
+      "",
+      [
+       "/aws/lambda/",
+       {
+        "Ref": "LambdaFunctionsDisconnectHandlerB1A35A73"
+       }
+      ]
+     ]
+    },
+    "RetentionInDays": 7
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/LambdaFunctions/DisconnectHandler/LogRetention/Resource"
+   }
+  },
+  "LambdaFunctionsDisconnectHandlerInvokeoVGxj5VEFPSnAe5xNjrFpMLXEbYGH3X6zgLgIQj1Rw3F9D7271": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "LambdaFunctionsDisconnectHandlerB1A35A73",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:us-east-1:902883117404:",
+       {
+        "Ref": "WebSocketApi32E01B6B"
+       },
+       "/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/LambdaFunctions/DisconnectHandler/InvokeoVGxj5VEFPSnAe5xNjrFpMLXEbYGH3--X6zgLgIQj1Rw="
+   }
+  },
+  "LambdaFunctionsAudioProcessorServiceRole60A63313": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "AudioProcessor"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/LambdaFunctions/AudioProcessor/ServiceRole/Resource"
+   }
+  },
+  "LambdaFunctionsAudioProcessorServiceRoleDefaultPolicy7A29627A": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "transcribe:StartStreamTranscription",
+        "xray:PutTelemetryRecords",
+        "xray:PutTraceSegments"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "dynamodb:PutItem",
+        "dynamodb:Query"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "DynamoDbTablesMetadataTable5D201506",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "DynamoDbTablesMetadataTable5D201506",
+             "Arn"
+            ]
+           },
+           "/index/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "bedrock:InvokeAgent",
+        "bedrock:InvokeModel"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        "arn:aws:bedrock:us-east-1:902883117404:agent/*",
+        "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-sonnet-*"
+       ]
+      },
+      {
+       "Action": "bedrock:Retrieve",
+       "Effect": "Allow",
+       "Resource": "arn:aws:bedrock:us-east-1:902883117404:knowledge-base/*"
+      },
+      {
+       "Action": "secretsmanager:GetSecretValue",
+       "Effect": "Allow",
+       "Resource": "arn:aws:secretsmanager:us-east-1:902883117404:secret:macher/*"
+      },
+      {
+       "Action": "ssm:GetParameter",
+       "Effect": "Allow",
+       "Resource": "arn:aws:ssm:us-east-1:902883117404:parameter/macher/*"
+      },
+      {
+       "Action": "sns:Publish",
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "SnsTopicFamilyLoopTopicB20AF77B"
+       }
+      },
+      {
+       "Action": "execute-api:ManageConnections",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:aws:execute-api:us-east-1:902883117404:",
+          {
+           "Ref": "WebSocketApi32E01B6B"
+          },
+          "/*"
+         ]
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "LambdaFunctionsAudioProcessorServiceRoleDefaultPolicy7A29627A",
+    "Roles": [
+     {
+      "Ref": "LambdaFunctionsAudioProcessorServiceRole60A63313"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/LambdaFunctions/AudioProcessor/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "LambdaFunctionsAudioProcessor911DD9C8": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Architectures": [
+     "arm64"
+    ],
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-902883117404-us-east-1",
+     "S3Key": "fa00ca8b334617a0361b555252108d341a452590edc98cd639da29b8a5984f06.zip"
+    },
+    "Description": "Processes audio data, detects fraud, stores metadata, and publishes events",
+    "Environment": {
+     "Variables": {
+      "CONNECTIONS_TABLE_NAME": {
+       "Ref": "DynamoDbTablesConnectionsTableF3C7B7C2"
+      },
+      "METADATA_TABLE_NAME": {
+       "Ref": "DynamoDbTablesMetadataTable5D201506"
+      },
+      "ENVIRONMENT": "dev",
+      "LOG_LEVEL": "INFO",
+      "SNS_TOPIC_ARN": {
+       "Ref": "SnsTopicFamilyLoopTopicB20AF77B"
+      },
+      "FRAUD_DETECTION_API_URL": {
+       "Fn::Join": [
+        "",
+        [
+         "https://",
+         {
+          "Ref": "FraudDetectionFraudDetectionApiAA222734"
+         },
+         ".execute-api.us-east-1.",
+         {
+          "Ref": "AWS::URLSuffix"
+         },
+         "/",
+         {
+          "Ref": "FraudDetectionFraudDetectionApiDeploymentStagedevA9656FD7"
+         },
+         "/analyze"
+        ]
+       ]
+      }
+     }
+    },
+    "FunctionName": "MACHER-AudioProcessor-dev",
+    "Handler": "index.handler",
+    "MemorySize": 1024,
+    "Role": {
+     "Fn::GetAtt": [
+      "LambdaFunctionsAudioProcessorServiceRole60A63313",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs20.x",
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "AudioProcessor"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ],
+    "Timeout": 30,
+    "TracingConfig": {
+     "Mode": "Active"
+    }
+   },
+   "DependsOn": [
+    "LambdaFunctionsAudioProcessorServiceRoleDefaultPolicy7A29627A",
+    "LambdaFunctionsAudioProcessorServiceRole60A63313"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/LambdaFunctions/AudioProcessor/Resource",
+    "aws:asset:path": "asset.fa00ca8b334617a0361b555252108d341a452590edc98cd639da29b8a5984f06",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "LambdaFunctionsAudioProcessorLogRetention82624401": {
+   "Type": "Custom::LogRetention",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+      "Arn"
+     ]
+    },
+    "LogGroupName": {
+     "Fn::Join": [
+      "",
+      [
+       "/aws/lambda/",
+       {
+        "Ref": "LambdaFunctionsAudioProcessor911DD9C8"
+       }
+      ]
+     ]
+    },
+    "RetentionInDays": 7
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/LambdaFunctions/AudioProcessor/LogRetention/Resource"
+   }
+  },
+  "LambdaFunctionsAudioProcessorInvokeoVGxj5VEFPSnAe5xNjrFpMLXEbYGH3X6zgLgIQj1Rw10ED0542": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "LambdaFunctionsAudioProcessor911DD9C8",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:us-east-1:902883117404:",
+       {
+        "Ref": "WebSocketApi32E01B6B"
+       },
+       "/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/LambdaFunctions/AudioProcessor/InvokeoVGxj5VEFPSnAe5xNjrFpMLXEbYGH3--X6zgLgIQj1Rw="
+   }
+  },
+  "LambdaFunctionsInvestigationHandlerServiceRole9228F71C": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "InvestigationHandler"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/LambdaFunctions/InvestigationHandler/ServiceRole/Resource"
+   }
+  },
+  "LambdaFunctionsInvestigationHandlerServiceRoleDefaultPolicy41D1A82F": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "xray:PutTelemetryRecords",
+        "xray:PutTraceSegments"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "LambdaFunctionsInvestigationHandlerServiceRoleDefaultPolicy41D1A82F",
+    "Roles": [
+     {
+      "Ref": "LambdaFunctionsInvestigationHandlerServiceRole9228F71C"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/LambdaFunctions/InvestigationHandler/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "LambdaFunctionsInvestigationHandler8087321E": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Architectures": [
+     "arm64"
+    ],
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-902883117404-us-east-1",
+     "S3Key": "b106de41914de3366413a7b30b622279a5d74bb5aa1e4148a37dc80254dbe26e.zip"
+    },
+    "Description": "Performs deep fraud investigation analysis for high-severity cases",
+    "Environment": {
+     "Variables": {
+      "ENVIRONMENT": "dev"
+     }
+    },
+    "FunctionName": "MACHER-InvestigationHandler-dev",
+    "Handler": "index.handler",
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "LambdaFunctionsInvestigationHandlerServiceRole9228F71C",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs20.x",
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "InvestigationHandler"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ],
+    "Timeout": 60,
+    "TracingConfig": {
+     "Mode": "Active"
+    }
+   },
+   "DependsOn": [
+    "LambdaFunctionsInvestigationHandlerServiceRoleDefaultPolicy41D1A82F",
+    "LambdaFunctionsInvestigationHandlerServiceRole9228F71C"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/LambdaFunctions/InvestigationHandler/Resource",
+    "aws:asset:path": "asset.b106de41914de3366413a7b30b622279a5d74bb5aa1e4148a37dc80254dbe26e",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "LambdaFunctionsInvestigationHandlerLogRetention4B6CAD1A": {
+   "Type": "Custom::LogRetention",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+      "Arn"
+     ]
+    },
+    "LogGroupName": {
+     "Fn::Join": [
+      "",
+      [
+       "/aws/lambda/",
+       {
+        "Ref": "LambdaFunctionsInvestigationHandler8087321E"
+       }
+      ]
+     ]
+    },
+    "RetentionInDays": 7
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/LambdaFunctions/InvestigationHandler/LogRetention/Resource"
+   }
+  },
+  "LambdaFunctionsGuardianSyncHandlerServiceRole528B4795": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "GuardianSyncHandler"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/LambdaFunctions/GuardianSyncHandler/ServiceRole/Resource"
+   }
+  },
+  "LambdaFunctionsGuardianSyncHandlerServiceRoleDefaultPolicy827A4B44": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "xray:PutTelemetryRecords",
+        "xray:PutTraceSegments"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:Query",
+        "dynamodb:UpdateItem"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "DynamoDbTablesGuardianLinksTable1C64D44A",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "DynamoDbTablesGuardianLinksTable1C64D44A",
+             "Arn"
+            ]
+           },
+           "/index/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "LambdaFunctionsGuardianSyncHandlerServiceRoleDefaultPolicy827A4B44",
+    "Roles": [
+     {
+      "Ref": "LambdaFunctionsGuardianSyncHandlerServiceRole528B4795"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/LambdaFunctions/GuardianSyncHandler/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "LambdaFunctionsGuardianSyncHandler9DC5A685": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Architectures": [
+     "arm64"
+    ],
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-902883117404-us-east-1",
+     "S3Key": "74370d10a508791aea6184e98f8505b64fb700cc197799dcc85e24105e10c4c3.zip"
+    },
+    "Description": "Handles guardian-protected user link CRUD and sync operations",
+    "Environment": {
+     "Variables": {
+      "GUARDIAN_LINKS_TABLE_NAME": {
+       "Ref": "DynamoDbTablesGuardianLinksTable1C64D44A"
+      },
+      "ENVIRONMENT": "dev",
+      "LOG_LEVEL": "INFO"
+     }
+    },
+    "FunctionName": "MACHER-GuardianSync-dev",
+    "Handler": "index.handler",
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "LambdaFunctionsGuardianSyncHandlerServiceRole528B4795",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs20.x",
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "GuardianSyncHandler"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ],
+    "Timeout": 15,
+    "TracingConfig": {
+     "Mode": "Active"
+    }
+   },
+   "DependsOn": [
+    "LambdaFunctionsGuardianSyncHandlerServiceRoleDefaultPolicy827A4B44",
+    "LambdaFunctionsGuardianSyncHandlerServiceRole528B4795"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/LambdaFunctions/GuardianSyncHandler/Resource",
+    "aws:asset:path": "asset.74370d10a508791aea6184e98f8505b64fb700cc197799dcc85e24105e10c4c3",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "LambdaFunctionsGuardianSyncHandlerLogRetentionA5AC56F6": {
+   "Type": "Custom::LogRetention",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+      "Arn"
+     ]
+    },
+    "LogGroupName": {
+     "Fn::Join": [
+      "",
+      [
+       "/aws/lambda/",
+       {
+        "Ref": "LambdaFunctionsGuardianSyncHandler9DC5A685"
+       }
+      ]
+     ]
+    },
+    "RetentionInDays": 7
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/LambdaFunctions/GuardianSyncHandler/LogRetention/Resource"
+   }
+  },
+  "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/Resource"
+   }
+  },
+  "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "logs:DeleteRetentionPolicy",
+        "logs:PutRetentionPolicy"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB",
+    "Roles": [
+     {
+      "Ref": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Handler": "index.handler",
+    "Runtime": "nodejs22.x",
+    "Timeout": 900,
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-902883117404-us-east-1",
+     "S3Key": "2819175352ad1ce0dae768e83fc328fb70fb5f10b4a8ff0ccbcb791f02b0716d.zip"
+    },
+    "Role": {
+     "Fn::GetAtt": [
+      "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB",
+      "Arn"
+     ]
+    },
+    "Tags": [
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ]
+   },
+   "DependsOn": [
+    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB",
+    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/Resource",
+    "aws:asset:path": "asset.2819175352ad1ce0dae768e83fc328fb70fb5f10b4a8ff0ccbcb791f02b0716d",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "SqsQueuesAudioQueueDLQ9BAEDD81": {
+   "Type": "AWS::SQS::Queue",
+   "Properties": {
+    "MessageRetentionPeriod": 1209600,
+    "QueueName": "MACHER-AudioQueue-DLQ-dev",
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "AudioQueueDLQ"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/SqsQueues/AudioQueueDLQ/Resource"
+   }
+  },
+  "SqsQueuesAudioQueueC6431CE1": {
+   "Type": "AWS::SQS::Queue",
+   "Properties": {
+    "MessageRetentionPeriod": 345600,
+    "QueueName": "MACHER-AudioQueue-dev",
+    "RedrivePolicy": {
+     "deadLetterTargetArn": {
+      "Fn::GetAtt": [
+       "SqsQueuesAudioQueueDLQ9BAEDD81",
+       "Arn"
+      ]
+     },
+     "maxReceiveCount": 3
+    },
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "AudioQueue"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ],
+    "VisibilityTimeout": 30
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/SqsQueues/AudioQueue/Resource"
+   }
+  },
+  "SnsTopicFamilyLoopTopicB20AF77B": {
+   "Type": "AWS::SNS::Topic",
+   "Properties": {
+    "DisplayName": "MACHER Fraud Alerts",
+    "FifoTopic": false,
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "FamilyLoopNotifications"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ],
+    "TopicName": "MACHER-FamilyLoop-dev"
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/SnsTopic/FamilyLoopTopic/Resource"
+   }
+  },
+  "MonitoringSnsTopicsCriticalAlertsTopic2F95531E": {
+   "Type": "AWS::SNS::Topic",
+   "Properties": {
+    "DisplayName": "MACHER Critical Alerts",
+    "FifoTopic": false,
+    "Tags": [
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     },
+     {
+      "Key": "Severity",
+      "Value": "critical"
+     }
+    ],
+    "TopicName": "MACHER-dev-Critical-Alerts"
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/MonitoringSnsTopics/CriticalAlertsTopic/Resource"
+   }
+  },
+  "MonitoringSnsTopicsWarningAlertsTopicA50A61B7": {
+   "Type": "AWS::SNS::Topic",
+   "Properties": {
+    "DisplayName": "MACHER Warning Alerts",
+    "FifoTopic": false,
+    "Tags": [
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     },
+     {
+      "Key": "Severity",
+      "Value": "warning"
+     }
+    ],
+    "TopicName": "MACHER-dev-Warning-Alerts"
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/MonitoringSnsTopics/WarningAlertsTopic/Resource"
+   }
+  },
+  "MonitoringSnsTopicsInfoAlertsTopicAD5BB23E": {
+   "Type": "AWS::SNS::Topic",
+   "Properties": {
+    "DisplayName": "MACHER Info Alerts",
+    "FifoTopic": false,
+    "Tags": [
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     },
+     {
+      "Key": "Severity",
+      "Value": "info"
+     }
+    ],
+    "TopicName": "MACHER-dev-Info-Alerts"
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/MonitoringSnsTopics/InfoAlertsTopic/Resource"
+   }
+  },
+  "MonitoringSnsTopicsSlackWebhookSlackWebhookDLQ01AB68F0": {
+   "Type": "AWS::SQS::Queue",
+   "Properties": {
+    "MessageRetentionPeriod": 1209600,
+    "QueueName": "MACHER-SlackWebhook-DLQ-dev",
+    "SqsManagedSseEnabled": true,
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "SlackWebhook"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/MonitoringSnsTopics/SlackWebhook/SlackWebhookDLQ/Resource"
+   }
+  },
+  "MonitoringSnsTopicsSlackWebhookSlackWebhookDLQPolicy9E417DCB": {
+   "Type": "AWS::SQS::QueuePolicy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sqs:SendMessage",
+       "Condition": {
+        "ArnEquals": {
+         "aws:SourceArn": {
+          "Ref": "MonitoringSnsTopicsCriticalAlertsTopic2F95531E"
+         }
+        }
+       },
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "sns.amazonaws.com"
+       },
+       "Resource": {
+        "Fn::GetAtt": [
+         "MonitoringSnsTopicsSlackWebhookSlackWebhookDLQ01AB68F0",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": "sqs:SendMessage",
+       "Condition": {
+        "ArnEquals": {
+         "aws:SourceArn": {
+          "Ref": "MonitoringSnsTopicsWarningAlertsTopicA50A61B7"
+         }
+        }
+       },
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "sns.amazonaws.com"
+       },
+       "Resource": {
+        "Fn::GetAtt": [
+         "MonitoringSnsTopicsSlackWebhookSlackWebhookDLQ01AB68F0",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": "sqs:SendMessage",
+       "Condition": {
+        "ArnEquals": {
+         "aws:SourceArn": {
+          "Ref": "MonitoringSnsTopicsInfoAlertsTopicAD5BB23E"
+         }
+        }
+       },
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "sns.amazonaws.com"
+       },
+       "Resource": {
+        "Fn::GetAtt": [
+         "MonitoringSnsTopicsSlackWebhookSlackWebhookDLQ01AB68F0",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Queues": [
+     {
+      "Ref": "MonitoringSnsTopicsSlackWebhookSlackWebhookDLQ01AB68F0"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/MonitoringSnsTopics/SlackWebhook/SlackWebhookDLQ/Policy/Resource"
+   }
+  },
+  "MonitoringSnsTopicsSlackWebhookSlackWebhookFunctionServiceRole4E4487FC": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "SlackWebhook"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/MonitoringSnsTopics/SlackWebhook/SlackWebhookFunction/ServiceRole/Resource"
+   }
+  },
+  "MonitoringSnsTopicsSlackWebhookSlackWebhookFunctionServiceRoleDefaultPolicyFF1E69F8": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sqs:SendMessage",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "MonitoringSnsTopicsSlackWebhookSlackWebhookDLQ01AB68F0",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "xray:PutTelemetryRecords",
+        "xray:PutTraceSegments"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": "secretsmanager:GetSecretValue",
+       "Effect": "Allow",
+       "Resource": "arn:aws:secretsmanager:us-east-1:902883117404:secret:macher/slack-webhook-url-*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "MonitoringSnsTopicsSlackWebhookSlackWebhookFunctionServiceRoleDefaultPolicyFF1E69F8",
+    "Roles": [
+     {
+      "Ref": "MonitoringSnsTopicsSlackWebhookSlackWebhookFunctionServiceRole4E4487FC"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/MonitoringSnsTopics/SlackWebhook/SlackWebhookFunction/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "MonitoringSnsTopicsSlackWebhookSlackWebhookFunctionE6FF9AAA": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Architectures": [
+     "arm64"
+    ],
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-902883117404-us-east-1",
+     "S3Key": "14790e63b065bf6b7185e804c8f65e173de879b6fc81b49f5183ba552d2ad494.zip"
+    },
+    "DeadLetterConfig": {
+     "TargetArn": {
+      "Fn::GetAtt": [
+       "MonitoringSnsTopicsSlackWebhookSlackWebhookDLQ01AB68F0",
+       "Arn"
+      ]
+     }
+    },
+    "Description": "Transforms SNS alarm notifications to Slack messages",
+    "Environment": {
+     "Variables": {
+      "SLACK_WEBHOOK_SECRET_NAME": "macher/slack-webhook-url",
+      "ENVIRONMENT": "dev"
+     }
+    },
+    "FunctionName": "MACHER-SlackWebhook-dev",
+    "Handler": "index.handler",
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "MonitoringSnsTopicsSlackWebhookSlackWebhookFunctionServiceRole4E4487FC",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs20.x",
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "SlackWebhook"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ],
+    "Timeout": 10,
+    "TracingConfig": {
+     "Mode": "Active"
+    }
+   },
+   "DependsOn": [
+    "MonitoringSnsTopicsSlackWebhookSlackWebhookFunctionServiceRoleDefaultPolicyFF1E69F8",
+    "MonitoringSnsTopicsSlackWebhookSlackWebhookFunctionServiceRole4E4487FC"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/MonitoringSnsTopics/SlackWebhook/SlackWebhookFunction/Resource",
+    "aws:asset:path": "asset.14790e63b065bf6b7185e804c8f65e173de879b6fc81b49f5183ba552d2ad494",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "MonitoringSnsTopicsSlackWebhookSlackWebhookFunctionLogRetention79FD7CB6": {
+   "Type": "Custom::LogRetention",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+      "Arn"
+     ]
+    },
+    "LogGroupName": {
+     "Fn::Join": [
+      "",
+      [
+       "/aws/lambda/",
+       {
+        "Ref": "MonitoringSnsTopicsSlackWebhookSlackWebhookFunctionE6FF9AAA"
+       }
+      ]
+     ]
+    },
+    "RetentionInDays": 7
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/MonitoringSnsTopics/SlackWebhook/SlackWebhookFunction/LogRetention/Resource"
+   }
+  },
+  "MonitoringSnsTopicsSlackWebhookSlackWebhookFunctionAllowInvokeVocalShielddevMonitoringSnsTopicsCriticalAlertsTopic8766CF0C8A173728": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "MonitoringSnsTopicsSlackWebhookSlackWebhookFunctionE6FF9AAA",
+      "Arn"
+     ]
+    },
+    "Principal": "sns.amazonaws.com",
+    "SourceArn": {
+     "Ref": "MonitoringSnsTopicsCriticalAlertsTopic2F95531E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/MonitoringSnsTopics/SlackWebhook/SlackWebhookFunction/AllowInvoke:VocalShielddevMonitoringSnsTopicsCriticalAlertsTopic8766CF0C"
+   }
+  },
+  "MonitoringSnsTopicsSlackWebhookSlackWebhookFunctionCriticalAlertsTopicA1EF8CAE": {
+   "Type": "AWS::SNS::Subscription",
+   "Properties": {
+    "Endpoint": {
+     "Fn::GetAtt": [
+      "MonitoringSnsTopicsSlackWebhookSlackWebhookFunctionE6FF9AAA",
+      "Arn"
+     ]
+    },
+    "Protocol": "lambda",
+    "RedrivePolicy": {
+     "deadLetterTargetArn": {
+      "Fn::GetAtt": [
+       "MonitoringSnsTopicsSlackWebhookSlackWebhookDLQ01AB68F0",
+       "Arn"
+      ]
+     }
+    },
+    "TopicArn": {
+     "Ref": "MonitoringSnsTopicsCriticalAlertsTopic2F95531E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/MonitoringSnsTopics/SlackWebhook/SlackWebhookFunction/CriticalAlertsTopic/Resource"
+   }
+  },
+  "MonitoringSnsTopicsSlackWebhookSlackWebhookFunctionAllowInvokeVocalShielddevMonitoringSnsTopicsWarningAlertsTopic81518B290D2B2E42": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "MonitoringSnsTopicsSlackWebhookSlackWebhookFunctionE6FF9AAA",
+      "Arn"
+     ]
+    },
+    "Principal": "sns.amazonaws.com",
+    "SourceArn": {
+     "Ref": "MonitoringSnsTopicsWarningAlertsTopicA50A61B7"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/MonitoringSnsTopics/SlackWebhook/SlackWebhookFunction/AllowInvoke:VocalShielddevMonitoringSnsTopicsWarningAlertsTopic81518B29"
+   }
+  },
+  "MonitoringSnsTopicsSlackWebhookSlackWebhookFunctionWarningAlertsTopicCC1CD76B": {
+   "Type": "AWS::SNS::Subscription",
+   "Properties": {
+    "Endpoint": {
+     "Fn::GetAtt": [
+      "MonitoringSnsTopicsSlackWebhookSlackWebhookFunctionE6FF9AAA",
+      "Arn"
+     ]
+    },
+    "Protocol": "lambda",
+    "RedrivePolicy": {
+     "deadLetterTargetArn": {
+      "Fn::GetAtt": [
+       "MonitoringSnsTopicsSlackWebhookSlackWebhookDLQ01AB68F0",
+       "Arn"
+      ]
+     }
+    },
+    "TopicArn": {
+     "Ref": "MonitoringSnsTopicsWarningAlertsTopicA50A61B7"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/MonitoringSnsTopics/SlackWebhook/SlackWebhookFunction/WarningAlertsTopic/Resource"
+   }
+  },
+  "MonitoringSnsTopicsSlackWebhookSlackWebhookFunctionAllowInvokeVocalShielddevMonitoringSnsTopicsInfoAlertsTopicBC3DEB72DD15356C": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "MonitoringSnsTopicsSlackWebhookSlackWebhookFunctionE6FF9AAA",
+      "Arn"
+     ]
+    },
+    "Principal": "sns.amazonaws.com",
+    "SourceArn": {
+     "Ref": "MonitoringSnsTopicsInfoAlertsTopicAD5BB23E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/MonitoringSnsTopics/SlackWebhook/SlackWebhookFunction/AllowInvoke:VocalShielddevMonitoringSnsTopicsInfoAlertsTopicBC3DEB72"
+   }
+  },
+  "MonitoringSnsTopicsSlackWebhookSlackWebhookFunctionInfoAlertsTopicF3CE6213": {
+   "Type": "AWS::SNS::Subscription",
+   "Properties": {
+    "Endpoint": {
+     "Fn::GetAtt": [
+      "MonitoringSnsTopicsSlackWebhookSlackWebhookFunctionE6FF9AAA",
+      "Arn"
+     ]
+    },
+    "Protocol": "lambda",
+    "RedrivePolicy": {
+     "deadLetterTargetArn": {
+      "Fn::GetAtt": [
+       "MonitoringSnsTopicsSlackWebhookSlackWebhookDLQ01AB68F0",
+       "Arn"
+      ]
+     }
+    },
+    "TopicArn": {
+     "Ref": "MonitoringSnsTopicsInfoAlertsTopicAD5BB23E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/MonitoringSnsTopics/SlackWebhook/SlackWebhookFunction/InfoAlertsTopic/Resource"
+   }
+  },
+  "WebSocketApi32E01B6B": {
+   "Type": "AWS::ApiGatewayV2::Api",
+   "Properties": {
+    "Description": "Real-time audio streaming API for MACHER fraud detection",
+    "Name": "MACHER-WebSocket-dev",
+    "ProtocolType": "WEBSOCKET",
+    "RouteSelectionExpression": "$request.body.action",
+    "Tags": {
+     "Component": "WebSocketApi",
+     "CostCenter": "VocalShield-Infrastructure",
+     "Environment": "dev",
+     "ManagedBy": "CDK",
+     "Project": "VocalShield"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/WebSocketApi/WebSocketApi/Resource"
+   }
+  },
+  "WebSocketApiconnectRouteConnectIntegrationPermissionE699A6A3": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "LambdaFunctionsConnectHandlerE7CD30E9",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:us-east-1:902883117404:",
+       {
+        "Ref": "WebSocketApi32E01B6B"
+       },
+       "/*$connect"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/WebSocketApi/WebSocketApi/$connect-Route/ConnectIntegration-Permission"
+   }
+  },
+  "WebSocketApiconnectRouteConnectIntegrationB57148FA": {
+   "Type": "AWS::ApiGatewayV2::Integration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "WebSocketApi32E01B6B"
+    },
+    "IntegrationType": "AWS_PROXY",
+    "IntegrationUri": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+       {
+        "Fn::GetAtt": [
+         "LambdaFunctionsConnectHandlerE7CD30E9",
+         "Arn"
+        ]
+       },
+       "/invocations"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/WebSocketApi/WebSocketApi/$connect-Route/ConnectIntegration/Resource"
+   }
+  },
+  "WebSocketApiconnectRoute7893AC79": {
+   "Type": "AWS::ApiGatewayV2::Route",
+   "Properties": {
+    "ApiId": {
+     "Ref": "WebSocketApi32E01B6B"
+    },
+    "AuthorizationType": "NONE",
+    "RouteKey": "$connect",
+    "Target": {
+     "Fn::Join": [
+      "",
+      [
+       "integrations/",
+       {
+        "Ref": "WebSocketApiconnectRouteConnectIntegrationB57148FA"
+       }
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/WebSocketApi/WebSocketApi/$connect-Route/Resource"
+   }
+  },
+  "WebSocketApidisconnectRouteDisconnectIntegrationPermission3D5EA087": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "LambdaFunctionsDisconnectHandlerB1A35A73",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:us-east-1:902883117404:",
+       {
+        "Ref": "WebSocketApi32E01B6B"
+       },
+       "/*$disconnect"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/WebSocketApi/WebSocketApi/$disconnect-Route/DisconnectIntegration-Permission"
+   }
+  },
+  "WebSocketApidisconnectRouteDisconnectIntegration125B6C49": {
+   "Type": "AWS::ApiGatewayV2::Integration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "WebSocketApi32E01B6B"
+    },
+    "IntegrationType": "AWS_PROXY",
+    "IntegrationUri": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+       {
+        "Fn::GetAtt": [
+         "LambdaFunctionsDisconnectHandlerB1A35A73",
+         "Arn"
+        ]
+       },
+       "/invocations"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/WebSocketApi/WebSocketApi/$disconnect-Route/DisconnectIntegration/Resource"
+   }
+  },
+  "WebSocketApidisconnectRoute9D90B85D": {
+   "Type": "AWS::ApiGatewayV2::Route",
+   "Properties": {
+    "ApiId": {
+     "Ref": "WebSocketApi32E01B6B"
+    },
+    "AuthorizationType": "NONE",
+    "RouteKey": "$disconnect",
+    "Target": {
+     "Fn::Join": [
+      "",
+      [
+       "integrations/",
+       {
+        "Ref": "WebSocketApidisconnectRouteDisconnectIntegration125B6C49"
+       }
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/WebSocketApi/WebSocketApi/$disconnect-Route/Resource"
+   }
+  },
+  "WebSocketApidefaultRouteDefaultIntegrationPermissionA7F65781": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "LambdaFunctionsConnectHandlerE7CD30E9",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:us-east-1:902883117404:",
+       {
+        "Ref": "WebSocketApi32E01B6B"
+       },
+       "/*$default"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/WebSocketApi/WebSocketApi/$default-Route/DefaultIntegration-Permission"
+   }
+  },
+  "WebSocketApidefaultRouteDefaultIntegration134B8EA6": {
+   "Type": "AWS::ApiGatewayV2::Integration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "WebSocketApi32E01B6B"
+    },
+    "IntegrationType": "AWS_PROXY",
+    "IntegrationUri": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+       {
+        "Fn::GetAtt": [
+         "LambdaFunctionsConnectHandlerE7CD30E9",
+         "Arn"
+        ]
+       },
+       "/invocations"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/WebSocketApi/WebSocketApi/$default-Route/DefaultIntegration/Resource"
+   }
+  },
+  "WebSocketApidefaultRoute42193BE4": {
+   "Type": "AWS::ApiGatewayV2::Route",
+   "Properties": {
+    "ApiId": {
+     "Ref": "WebSocketApi32E01B6B"
+    },
+    "AuthorizationType": "NONE",
+    "RouteKey": "$default",
+    "Target": {
+     "Fn::Join": [
+      "",
+      [
+       "integrations/",
+       {
+        "Ref": "WebSocketApidefaultRouteDefaultIntegration134B8EA6"
+       }
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/WebSocketApi/WebSocketApi/$default-Route/Resource"
+   }
+  },
+  "WebSocketApiaudioRouteAudioIntegrationPermission8F1D145D": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "LambdaFunctionsAudioProcessor911DD9C8",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:us-east-1:902883117404:",
+       {
+        "Ref": "WebSocketApi32E01B6B"
+       },
+       "/*audio"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/WebSocketApi/WebSocketApi/audio-Route/AudioIntegration-Permission"
+   }
+  },
+  "WebSocketApiaudioRouteAudioIntegrationE69E6ED5": {
+   "Type": "AWS::ApiGatewayV2::Integration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "WebSocketApi32E01B6B"
+    },
+    "IntegrationType": "AWS_PROXY",
+    "IntegrationUri": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+       {
+        "Fn::GetAtt": [
+         "LambdaFunctionsAudioProcessor911DD9C8",
+         "Arn"
+        ]
+       },
+       "/invocations"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/WebSocketApi/WebSocketApi/audio-Route/AudioIntegration/Resource"
+   }
+  },
+  "WebSocketApiaudioRouteE9E51A8F": {
+   "Type": "AWS::ApiGatewayV2::Route",
+   "Properties": {
+    "ApiId": {
+     "Ref": "WebSocketApi32E01B6B"
+    },
+    "AuthorizationType": "NONE",
+    "RouteKey": "audio",
+    "Target": {
+     "Fn::Join": [
+      "",
+      [
+       "integrations/",
+       {
+        "Ref": "WebSocketApiaudioRouteAudioIntegrationE69E6ED5"
+       }
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/WebSocketApi/WebSocketApi/audio-Route/Resource"
+   }
+  },
+  "WebSocketApiWebSocketStage31D199C5": {
+   "Type": "AWS::ApiGatewayV2::Stage",
+   "Properties": {
+    "ApiId": {
+     "Ref": "WebSocketApi32E01B6B"
+    },
+    "AutoDeploy": true,
+    "DefaultRouteSettings": {
+     "ThrottlingBurstLimit": 200,
+     "ThrottlingRateLimit": 100
+    },
+    "StageName": "dev",
+    "Tags": {
+     "Component": "WebSocketStage",
+     "CostCenter": "VocalShield-Infrastructure",
+     "Environment": "dev",
+     "ManagedBy": "CDK",
+     "Project": "VocalShield"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/WebSocketApi/WebSocketStage/Resource"
+   }
+  },
+  "CloudWatchDashboardMACHERDashboard098E87F6": {
+   "Type": "AWS::CloudWatch::Dashboard",
+   "Properties": {
+    "DashboardBody": {
+     "Fn::Join": [
+      "",
+      [
+       "{\"periodOverride\":\"auto\",\"widgets\":[{\"type\":\"metric\",\"width\":12,\"height\":6,\"x\":0,\"y\":0,\"properties\":{\"view\":\"timeSeries\",\"title\":\"WebSocket Connections\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"AWS/ApiGateway\",\"ConnectCount\",\"ApiId\",\"",
+       {
+        "Ref": "WebSocketApi32E01B6B"
+       },
+       "\",{\"period\":60,\"stat\":\"Sum\"}]],\"yAxis\":{}}},{\"type\":\"metric\",\"width\":12,\"height\":6,\"x\":12,\"y\":0,\"properties\":{\"view\":\"timeSeries\",\"title\":\"WebSocket Messages\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"AWS/ApiGateway\",\"MessageCount\",\"ApiId\",\"",
+       {
+        "Ref": "WebSocketApi32E01B6B"
+       },
+       "\",{\"period\":60,\"stat\":\"Sum\"}]],\"yAxis\":{}}},{\"type\":\"metric\",\"width\":12,\"height\":6,\"x\":0,\"y\":6,\"properties\":{\"view\":\"timeSeries\",\"title\":\"Lambda Invocations\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"",
+       {
+        "Ref": "LambdaFunctionsConnectHandlerE7CD30E9"
+       },
+       "\",{\"label\":\"Connect Handler\",\"stat\":\"Sum\"}],[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"",
+       {
+        "Ref": "LambdaFunctionsDisconnectHandlerB1A35A73"
+       },
+       "\",{\"label\":\"Disconnect Handler\",\"stat\":\"Sum\"}],[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"",
+       {
+        "Ref": "LambdaFunctionsAudioProcessor911DD9C8"
+       },
+       "\",{\"label\":\"Audio Processor\",\"stat\":\"Sum\"}]],\"yAxis\":{}}},{\"type\":\"metric\",\"width\":12,\"height\":6,\"x\":12,\"y\":6,\"properties\":{\"view\":\"timeSeries\",\"title\":\"Lambda Errors\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"",
+       {
+        "Ref": "LambdaFunctionsConnectHandlerE7CD30E9"
+       },
+       "\",{\"label\":\"Connect Handler\",\"stat\":\"Sum\"}],[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"",
+       {
+        "Ref": "LambdaFunctionsDisconnectHandlerB1A35A73"
+       },
+       "\",{\"label\":\"Disconnect Handler\",\"stat\":\"Sum\"}],[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"",
+       {
+        "Ref": "LambdaFunctionsAudioProcessor911DD9C8"
+       },
+       "\",{\"label\":\"Audio Processor\",\"stat\":\"Sum\"}]],\"yAxis\":{}}},{\"type\":\"metric\",\"width\":8,\"height\":6,\"x\":0,\"y\":12,\"properties\":{\"view\":\"timeSeries\",\"title\":\"Lambda Duration - Connect Handler\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"",
+       {
+        "Ref": "LambdaFunctionsConnectHandlerE7CD30E9"
+       },
+       "\",{\"label\":\"P50\",\"stat\":\"p50\"}],[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"",
+       {
+        "Ref": "LambdaFunctionsConnectHandlerE7CD30E9"
+       },
+       "\",{\"label\":\"P90\",\"stat\":\"p90\"}],[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"",
+       {
+        "Ref": "LambdaFunctionsConnectHandlerE7CD30E9"
+       },
+       "\",{\"label\":\"P99\",\"stat\":\"p99\"}]],\"yAxis\":{}}},{\"type\":\"metric\",\"width\":8,\"height\":6,\"x\":8,\"y\":12,\"properties\":{\"view\":\"timeSeries\",\"title\":\"Lambda Duration - Disconnect Handler\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"",
+       {
+        "Ref": "LambdaFunctionsDisconnectHandlerB1A35A73"
+       },
+       "\",{\"label\":\"P50\",\"stat\":\"p50\"}],[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"",
+       {
+        "Ref": "LambdaFunctionsDisconnectHandlerB1A35A73"
+       },
+       "\",{\"label\":\"P90\",\"stat\":\"p90\"}],[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"",
+       {
+        "Ref": "LambdaFunctionsDisconnectHandlerB1A35A73"
+       },
+       "\",{\"label\":\"P99\",\"stat\":\"p99\"}]],\"yAxis\":{}}},{\"type\":\"metric\",\"width\":8,\"height\":6,\"x\":16,\"y\":12,\"properties\":{\"view\":\"timeSeries\",\"title\":\"Lambda Duration - Audio Processor\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"",
+       {
+        "Ref": "LambdaFunctionsAudioProcessor911DD9C8"
+       },
+       "\",{\"label\":\"P50\",\"stat\":\"p50\"}],[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"",
+       {
+        "Ref": "LambdaFunctionsAudioProcessor911DD9C8"
+       },
+       "\",{\"label\":\"P90\",\"stat\":\"p90\"}],[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"",
+       {
+        "Ref": "LambdaFunctionsAudioProcessor911DD9C8"
+       },
+       "\",{\"label\":\"P99\",\"stat\":\"p99\"}]],\"yAxis\":{}}},{\"type\":\"metric\",\"width\":12,\"height\":6,\"x\":0,\"y\":18,\"properties\":{\"view\":\"timeSeries\",\"title\":\"DynamoDB Read Capacity\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"AWS/DynamoDB\",\"ConsumedReadCapacityUnits\",\"TableName\",\"",
+       {
+        "Ref": "DynamoDbTablesConnectionsTableF3C7B7C2"
+       },
+       "\",{\"label\":\"Connections Table\",\"stat\":\"Sum\"}],[\"AWS/DynamoDB\",\"ConsumedReadCapacityUnits\",\"TableName\",\"",
+       {
+        "Ref": "DynamoDbTablesMetadataTable5D201506"
+       },
+       "\",{\"label\":\"Metadata Table\",\"stat\":\"Sum\"}]],\"yAxis\":{}}},{\"type\":\"metric\",\"width\":12,\"height\":6,\"x\":12,\"y\":18,\"properties\":{\"view\":\"timeSeries\",\"title\":\"DynamoDB Write Capacity\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"AWS/DynamoDB\",\"ConsumedWriteCapacityUnits\",\"TableName\",\"",
+       {
+        "Ref": "DynamoDbTablesConnectionsTableF3C7B7C2"
+       },
+       "\",{\"label\":\"Connections Table\",\"stat\":\"Sum\"}],[\"AWS/DynamoDB\",\"ConsumedWriteCapacityUnits\",\"TableName\",\"",
+       {
+        "Ref": "DynamoDbTablesMetadataTable5D201506"
+       },
+       "\",{\"label\":\"Metadata Table\",\"stat\":\"Sum\"}]],\"yAxis\":{}}},{\"type\":\"metric\",\"width\":12,\"height\":6,\"x\":0,\"y\":24,\"properties\":{\"view\":\"timeSeries\",\"title\":\"SNS Messages Published\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"AWS/SNS\",\"NumberOfMessagesPublished\",\"TopicName\",\"",
+       {
+        "Fn::GetAtt": [
+         "SnsTopicFamilyLoopTopicB20AF77B",
+         "TopicName"
+        ]
+       },
+       "\",{\"stat\":\"Sum\"}]],\"yAxis\":{}}},{\"type\":\"metric\",\"width\":12,\"height\":6,\"x\":12,\"y\":24,\"properties\":{\"view\":\"timeSeries\",\"title\":\"SQS Queue Metrics\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"AWS/SQS\",\"ApproximateNumberOfMessagesVisible\",\"QueueName\",\"",
+       {
+        "Fn::GetAtt": [
+         "SqsQueuesAudioQueueC6431CE1",
+         "QueueName"
+        ]
+       },
+       "\",{\"label\":\"Queue Depth\",\"stat\":\"Maximum\"}],[\"AWS/SQS\",\"ApproximateAgeOfOldestMessage\",\"QueueName\",\"",
+       {
+        "Fn::GetAtt": [
+         "SqsQueuesAudioQueueC6431CE1",
+         "QueueName"
+        ]
+       },
+       "\",{\"label\":\"Oldest Message Age (s)\",\"stat\":\"Maximum\"}]],\"yAxis\":{}}},{\"type\":\"metric\",\"width\":24,\"height\":3,\"x\":0,\"y\":30,\"properties\":{\"view\":\"singleValue\",\"title\":\"Estimated Monthly Cost\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"MACHER\",\"EstimatedMonthlyCost\",\"Environment\",\"dev\",{\"period\":3600}]]}}]}"
+      ]
+     ]
+    },
+    "DashboardName": "MACHER-dev"
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/CloudWatchDashboard/MACHERDashboard/Resource"
+   }
+  },
+  "CloudWatchAlarmsAlarmTopicB937CCE0": {
+   "Type": "AWS::SNS::Topic",
+   "Properties": {
+    "DisplayName": "MACHER CloudWatch Alarms",
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "CloudWatchAlarms"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ],
+    "TopicName": "MACHER-Alarms-dev"
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/CloudWatchAlarms/AlarmTopic/Resource"
+   }
+  },
+  "CloudWatchAlarmsBillingAlarmD88EC155": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmActions": [
+     {
+      "Ref": "CloudWatchAlarmsAlarmTopicB937CCE0"
+     }
+    ],
+    "AlarmDescription": "Alert when estimated AWS charges exceed $5",
+    "AlarmName": "MACHER-BillingAlert-dev",
+    "ComparisonOperator": "GreaterThanThreshold",
+    "Dimensions": [
+     {
+      "Name": "Currency",
+      "Value": "USD"
+     }
+    ],
+    "EvaluationPeriods": 1,
+    "MetricName": "EstimatedCharges",
+    "Namespace": "AWS/Billing",
+    "Period": 21600,
+    "Statistic": "Maximum",
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "CloudWatchAlarms"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ],
+    "Threshold": 5
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/CloudWatchAlarms/BillingAlarm/Resource"
+   }
+  },
+  "CloudWatchAlarmsErrorRateAlarm1D49D933": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmActions": [
+     {
+      "Ref": "CloudWatchAlarmsAlarmTopicB937CCE0"
+     }
+    ],
+    "AlarmDescription": "Alert when Lambda error count exceeds 10 in 5 minutes",
+    "AlarmName": "MACHER-ErrorRate-dev",
+    "ComparisonOperator": "GreaterThanThreshold",
+    "EvaluationPeriods": 1,
+    "Metrics": [
+     {
+      "Expression": "e1 + e2 + e3",
+      "Id": "expr_1",
+      "ReturnData": true
+     },
+     {
+      "Id": "e1",
+      "MetricStat": {
+       "Metric": {
+        "Dimensions": [
+         {
+          "Name": "FunctionName",
+          "Value": {
+           "Ref": "LambdaFunctionsConnectHandlerE7CD30E9"
+          }
+         }
+        ],
+        "MetricName": "Errors",
+        "Namespace": "AWS/Lambda"
+       },
+       "Period": 300,
+       "Stat": "Sum"
+      },
+      "ReturnData": false
+     },
+     {
+      "Id": "e2",
+      "MetricStat": {
+       "Metric": {
+        "Dimensions": [
+         {
+          "Name": "FunctionName",
+          "Value": {
+           "Ref": "LambdaFunctionsDisconnectHandlerB1A35A73"
+          }
+         }
+        ],
+        "MetricName": "Errors",
+        "Namespace": "AWS/Lambda"
+       },
+       "Period": 300,
+       "Stat": "Sum"
+      },
+      "ReturnData": false
+     },
+     {
+      "Id": "e3",
+      "MetricStat": {
+       "Metric": {
+        "Dimensions": [
+         {
+          "Name": "FunctionName",
+          "Value": {
+           "Ref": "LambdaFunctionsAudioProcessor911DD9C8"
+          }
+         }
+        ],
+        "MetricName": "Errors",
+        "Namespace": "AWS/Lambda"
+       },
+       "Period": 300,
+       "Stat": "Sum"
+      },
+      "ReturnData": false
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "CloudWatchAlarms"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ],
+    "Threshold": 10
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/CloudWatchAlarms/ErrorRateAlarm/Resource"
+   }
+  },
+  "CloudWatchAlarmsConnectionLimitAlarm0D01D621": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmActions": [
+     {
+      "Ref": "CloudWatchAlarmsAlarmTopicB937CCE0"
+     }
+    ],
+    "AlarmDescription": "Alert when concurrent connections approach Free Tier limit",
+    "AlarmName": "MACHER-ConnectionLimit-dev",
+    "ComparisonOperator": "GreaterThanThreshold",
+    "Dimensions": [
+     {
+      "Name": "FunctionName",
+      "Value": {
+       "Ref": "LambdaFunctionsConnectHandlerE7CD30E9"
+      }
+     }
+    ],
+    "EvaluationPeriods": 1,
+    "MetricName": "Invocations",
+    "Namespace": "AWS/Lambda",
+    "Period": 60,
+    "Statistic": "Sum",
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "CloudWatchAlarms"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ],
+    "Threshold": 900
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/CloudWatchAlarms/ConnectionLimitAlarm/Resource"
+   }
+  },
+  "CloudWatchAlarmsDlqAlarm8111AAEB": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmActions": [
+     {
+      "Ref": "CloudWatchAlarmsAlarmTopicB937CCE0"
+     }
+    ],
+    "AlarmDescription": "Alert when messages appear in dead-letter queue",
+    "AlarmName": "MACHER-DLQ-dev",
+    "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+    "Dimensions": [
+     {
+      "Name": "QueueName",
+      "Value": {
+       "Fn::GetAtt": [
+        "SqsQueuesAudioQueueDLQ9BAEDD81",
+        "QueueName"
+       ]
+      }
+     }
+    ],
+    "EvaluationPeriods": 1,
+    "MetricName": "ApproximateNumberOfMessagesVisible",
+    "Namespace": "AWS/SQS",
+    "Period": 300,
+    "Statistic": "Sum",
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "CloudWatchAlarms"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ],
+    "Threshold": 1
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/CloudWatchAlarms/DlqAlarm/Resource"
+   }
+  },
+  "FraudDetectionContextTableF2B4ACCD": {
+   "Type": "AWS::DynamoDB::Table",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "call_id",
+      "AttributeType": "S"
+     }
+    ],
+    "BillingMode": "PAY_PER_REQUEST",
+    "KeySchema": [
+     {
+      "AttributeName": "call_id",
+      "KeyType": "HASH"
+     }
+    ],
+    "PointInTimeRecoverySpecification": {
+     "PointInTimeRecoveryEnabled": false
+    },
+    "SSESpecification": {
+     "SSEEnabled": true
+    },
+    "TableName": "MACHER-FraudContext-dev",
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "FraudDetection"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ],
+    "TimeToLiveSpecification": {
+     "AttributeName": "ttl",
+     "Enabled": true
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/FraudDetection/ContextTable/Resource"
+   }
+  },
+  "FraudDetectionAnalysisFunctionServiceRole27A64853": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "FraudDetection"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/FraudDetection/AnalysisFunction/ServiceRole/Resource"
+   }
+  },
+  "FraudDetectionAnalysisFunctionServiceRoleDefaultPolicyD2260DEB": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "xray:PutTelemetryRecords",
+        "xray:PutTraceSegments"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:PutItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:UpdateItem"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "FraudDetectionContextTableF2B4ACCD",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "bedrock:ApplyGuardrail",
+        "bedrock:InvokeAgent",
+        "bedrock:Retrieve"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        "arn:aws:bedrock:us-east-1:902883117404:agent-alias/GE12ANYDU3/YVJQNXY4NU",
+        "arn:aws:bedrock:us-east-1:902883117404:agent/GE12ANYDU3",
+        "arn:aws:bedrock:us-east-1:902883117404:guardrail/weu4czin6ri3",
+        "arn:aws:bedrock:us-east-1:902883117404:knowledge-base/placeholder"
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "FraudDetectionAnalysisFunctionServiceRoleDefaultPolicyD2260DEB",
+    "Roles": [
+     {
+      "Ref": "FraudDetectionAnalysisFunctionServiceRole27A64853"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/FraudDetection/AnalysisFunction/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "FraudDetectionAnalysisFunction942F5C48": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Architectures": [
+     "arm64"
+    ],
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-902883117404-us-east-1",
+     "S3Key": "69118b22aab18d7541451f2027f84db1904d1ed9f3b36a7fb48e66249f9866ff.zip"
+    },
+    "Description": "Analyzes phone call transcripts for fraud indicators using Amazon Bedrock",
+    "Environment": {
+     "Variables": {
+      "CONTEXT_TABLE_NAME": {
+       "Ref": "FraudDetectionContextTableF2B4ACCD"
+      },
+      "BEDROCK_AGENT_ID": "GE12ANYDU3",
+      "BEDROCK_AGENT_ALIAS_ID": "YVJQNXY4NU",
+      "GUARDRAIL_ID": "weu4czin6ri3",
+      "GUARDRAIL_VERSION": "DRAFT",
+      "KNOWLEDGE_BASE_ID": "placeholder",
+      "NOTIFICATION_SERVICE_URL": "",
+      "ENVIRONMENT": "dev"
+     }
+    },
+    "FunctionName": "MACHER-FraudAnalysis-dev",
+    "Handler": "lambda_handler.handler",
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "FraudDetectionAnalysisFunctionServiceRole27A64853",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.12",
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "FraudDetection"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ],
+    "Timeout": 30,
+    "TracingConfig": {
+     "Mode": "Active"
+    }
+   },
+   "DependsOn": [
+    "FraudDetectionAnalysisFunctionServiceRoleDefaultPolicyD2260DEB",
+    "FraudDetectionAnalysisFunctionServiceRole27A64853"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/FraudDetection/AnalysisFunction/Resource",
+    "aws:asset:path": "asset.69118b22aab18d7541451f2027f84db1904d1ed9f3b36a7fb48e66249f9866ff",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "FraudDetectionAnalysisFunctionLogRetention827B0E77": {
+   "Type": "Custom::LogRetention",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+      "Arn"
+     ]
+    },
+    "LogGroupName": {
+     "Fn::Join": [
+      "",
+      [
+       "/aws/lambda/",
+       {
+        "Ref": "FraudDetectionAnalysisFunction942F5C48"
+       }
+      ]
+     ]
+    },
+    "RetentionInDays": 7
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/FraudDetection/AnalysisFunction/LogRetention/Resource"
+   }
+  },
+  "FraudDetectionFraudDetectionApiAA222734": {
+   "Type": "AWS::ApiGateway::RestApi",
+   "Properties": {
+    "Description": "API for real-time fraud detection analysis",
+    "Name": "MACHER-FraudDetection-dev",
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "FraudDetection"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/FraudDetection/FraudDetectionApi/Resource"
+   }
+  },
+  "FraudDetectionFraudDetectionApiDeployment540F8F6E490a9cd4bd300fe4ea94e577c776dc74": {
+   "Type": "AWS::ApiGateway::Deployment",
+   "Properties": {
+    "Description": "API for real-time fraud detection analysis",
+    "RestApiId": {
+     "Ref": "FraudDetectionFraudDetectionApiAA222734"
+    }
+   },
+   "DependsOn": [
+    "FraudDetectionFraudDetectionApianalyzeOPTIONS32B3FFBD",
+    "FraudDetectionFraudDetectionApianalyzePOST083AAAB3",
+    "FraudDetectionFraudDetectionApianalyze91BE26C9",
+    "FraudDetectionFraudDetectionApiOPTIONSB77E4886"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/FraudDetection/FraudDetectionApi/Deployment/Resource",
+    "aws:cdk:do-not-refactor": true
+   }
+  },
+  "FraudDetectionFraudDetectionApiDeploymentStagedevA9656FD7": {
+   "Type": "AWS::ApiGateway::Stage",
+   "Properties": {
+    "DeploymentId": {
+     "Ref": "FraudDetectionFraudDetectionApiDeployment540F8F6E490a9cd4bd300fe4ea94e577c776dc74"
+    },
+    "MethodSettings": [
+     {
+      "DataTraceEnabled": false,
+      "HttpMethod": "*",
+      "LoggingLevel": "OFF",
+      "MetricsEnabled": true,
+      "ResourcePath": "/*",
+      "ThrottlingBurstLimit": 200,
+      "ThrottlingRateLimit": 100
+     }
+    ],
+    "RestApiId": {
+     "Ref": "FraudDetectionFraudDetectionApiAA222734"
+    },
+    "StageName": "dev",
+    "Tags": [
+     {
+      "Key": "Component",
+      "Value": "FraudDetection"
+     },
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ],
+    "TracingEnabled": true
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/FraudDetection/FraudDetectionApi/DeploymentStage.dev/Resource"
+   }
+  },
+  "FraudDetectionFraudDetectionApiOPTIONSB77E4886": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'POST,OPTIONS'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Fn::GetAtt": [
+      "FraudDetectionFraudDetectionApiAA222734",
+      "RootResourceId"
+     ]
+    },
+    "RestApiId": {
+     "Ref": "FraudDetectionFraudDetectionApiAA222734"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/FraudDetection/FraudDetectionApi/Default/OPTIONS/Resource"
+   }
+  },
+  "FraudDetectionFraudDetectionApianalyze91BE26C9": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Fn::GetAtt": [
+      "FraudDetectionFraudDetectionApiAA222734",
+      "RootResourceId"
+     ]
+    },
+    "PathPart": "analyze",
+    "RestApiId": {
+     "Ref": "FraudDetectionFraudDetectionApiAA222734"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/FraudDetection/FraudDetectionApi/Default/analyze/Resource"
+   }
+  },
+  "FraudDetectionFraudDetectionApianalyzeOPTIONS32B3FFBD": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'POST,OPTIONS'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "FraudDetectionFraudDetectionApianalyze91BE26C9"
+    },
+    "RestApiId": {
+     "Ref": "FraudDetectionFraudDetectionApiAA222734"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/FraudDetection/FraudDetectionApi/Default/analyze/OPTIONS/Resource"
+   }
+  },
+  "FraudDetectionFraudDetectionApianalyzePOSTApiPermissionVocalShielddevFraudDetectionFraudDetectionApi403AF64FPOSTanalyze9337BD11": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "FraudDetectionAnalysisFunction942F5C48",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:us-east-1:902883117404:",
+       {
+        "Ref": "FraudDetectionFraudDetectionApiAA222734"
+       },
+       "/",
+       {
+        "Ref": "FraudDetectionFraudDetectionApiDeploymentStagedevA9656FD7"
+       },
+       "/POST/analyze"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/FraudDetection/FraudDetectionApi/Default/analyze/POST/ApiPermission.VocalShielddevFraudDetectionFraudDetectionApi403AF64F.POST..analyze"
+   }
+  },
+  "FraudDetectionFraudDetectionApianalyzePOSTApiPermissionTestVocalShielddevFraudDetectionFraudDetectionApi403AF64FPOSTanalyze9A1BE3C4": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "FraudDetectionAnalysisFunction942F5C48",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:us-east-1:902883117404:",
+       {
+        "Ref": "FraudDetectionFraudDetectionApiAA222734"
+       },
+       "/test-invoke-stage/POST/analyze"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/FraudDetection/FraudDetectionApi/Default/analyze/POST/ApiPermission.Test.VocalShielddevFraudDetectionFraudDetectionApi403AF64F.POST..analyze"
+   }
+  },
+  "FraudDetectionFraudDetectionApianalyzePOST083AAAB3": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "POST",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "IntegrationResponses": [
+      {
+       "StatusCode": "200"
+      },
+      {
+       "SelectionPattern": ".*\"statusCode\":400.*",
+       "StatusCode": "400"
+      },
+      {
+       "SelectionPattern": ".*\"statusCode\":500.*",
+       "StatusCode": "500"
+      }
+     ],
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "FraudDetectionAnalysisFunction942F5C48",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "MethodResponses": [
+     {
+      "StatusCode": "200"
+     },
+     {
+      "StatusCode": "400"
+     },
+     {
+      "StatusCode": "500"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "FraudDetectionFraudDetectionApianalyze91BE26C9"
+    },
+    "RestApiId": {
+     "Ref": "FraudDetectionFraudDetectionApiAA222734"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/FraudDetection/FraudDetectionApi/Default/analyze/POST/Resource"
+   }
+  },
+  "FraudDetectionAnalysisErrorAlarm80BA9BEA": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmDescription": "Fraud analysis Lambda error rate exceeds 5%",
+    "AlarmName": "MACHER-FraudAnalysis-Errors-dev",
+    "ComparisonOperator": "GreaterThanThreshold",
+    "Dimensions": [
+     {
+      "Name": "FunctionName",
+      "Value": {
+       "Ref": "FraudDetectionAnalysisFunction942F5C48"
+      }
+     }
+    ],
+    "EvaluationPeriods": 2,
+    "MetricName": "Errors",
+    "Namespace": "AWS/Lambda",
+    "Period": 300,
+    "Statistic": "Sum",
+    "Tags": [
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ],
+    "Threshold": 5,
+    "TreatMissingData": "notBreaching"
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/FraudDetection/AnalysisErrorAlarm/Resource"
+   }
+  },
+  "FraudDetectionAnalysisLatencyAlarmE2BA311D": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmDescription": "Fraud analysis P99 latency exceeds 2 seconds",
+    "AlarmName": "MACHER-FraudAnalysis-Latency-dev",
+    "ComparisonOperator": "GreaterThanThreshold",
+    "Dimensions": [
+     {
+      "Name": "FunctionName",
+      "Value": {
+       "Ref": "FraudDetectionAnalysisFunction942F5C48"
+      }
+     }
+    ],
+    "EvaluationPeriods": 2,
+    "ExtendedStatistic": "p99",
+    "MetricName": "Duration",
+    "Namespace": "AWS/Lambda",
+    "Period": 300,
+    "Tags": [
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ],
+    "Threshold": 2000,
+    "TreatMissingData": "notBreaching"
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/FraudDetection/AnalysisLatencyAlarm/Resource"
+   }
+  },
+  "FraudDetectionApiErrorAlarm7154B32C": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmDescription": "Fraud detection API 5xx error rate exceeds threshold",
+    "AlarmName": "MACHER-FraudApi-5xxErrors-dev",
+    "ComparisonOperator": "GreaterThanThreshold",
+    "Dimensions": [
+     {
+      "Name": "ApiName",
+      "Value": "MACHER-FraudDetection-dev"
+     }
+    ],
+    "EvaluationPeriods": 2,
+    "MetricName": "5XXError",
+    "Namespace": "AWS/ApiGateway",
+    "Period": 300,
+    "Statistic": "Sum",
+    "Tags": [
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ],
+    "Threshold": 10,
+    "TreatMissingData": "notBreaching"
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/FraudDetection/ApiErrorAlarm/Resource"
+   }
+  },
+  "FraudDetectionAnalysisCostAlarm66B9FB14": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmDescription": "Fraud analysis estimated daily cost exceeds $50",
+    "AlarmName": "MACHER-FraudAnalysis-Cost-dev",
+    "ComparisonOperator": "GreaterThanThreshold",
+    "Dimensions": [
+     {
+      "Name": "FunctionName",
+      "Value": {
+       "Ref": "FraudDetectionAnalysisFunction942F5C48"
+      }
+     }
+    ],
+    "EvaluationPeriods": 1,
+    "MetricName": "Invocations",
+    "Namespace": "AWS/Lambda",
+    "Period": 86400,
+    "Statistic": "Sum",
+    "Tags": [
+     {
+      "Key": "CostCenter",
+      "Value": "VocalShield-Infrastructure"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "VocalShield"
+     }
+    ],
+    "Threshold": 16667,
+    "TreatMissingData": "notBreaching"
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/FraudDetection/AnalysisCostAlarm/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/21UTY/TMBD9LdxdA10OXLNdQEiLCO2qHCvHHlJvHTv4o1UU5b8ztvO1FZf4vfFk5tnzki3dPnymH96xm9twcdkoWdH+4Bm/EAydeuBb2h9bTnZ/9LHckTJUSvJDqDT4GFvQ3gQPL6xSsMSXWOGc4ZJ5afScTEorr8zDUuO79mARf8PojXVj05EVHmWdG9CejBHU9UWL1kjtx9SJDsQ90P4x8EsuPKK8lAaP0C3hkWfyyBzEt0+9gFaZLvajeetpDhDmHHhHi7gMRLGmEoz2WPGZdWCPYF086EHqWoE3+mvQPB19Bpi6xiXYRrr40kAka2i/N/ke07oIzmggotOsMQJnNd94AqgcuEVpDdOsBouzTDyNJCFUa2pHn029B49HiQLcX0f7XwFCKpRBei6NVxR7aMx/Ma1MtsgAh+i4le10ojUfCGtlnWd2RT/9hupg4o0WrYy5cZlj2RozjZao7WycO3qXjMats/0iGAhXJogb8/xM+yfmzpVhVsT9hRSK2SaJiGCtFIcAbpI4wZUHYpmFvW1NMN8EyyHaifwAfzap74im3bFywsOwCgfnTfO/rIh/Bt8Gf5dUWnOVAmxqmHwZhaABR3eeVHTmCT9qriQtbm6nZDLrQLQRQF/d++v2E/2I/4JXJ+XGBvRGA3Sf13+oSgizKAQAAA=="
+   },
+   "Metadata": {
+    "aws:cdk:path": "VocalShield-dev/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "VpcConstructReservedWavelengthCidr6B858560": {
+   "Description": "Reserved CIDR block for future Wavelength Zone subnet",
+   "Value": "10.0.10.0/24",
+   "Export": {
+    "Name": "VocalShield-dev-WavelengthCidr"
+   }
+  },
+  "VpcConstructVpcId3239CBDB": {
+   "Description": "VPC ID",
+   "Value": {
+    "Ref": "VpcConstructMACHERVpcCAA5F27B"
+   },
+   "Export": {
+    "Name": "VocalShield-dev-VpcId"
+   }
+  },
+  "VpcConstructDynamoDbEndpointId369139B2": {
+   "Description": "DynamoDB Gateway VPC Endpoint ID",
+   "Value": {
+    "Ref": "VpcConstructMACHERVpcDynamoDbEndpoint8ED48144"
+   },
+   "Export": {
+    "Name": "VocalShield-dev-DynamoDbEndpointId"
+   }
+  },
+  "KnowledgeBaseKnowledgeBaseBucketName312FBE36": {
+   "Description": "S3 bucket name for Bedrock Knowledge Base documents",
+   "Value": {
+    "Ref": "KnowledgeBaseKnowledgeBaseBucket08D28449"
+   },
+   "Export": {
+    "Name": "dev-KnowledgeBase-BucketName"
+   }
+  },
+  "KnowledgeBaseKnowledgeBaseBucketArn971EB017": {
+   "Description": "S3 bucket ARN for Bedrock Knowledge Base",
+   "Value": {
+    "Fn::GetAtt": [
+     "KnowledgeBaseKnowledgeBaseBucket08D28449",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "dev-KnowledgeBase-BucketArn"
+   }
+  },
+  "KnowledgeBaseBedrockKnowledgeBaseRoleArnCC04CED0": {
+   "Description": "IAM role ARN for Bedrock Knowledge Base (use when creating KB)",
+   "Value": {
+    "Fn::GetAtt": [
+     "KnowledgeBaseBedrockKnowledgeBaseRole27C6F571",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "dev-BedrockKB-RoleArn"
+   }
+  },
+  "KnowledgeBaseBedrockAgentRoleArn7FF9800E": {
+   "Description": "IAM role ARN for Bedrock Agent (use when creating Agent)",
+   "Value": {
+    "Fn::GetAtt": [
+     "KnowledgeBaseBedrockAgentRole5717B63A",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "dev-BedrockAgent-RoleArn"
+   }
+  },
+  "KnowledgeBaseNextStepsD1CD94E0": {
+   "Description": "Manual steps required to complete Bedrock setup",
+   "Value": "Run scripts in lambda/fraud-detection/scripts/ to create Bedrock Knowledge Base, Agent, and Guardrails"
+  },
+  "DynamoDbTablesConnectionsTableName9B18CB4A": {
+   "Description": "DynamoDB Connections Table name",
+   "Value": {
+    "Ref": "DynamoDbTablesConnectionsTableF3C7B7C2"
+   },
+   "Export": {
+    "Name": "VocalShield-dev-ConnectionsTableName"
+   }
+  },
+  "DynamoDbTablesConnectionsTableArn6FF5F3D8": {
+   "Description": "DynamoDB Connections Table ARN",
+   "Value": {
+    "Fn::GetAtt": [
+     "DynamoDbTablesConnectionsTableF3C7B7C2",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "VocalShield-dev-ConnectionsTableArn"
+   }
+  },
+  "DynamoDbTablesMetadataTableName02ABFE98": {
+   "Description": "DynamoDB Metadata Table name",
+   "Value": {
+    "Ref": "DynamoDbTablesMetadataTable5D201506"
+   },
+   "Export": {
+    "Name": "VocalShield-dev-MetadataTableName"
+   }
+  },
+  "DynamoDbTablesMetadataTableArnFD717650": {
+   "Description": "DynamoDB Metadata Table ARN",
+   "Value": {
+    "Fn::GetAtt": [
+     "DynamoDbTablesMetadataTable5D201506",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "VocalShield-dev-MetadataTableArn"
+   }
+  },
+  "DynamoDbTablesGuardianLinksTableName27F8764B": {
+   "Description": "DynamoDB Guardian Links Table name",
+   "Value": {
+    "Ref": "DynamoDbTablesGuardianLinksTable1C64D44A"
+   },
+   "Export": {
+    "Name": "VocalShield-dev-GuardianLinksTableName"
+   }
+  },
+  "DynamoDbTablesGuardianLinksTableArn5BC187FE": {
+   "Description": "DynamoDB Guardian Links Table ARN",
+   "Value": {
+    "Fn::GetAtt": [
+     "DynamoDbTablesGuardianLinksTable1C64D44A",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "VocalShield-dev-GuardianLinksTableArn"
+   }
+  },
+  "SqsQueuesAudioQueueUrl5FBE9F8E": {
+   "Description": "Audio processing queue URL",
+   "Value": {
+    "Ref": "SqsQueuesAudioQueueC6431CE1"
+   },
+   "Export": {
+    "Name": "MACHER-AudioQueueUrl-dev"
+   }
+  },
+  "SqsQueuesAudioQueueArnB91FAF19": {
+   "Description": "Audio processing queue ARN",
+   "Value": {
+    "Fn::GetAtt": [
+     "SqsQueuesAudioQueueC6431CE1",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "MACHER-AudioQueueArn-dev"
+   }
+  },
+  "MonitoringSnsTopicsSlackWebhookSlackWebhookFunctionArnAE4A3A79": {
+   "Description": "Slack Webhook Lambda Function ARN",
+   "Value": {
+    "Fn::GetAtt": [
+     "MonitoringSnsTopicsSlackWebhookSlackWebhookFunctionE6FF9AAA",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "dev-MACHER-SlackWebhookFunction"
+   }
+  },
+  "MonitoringSnsTopicsSlackWebhookSlackWebhookDLQUrlC9F9F6AD": {
+   "Description": "Slack Webhook Dead Letter Queue URL",
+   "Value": {
+    "Ref": "MonitoringSnsTopicsSlackWebhookSlackWebhookDLQ01AB68F0"
+   },
+   "Export": {
+    "Name": "dev-MACHER-SlackWebhookDLQ"
+   }
+  },
+  "MonitoringSnsTopicsSlackWebhookSlackWebhookDLQArn5521B4BA": {
+   "Description": "Slack Webhook Dead Letter Queue ARN",
+   "Value": {
+    "Fn::GetAtt": [
+     "MonitoringSnsTopicsSlackWebhookSlackWebhookDLQ01AB68F0",
+     "Arn"
+    ]
+   }
+  },
+  "MonitoringSnsTopicsCriticalAlertsTopicArn463C0A5F": {
+   "Description": "SNS Topic ARN for critical alerts",
+   "Value": {
+    "Ref": "MonitoringSnsTopicsCriticalAlertsTopic2F95531E"
+   },
+   "Export": {
+    "Name": "dev-MACHER-CriticalAlertsTopic"
+   }
+  },
+  "MonitoringSnsTopicsWarningAlertsTopicArn47DAC95B": {
+   "Description": "SNS Topic ARN for warning alerts",
+   "Value": {
+    "Ref": "MonitoringSnsTopicsWarningAlertsTopicA50A61B7"
+   },
+   "Export": {
+    "Name": "dev-MACHER-WarningAlertsTopic"
+   }
+  },
+  "MonitoringSnsTopicsInfoAlertsTopicArn1EEC5145": {
+   "Description": "SNS Topic ARN for info alerts",
+   "Value": {
+    "Ref": "MonitoringSnsTopicsInfoAlertsTopicAD5BB23E"
+   },
+   "Export": {
+    "Name": "dev-MACHER-InfoAlertsTopic"
+   }
+  },
+  "WebSocketApiWebSocketApiEndpoint38CB6B8C": {
+   "Description": "WebSocket API endpoint URL",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "wss://",
+      {
+       "Ref": "WebSocketApi32E01B6B"
+      },
+      ".execute-api.us-east-1.",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/dev"
+     ]
+    ]
+   },
+   "Export": {
+    "Name": "MACHER-WebSocketApiEndpoint-dev"
+   }
+  },
+  "WebSocketApiWebSocketApiId1C06EF0F": {
+   "Description": "WebSocket API ID",
+   "Value": {
+    "Ref": "WebSocketApi32E01B6B"
+   },
+   "Export": {
+    "Name": "MACHER-WebSocketApiId-dev"
+   }
+  },
+  "CloudWatchAlarmsAlarmTopicArn8E48CE73": {
+   "Description": "SNS Topic ARN for CloudWatch alarm notifications",
+   "Value": {
+    "Ref": "CloudWatchAlarmsAlarmTopicB937CCE0"
+   },
+   "Export": {
+    "Name": "dev-MACHER-AlarmTopic"
+   }
+  },
+  "FraudDetectionFraudDetectionApiEndpoint67551E46": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Ref": "FraudDetectionFraudDetectionApiAA222734"
+      },
+      ".execute-api.us-east-1.",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "FraudDetectionFraudDetectionApiDeploymentStagedevA9656FD7"
+      },
+      "/"
+     ]
+    ]
+   }
+  },
+  "FraudDetectionContextTableName37AB7EB0": {
+   "Description": "DynamoDB table for fraud detection context",
+   "Value": {
+    "Ref": "FraudDetectionContextTableF2B4ACCD"
+   },
+   "Export": {
+    "Name": "dev-FraudDetection-ContextTable"
+   }
+  },
+  "FraudDetectionAnalysisFunctionArn2765977E": {
+   "Description": "Fraud analysis Lambda function ARN",
+   "Value": {
+    "Fn::GetAtt": [
+     "FraudDetectionAnalysisFunction942F5C48",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "dev-FraudDetection-FunctionArn"
+   }
+  },
+  "FraudDetectionApiEndpoint14D13048": {
+   "Description": "Fraud detection API endpoint",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Ref": "FraudDetectionFraudDetectionApiAA222734"
+      },
+      ".execute-api.us-east-1.",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "FraudDetectionFraudDetectionApiDeploymentStagedevA9656FD7"
+      },
+      "/"
+     ]
+    ]
+   },
+   "Export": {
+    "Name": "dev-FraudDetection-ApiEndpoint"
+   }
+  },
+  "FraudDetectionAnalyzeEndpoint7533A9D3": {
+   "Description": "Fraud detection /analyze endpoint",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Ref": "FraudDetectionFraudDetectionApiAA222734"
+      },
+      ".execute-api.us-east-1.",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "FraudDetectionFraudDetectionApiDeploymentStagedevA9656FD7"
+      },
+      "/analyze"
+     ]
+    ]
+   },
+   "Export": {
+    "Name": "dev-FraudDetection-AnalyzeEndpoint"
+   }
+  },
+  "WebSocketApiEndpoint": {
+   "Description": "WebSocket API endpoint URL for mobile app (wss://)",
+   "Value": {
+    "Fn::GetAtt": [
+     "WebSocketApi32E01B6B",
+     "ApiEndpoint"
+    ]
+   },
+   "Export": {
+    "Name": "dev-VocalShield-WebSocketEndpoint"
+   }
+  },
+  "WebSocketApiId": {
+   "Description": "WebSocket API ID",
+   "Value": {
+    "Ref": "WebSocketApi32E01B6B"
+   },
+   "Export": {
+    "Name": "dev-VocalShield-WebSocketApiId"
+   }
+  },
+  "ApiKeysSecretArn": {
+   "Description": "Secrets Manager ARN for API keys (includes auto-generated WebSocket API key)",
+   "Value": {
+    "Ref": "SecretsManagerApiKeysSecret42385DCB"
+   },
+   "Export": {
+    "Name": "dev-VocalShield-ApiKeysSecret"
+   }
+  },
+  "ApiKeysSecretName": {
+   "Description": "Secrets Manager secret name for API keys (use with AWS CLI to retrieve)",
+   "Value": {
+    "Fn::Join": [
+     "-",
+     [
+      {
+       "Fn::Select": [
+        0,
+        {
+         "Fn::Split": [
+          "-",
+          {
+           "Fn::Select": [
+            6,
+            {
+             "Fn::Split": [
+              ":",
+              {
+               "Ref": "SecretsManagerApiKeysSecret42385DCB"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "Fn::Select": [
+        1,
+        {
+         "Fn::Split": [
+          "-",
+          {
+           "Fn::Select": [
+            6,
+            {
+             "Fn::Split": [
+              ":",
+              {
+               "Ref": "SecretsManagerApiKeysSecret42385DCB"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    ]
+   }
+  },
+  "ConnectionsTableName": {
+   "Description": "DynamoDB Connections Table name",
+   "Value": {
+    "Ref": "DynamoDbTablesConnectionsTableF3C7B7C2"
+   },
+   "Export": {
+    "Name": "dev-VocalShield-ConnectionsTable"
+   }
+  },
+  "MetadataTableName": {
+   "Description": "DynamoDB Metadata Table name",
+   "Value": {
+    "Ref": "DynamoDbTablesMetadataTable5D201506"
+   },
+   "Export": {
+    "Name": "dev-VocalShield-MetadataTable"
+   }
+  },
+  "FamilyLoopTopicArn": {
+   "Description": "SNS Family Loop Topic ARN",
+   "Value": {
+    "Ref": "SnsTopicFamilyLoopTopicB20AF77B"
+   },
+   "Export": {
+    "Name": "dev-VocalShield-FamilyLoopTopic"
+   }
+  },
+  "AudioQueueUrl": {
+   "Description": "SQS Audio Queue URL",
+   "Value": {
+    "Ref": "SqsQueuesAudioQueueC6431CE1"
+   },
+   "Export": {
+    "Name": "dev-VocalShield-AudioQueue"
+   }
+  },
+  "ConnectHandlerArn": {
+   "Description": "Connect Handler Lambda ARN",
+   "Value": {
+    "Fn::GetAtt": [
+     "LambdaFunctionsConnectHandlerE7CD30E9",
+     "Arn"
+    ]
+   }
+  },
+  "DisconnectHandlerArn": {
+   "Description": "Disconnect Handler Lambda ARN",
+   "Value": {
+    "Fn::GetAtt": [
+     "LambdaFunctionsDisconnectHandlerB1A35A73",
+     "Arn"
+    ]
+   }
+  },
+  "AudioProcessorArn": {
+   "Description": "Audio Processor Lambda ARN",
+   "Value": {
+    "Fn::GetAtt": [
+     "LambdaFunctionsAudioProcessor911DD9C8",
+     "Arn"
+    ]
+   }
+  },
+  "GuardianSyncHandlerArn": {
+   "Description": "Guardian Sync Handler Lambda ARN",
+   "Value": {
+    "Fn::GetAtt": [
+     "LambdaFunctionsGuardianSyncHandler9DC5A685",
+     "Arn"
+    ]
+   }
+  },
+  "DashboardUrl": {
+   "Description": "CloudWatch Dashboard URL",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://console.aws.amazon.com/cloudwatch/home?region=us-east-1#dashboards:name=",
+      {
+       "Ref": "CloudWatchDashboardMACHERDashboard098E87F6"
+      }
+     ]
+    ]
+   }
+  },
+  "Region": {
+   "Description": "AWS Region where stack is deployed (us-east-1)",
+   "Value": "us-east-1"
+  },
+  "Environment": {
+   "Description": "Deployment environment (dev, staging, production)",
+   "Value": "dev"
+  },
+  "StackName": {
+   "Description": "CloudFormation stack name",
+   "Value": "VocalShield-dev"
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

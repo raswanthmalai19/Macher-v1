@@ -1,5 +1,5 @@
 /**
- * Free Tier Compliance Validator for VocalShield CI/CD Pipeline
+ * Free Tier Compliance Validator for MACHER CI/CD Pipeline
  * 
  * This module validates AWS resource configurations against Free Tier limits
  * and estimates monthly costs to ensure deployments stay within budget constraints.

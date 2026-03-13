@@ -7,12 +7,12 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.Help
-
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,10 +25,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.macher.android.data.database.MacherDatabase
+import com.macher.android.data.preferences.UserPreferences
+import com.macher.android.data.repository.GuardianRepository
 import com.macher.android.ui.theme.*
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -40,6 +44,7 @@ import kotlin.math.sin
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GuardianDashboardScreen(
+    userName: String = "",
     onNavigateToContacts: () -> Unit,
     onNavigateToAlerts: () -> Unit,
     onNavigateToSettings: () -> Unit,
@@ -49,15 +54,58 @@ fun GuardianDashboardScreen(
 ) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+
+    // ── Live data from Room DB ──────────────────────────────────
+    val context = LocalContext.current
+    val db = remember { MacherDatabase.getDatabase(context) }
+    val userPrefs = remember { UserPreferences(context) }
+    val guardianId by userPrefs.userId.collectAsState(initial = null)
+    val guardianRepo = remember { GuardianRepository(db.guardianProtectedLinkDao(), db.userDao()) }
+    val allLinks by remember(guardianId) {
+        guardianRepo.getProtectedUsers(guardianId ?: "")
+    }.collectAsState(initial = emptyList())
+    val activeLinks = allLinks.filter { it.isActive }
+
+    // Query real alert counts from DB for all protected users
+    val alertDao = remember { db.alertHistoryDao() }
+    val protectedIds = activeLinks.map { it.protectedId }
+    val allAlerts by remember(protectedIds) {
+        if (protectedIds.isEmpty()) {
+            kotlinx.coroutines.flow.flowOf(emptyList<com.macher.android.data.database.AlertHistoryEntity>())
+        } else {
+            // Get alerts for first protected user (primary); extend if multiple
+            alertDao.getAlertHistory(protectedIds.firstOrNull() ?: "", limit = 100)
+        }
+    }.collectAsState(initial = emptyList())
+    val dangerCount = allAlerts.count { it.threatLevel == "DANGER" }
+    val cautionCount = allAlerts.count { it.threatLevel == "CAUTION" }
+    
+    // Trusted contacts count
+    val trustedDao = remember { db.trustedContactDao() }
+    val resolvedGuardianId = guardianId ?: ""
+    val trustedContacts by remember(resolvedGuardianId) {
+        trustedDao.getTrustedContacts(resolvedGuardianId)
+    }.collectAsState(initial = emptyList())
+    val contactsCount = trustedContacts.size
+    
+    // Safe rate: percentage of calls that were SAFE
+    val safeRate = if (allAlerts.isNotEmpty()) {
+        val safeCount = allAlerts.count { it.threatLevel == "SAFE" }
+        ((safeCount.toFloat() / allAlerts.size) * 100).toInt()
+    } else {
+        100 // Default to 100% safe when no alerts
+    }
     
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
             GuardianDrawerContent(
+                userName = userName,
                 onNavigateToContacts = onNavigateToContacts,
                 onNavigateToAlerts = onNavigateToAlerts,
                 onNavigateToSettings = onNavigateToSettings,
-                onNavigateToProtectedUsers = onNavigateToProtectedUsers
+                onNavigateToProtectedUsers = onNavigateToProtectedUsers,
+                onCloseDrawer = { scope.launch { try { drawerState.close() } catch (_: Exception) {} } }
             )
         }
     ) {
@@ -71,7 +119,7 @@ fun GuardianDashboardScreen(
                         )
                     },
                     navigationIcon = {
-                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                        IconButton(onClick = { scope.launch { try { drawerState.open() } catch (_: Exception) {} } }) {
                             Icon(Icons.Default.Menu, contentDescription = "Menu")
                         }
                     },
@@ -102,7 +150,13 @@ fun GuardianDashboardScreen(
             ) {
                 // Hero Banner with greeting & stats
                 item {
-                    GuardianHeroBanner()
+                    GuardianHeroBanner(
+                        userName = userName,
+                        protectedCount = activeLinks.size,
+                        contactsCount = contactsCount,
+                        safeRate = safeRate,
+                        alertsCount = allAlerts.size
+                    )
                 }
 
                 item {
@@ -112,16 +166,32 @@ fun GuardianDashboardScreen(
                         icon = Icons.Default.People
                     )
                 }
-                
-                item {
-                    ProtectedUserCard(
-                        name = "Mom",
-                        phoneNumber = "+1 (555) 123-4567",
-                        status = "Active",
-                        threatLevel = "Safe",
-                        lastActivity = "2 hours ago",
-                        onClick = onNavigateToProtectedUsers
-                    )
+
+                // Show real protected users from DB, or an empty-state prompt
+                if (activeLinks.isEmpty()) {
+                    item {
+                        OutlinedButton(
+                            onClick = onNavigateToProtectedUsers,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.5.dp, MacherViolet)
+                        ) {
+                            Icon(Icons.Default.PersonAdd, contentDescription = null, tint = MacherViolet)
+                            Spacer(Modifier.width(8.dp))
+                            Text("Add a protected user", color = MacherViolet, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                } else {
+                    items(activeLinks) { link ->
+                        ProtectedUserCard(
+                            name = link.protectedName.ifEmpty { "Pending setup…" },
+                            phoneNumber = link.protectedPhone.ifEmpty { "—" },
+                            status = "Active",
+                            threatLevel = "Safe",
+                            lastActivity = "Recently",
+                            onClick = onNavigateToProtectedUsers
+                        )
+                    }
                 }
                 
                 item {
@@ -134,9 +204,9 @@ fun GuardianDashboardScreen(
                 
                 item {
                     AlertSummaryCard(
-                        dangerCount = 2,
-                        cautionCount = 5,
-                        totalCount = 7,
+                        dangerCount = dangerCount,
+                        cautionCount = cautionCount,
+                        totalCount = allAlerts.size,
                         onClick = onNavigateToAlerts
                     )
                 }
@@ -157,7 +227,7 @@ fun GuardianDashboardScreen(
                         QuickActionCard(
                             icon = Icons.Default.ContactPhone,
                             title = "Trusted Contacts",
-                            subtitle = "12 contacts",
+                            subtitle = "Manage contacts",
                             modifier = Modifier.weight(1f),
                             onClick = onNavigateToContacts
                         )
@@ -200,7 +270,13 @@ fun GuardianDashboardScreen(
 }
 
 @Composable
-fun GuardianHeroBanner() {
+fun GuardianHeroBanner(
+    userName: String = "",
+    protectedCount: Int = 0,
+    contactsCount: Int = 0,
+    safeRate: Int = 100,
+    alertsCount: Int = 0
+) {
     val greeting = remember {
         val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
         when {
@@ -265,7 +341,7 @@ fun GuardianHeroBanner() {
                     color = Color.White.copy(alpha = 0.8f)
                 )
                 Text(
-                    text = "Guardian",
+                    text = userName.ifEmpty { "Guardian" },
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Black,
                     color = Color.White,
@@ -279,10 +355,10 @@ fun GuardianHeroBanner() {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    HeroStat(value = "1", label = "Protected", color = MacherElectricCyan)
-                    HeroStat(value = "12", label = "Contacts", color = SafeGreen)
-                    HeroStat(value = "98%", label = "Safe Rate", color = SafeGreenLight)
-                    HeroStat(value = "7", label = "Alerts", color = CautionYellow)
+                    HeroStat(value = protectedCount.toString(), label = "Protected", color = MacherElectricCyan)
+                    HeroStat(value = contactsCount.toString(), label = "Contacts", color = SafeGreen)
+                    HeroStat(value = "$safeRate%", label = "Safe Rate", color = SafeGreenLight)
+                    HeroStat(value = alertsCount.toString(), label = "Alerts", color = CautionYellow)
                 }
             }
         }
@@ -309,11 +385,15 @@ private fun HeroStat(value: String, label: String, color: Color) {
 
 @Composable
 fun GuardianDrawerContent(
+    userName: String = "",
     onNavigateToContacts: () -> Unit,
     onNavigateToAlerts: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    onNavigateToProtectedUsers: () -> Unit
+    onNavigateToProtectedUsers: () -> Unit,
+    onCloseDrawer: () -> Unit = {}
 ) {
+    var showHelpDialog by remember { mutableStateOf(false) }
+
     ModalDrawerSheet {
         Column(
             modifier = Modifier
@@ -343,12 +423,12 @@ fun GuardianDrawerContent(
                 
                 Column {
                     Text(
-                        text = "Guardian Mode",
+                        text = userName.ifEmpty { "Guardian" },
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Family Protection",
+                        text = "Guardian Mode • Family Protection",
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -363,7 +443,7 @@ fun GuardianDrawerContent(
             DrawerMenuItem(
                 icon = Icons.Default.Dashboard,
                 title = "Dashboard",
-                onClick = { }
+                onClick = onCloseDrawer
             )
             
             DrawerMenuItem(
@@ -397,8 +477,34 @@ fun GuardianDrawerContent(
             DrawerMenuItem(
                 icon = Icons.AutoMirrored.Filled.Help,
                 title = "Help & Support",
-                onClick = { }
+                onClick = { showHelpDialog = true }
             )
+
+            if (showHelpDialog) {
+                androidx.compose.material3.AlertDialog(
+                    onDismissRequest = { showHelpDialog = false },
+                    title = { Text("Help & Support") },
+                    text = {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("MACHER Guardian Mode lets you monitor and protect your family members from phone scams.")
+                            Text("• Add protected users via link codes")
+                            Text("• View real-time threat alerts")
+                            Text("• Manage trusted contact whitelists")
+                            Text("• Configure detection sensitivity")
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                "Need help? Email support@macher.app",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { showHelpDialog = false }) { Text("Got it") }
+                    },
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            }
         }
     }
 }

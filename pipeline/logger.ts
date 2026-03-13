@@ -1,5 +1,5 @@
 /**
- * Structured logging utility for VocalShield CI/CD Pipeline
+ * Structured logging utility for MACHER CI/CD Pipeline
  * 
  * Provides JSON-formatted logging with consistent structure across all pipeline components.
  */

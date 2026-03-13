@@ -6,6 +6,8 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import com.macher.android.data.database.*
+import com.macher.android.data.preferences.AppPreferences
+import com.macher.android.data.preferences.UserPreferences
 import com.macher.android.detection.*
 import com.macher.android.demo.ScamScenarios
 import com.macher.android.network.RealWebSocketClient
@@ -16,13 +18,16 @@ import com.macher.android.util.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.util.UUID
 
 /**
@@ -36,11 +41,15 @@ import java.util.UUID
  */
 class MonitoringManager(private val context: Context) {
     
-    private val scope = CoroutineScope(Dispatchers.Main + Job())
+    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private val interventionEngine = InterventionEngine(context)
-    private val webSocketClient = RealWebSocketClient()
+    val webSocketClient = RealWebSocketClient()
     private val audioCaptureService = AudioCaptureService()
     private val familyLoopService = FamilyLoopService(context)
+    
+    // User settings preferences — checked before acting on toggleable behaviors
+    private val appPreferences = AppPreferences(context)
+    private val userPreferences = UserPreferences(context)
     
     // Database instance for persistence (Task 6)
     private val database = MacherDatabase.getDatabase(context)
@@ -48,6 +57,9 @@ class MonitoringManager(private val context: Context) {
     private val riskAssessmentDao = database.riskAssessmentDao()
     private val riskTriggerDao = database.riskTriggerDao()
     private val historicalRiskDao = database.historicalRiskDao()
+    
+    // Guardian link DAO for retrieving guardian phone numbers
+    private val guardianLinkDao = database.guardianProtectedLinkDao()
     
     // Enhanced detection engines
     private val metadataAnalyzer = MetadataRiskAnalyzer()
@@ -64,6 +76,11 @@ class MonitoringManager(private val context: Context) {
     
     private val _isMonitoring = MutableStateFlow(false)
     val isMonitoring: StateFlow<Boolean> = _isMonitoring
+    
+    // True when an actual phone call is being monitored (audio + WebSocket active)
+    // False when just armed/listening for calls
+    private val _isActiveCall = MutableStateFlow(false)
+    val isActiveCall: StateFlow<Boolean> = _isActiveCall
     
     private val _transcription = MutableStateFlow("")
     val transcription: StateFlow<String> = _transcription
@@ -126,7 +143,41 @@ class MonitoringManager(private val context: Context) {
     
     private var simulationJob: Job? = null
     
+    // Cached user settings (observed from AppPreferences DataStore)
+    private var settingHapticEnabled = true
+    private var settingOverlayEnabled = true
+    private var settingAutoDisconnect = true
+    private var settingAlertGuardian = true
+    private var settingNotificationsEnabled = true
+    
+    // Current call context for real-mode detection
+    private var currentCallPhoneNumber: String = ""
+    private var currentCallStartTime: Long = System.currentTimeMillis()
+    private var currentCallSessionId: String = ""
+    
+    /**
+     * Look up the first active guardian's phone number from the DB.
+     * Returns null if no guardian link exists.
+     */
+    private suspend fun getGuardianPhoneNumber(): String? {
+        return try {
+            val userId = userPreferences.userId.first() ?: return null
+            val links = guardianLinkDao.getLinksForProtected(userId)
+            links.first().firstOrNull()?.guardianPhone?.takeIf { it.isNotEmpty() }
+        } catch (e: Exception) {
+            Logger.warn("MonitoringManager", "Could not retrieve guardian phone: ${e.message}")
+            null
+        }
+    }
+    
     init {
+        // Observe user settings so services respect toggles
+        scope.launch { appPreferences.enableHaptic.collect { settingHapticEnabled = it } }
+        scope.launch { appPreferences.enableOverlay.collect { settingOverlayEnabled = it } }
+        scope.launch { appPreferences.autoDisconnect.collect { settingAutoDisconnect = it } }
+        scope.launch { appPreferences.alertGuardian.collect { settingAlertGuardian = it } }
+        scope.launch { appPreferences.enableNotifications.collect { settingNotificationsEnabled = it } }
+        
         // Observe intervention engine overlay state
         scope.launch {
             interventionEngine.overlayVisible.collect { visible ->
@@ -144,20 +195,63 @@ class MonitoringManager(private val context: Context) {
                     com.macher.android.network.ConnectionState.DISCONNECTING -> ConnectionState.DISCONNECTING
                     com.macher.android.network.ConnectionState.ERROR -> ConnectionState.ERROR
                 }
+                // Immediately sync detection mode based on live connection health
+                // so the UI never claims "Full Protection" when backend is unreachable.
+                if (!Config.DEMO_MODE) {
+                    when (state) {
+                        com.macher.android.network.ConnectionState.ERROR -> {
+                            // Only fall back to local-only after all retries are exhausted.
+                            // While isReconnecting=true the WS is still attempting — don't
+                            // prematurely switch away from REAL_FULL and scare the user.
+                            if (_detectionMode.value == DetectionMode.REAL_FULL && !webSocketClient.isReconnecting.value) {
+                                Logger.warn("MonitoringManager", "Backend unreachable (retries exhausted) — switching to local-only detection")
+                                _detectionMode.value = DetectionMode.REAL_METADATA_ONLY
+                            }
+                        }
+                        com.macher.android.network.ConnectionState.CONNECTED -> {
+                            if (_detectionMode.value == DetectionMode.REAL_METADATA_ONLY) {
+                                Logger.info("MonitoringManager", "Backend connected — restoring full detection")
+                                _detectionMode.value = DetectionMode.REAL_FULL
+                            }
+                        }
+                        else -> {}
+                    }
+                }
             }
         }
         
-        // Observe transcription from WebSocket
+        // Observe transcription from WebSocket and trigger local detection
         scope.launch {
             webSocketClient.transcriptionFlow.collect { transcript ->
                 _transcription.value = transcript
+                
+                // In REAL mode, run local ManipulationDetector on live transcription text
+                // so detection works even before the AWS Bedrock analysis returns.
+                if (_isMonitoring.value && !Config.DEMO_MODE && transcript.isNotEmpty()) {
+                    try {
+                        val metadata = CallMetadata(
+                            phoneNumber = currentCallPhoneNumber,
+                            callTime = currentCallStartTime,
+                            isInContacts = false,
+                            recentCallCount = 0,
+                            averageCallDuration = 0
+                        )
+                        performDetection(metadata, transcript)
+                    } catch (e: Exception) {
+                        Logger.error("MonitoringManager", "Local detection failed: ${e.message}", e)
+                    }
+                }
             }
         }
         
-        // Observe threat level from WebSocket
+        // Observe threat level from WebSocket (AWS Bedrock remote analysis)
         scope.launch {
             webSocketClient.threatLevelFlow.collect { level ->
-                _threatLevel.value = level
+                // Only update from WebSocket if the remote analysis gives a higher threat
+                // This merges remote Bedrock analysis with local detection
+                if (level.ordinal > _threatLevel.value.ordinal) {
+                    _threatLevel.value = level
+                }
                 
                 // Trigger intervention based on threat level
                 if (level != ThreatLevel.SAFE) {
@@ -171,7 +265,12 @@ class MonitoringManager(private val context: Context) {
                     
                     // Send Family Loop alert for high threats
                     if (level == ThreatLevel.DANGER && confidence >= 0.7f) {
-                        familyLoopService.sendAlert(level, threatType, confidence)
+                        if (settingAlertGuardian && settingNotificationsEnabled) {
+                            scope.launch(Dispatchers.IO) {
+                                val guardianPhone = getGuardianPhoneNumber()
+                                familyLoopService.sendAlert(level, threatType, confidence, guardianPhone)
+                            }
+                        }
                     }
                 }
             }
@@ -180,14 +279,18 @@ class MonitoringManager(private val context: Context) {
         // Observe threat confidence
         scope.launch {
             webSocketClient.threatConfidenceFlow.collect { confidence ->
-                _threatConfidence.value = confidence
+                if (confidence > _threatConfidence.value) {
+                    _threatConfidence.value = confidence
+                }
             }
         }
         
         // Observe threat type
         scope.launch {
             webSocketClient.threatTypeFlow.collect { type ->
-                _threatType.value = type
+                if (type.isNotEmpty()) {
+                    _threatType.value = type
+                }
             }
         }
         
@@ -214,7 +317,27 @@ class MonitoringManager(private val context: Context) {
     }
     
     /**
-     * Start monitoring
+     * Start monitoring with a specific phone number (called from call detection).
+     * This means an actual call is happening — connect to backend and analyze.
+     * Can be called when armed (isMonitoring=true, isActiveCall=false) or directly.
+     */
+    fun startMonitoring(phoneNumber: String) {
+        if (_isActiveCall.value) {
+            Logger.warn("MonitoringManager", "Already monitoring an active call")
+            return
+        }
+        currentCallPhoneNumber = phoneNumber
+        currentCallStartTime = System.currentTimeMillis()
+        currentCallSessionId = java.util.UUID.randomUUID().toString()
+        webSocketClient.setCallSessionId(currentCallSessionId)
+        _isActiveCall.value = true
+        startRealMonitoring()
+    }
+
+    /**
+     * Toggle monitoring from UI button.
+     * In real mode (non-demo): enters armed/listening state — waits for an incoming call.
+     * In demo mode: starts the demo simulation immediately.
      */
     fun startMonitoring() {
         if (_isMonitoring.value) {
@@ -225,6 +348,12 @@ class MonitoringManager(private val context: Context) {
         Logger.info("MonitoringManager", "Starting MACHER monitoring")
         
         _isMonitoring.value = true
+        
+        // Generate a call session ID if not already set
+        if (currentCallSessionId.isEmpty()) {
+            currentCallSessionId = java.util.UUID.randomUUID().toString()
+            webSocketClient.setCallSessionId(currentCallSessionId)
+        }
         
         if (Config.DEMO_MODE) {
             // Demo mode: Use simulation
@@ -239,51 +368,107 @@ class MonitoringManager(private val context: Context) {
                 startDemoSimulation()
             }
         } else {
-            // Real mode: Validate backend config first
-            if (Config.WEBSOCKET_URL.contains("YOUR_API_ID")) {
-                Logger.error("MonitoringManager", "Backend not configured — URL still has placeholder")
-                _connectionState.value = ConnectionState.ERROR
-                _transcription.value = "⚠️ Backend not configured. Open Config.kt and replace YOUR_API_ID with your AWS API Gateway URL."
-                _isMonitoring.value = false
-                return
-            }
-
-            Logger.info("MonitoringManager", "Running in REAL mode — connecting to AWS")
+            // Real mode: Enter armed/listening state.
+            // The app is now actively waiting for phone calls.
+            // No WebSocket connection is established yet — that happens when a call starts.
+            // When a call is detected by phoneStateReceiver, startMonitoring(phoneNumber)
+            // will be called which triggers startRealMonitoring() for actual analysis.
+            Logger.info("MonitoringManager", "Running in REAL mode — armed and listening for calls")
             _detectionMode.value = DetectionMode.REAL_FULL
-            _connectionState.value = ConnectionState.CONNECTING
-            
-            // Start fallback manager health checks (Task 4.4)
-            fallbackManager.startHealthChecks()
-            
-            // Connect to WebSocket
-            webSocketClient.connect()
-            
-            // Start audio capture after a short delay to allow connection
-            scope.launch {
-                delay(1500)
-                if (_connectionState.value == ConnectionState.CONNECTED) {
-                    if (audioCaptureService.hasPermission(context)) {
-                        audioCaptureService.startCapture { audioChunk ->
-                            webSocketClient.sendAudioChunk(audioChunk)
-                        }
-                    } else {
-                        Logger.error("MonitoringManager", "Audio recording permission not granted")
-                        _connectionState.value = ConnectionState.ERROR
-                        _transcription.value = "⚠️ Microphone permission required. Grant it in Settings > Apps > MACHER."
-                        _isMonitoring.value = false
-                    }
-                } else if (_connectionState.value == ConnectionState.ERROR ||
-                           _connectionState.value == ConnectionState.DISCONNECTED) {
-                    Logger.error("MonitoringManager", "Failed to connect to backend")
-                    _transcription.value = "⚠️ Could not connect to backend. Check your internet connection and AWS URL."
-                    _isMonitoring.value = false
+            _connectionState.value = ConnectionState.DISCONNECTED
+            _transcription.value = "🛡️ Protection active. Monitoring incoming calls..."
+        }
+    }
+
+    /**
+     * Start the real monitoring pipeline — connect to WebSocket and capture audio.
+     * Only called when an actual phone call is in progress.
+     */
+    private fun startRealMonitoring() {
+        Logger.info("MonitoringManager", "Starting real call monitoring for: $currentCallPhoneNumber")
+        
+        _isMonitoring.value = true
+        
+        // Validate backend config first
+        if (Config.WEBSOCKET_URL.contains("YOUR_API_ID")) {
+            Logger.error("MonitoringManager", "Backend not configured — URL still has placeholder")
+            _connectionState.value = ConnectionState.ERROR
+            _transcription.value = "⚠️ Backend not configured. Open Config.kt and replace YOUR_API_ID with your AWS API Gateway URL."
+            _isMonitoring.value = false
+            return
+        }
+
+        Logger.info("MonitoringManager", "Running in REAL mode — connecting to AWS")
+        _detectionMode.value = DetectionMode.REAL_FULL
+        _connectionState.value = ConnectionState.CONNECTING
+        
+        // Start fallback manager health checks
+        fallbackManager.startHealthChecks()
+        
+        // Connect to WebSocket
+        webSocketClient.connect()
+        
+        // Wait up to 20s — gives all 3 retry attempts time to resolve before giving up.
+        // Must wait for CONNECTED specifically; ERROR should not exit early (retries may follow).
+        scope.launch {
+            withTimeoutOrNull(20_000L) {
+                webSocketClient.connectionState.first { state ->
+                    state == com.macher.android.network.ConnectionState.CONNECTED
                 }
+            }
+            if (_connectionState.value == ConnectionState.CONNECTED) {
+                if (audioCaptureService.hasPermission(context)) {
+                    // Batch audio chunks to reduce WebSocket messages and save AWS credits
+                    val batchSize = Config.CreditSaver.AUDIO_CHUNK_BATCH_SIZE
+                    val audioBuffer = mutableListOf<ByteArray>()
+                    audioCaptureService.startCapture { audioChunk ->
+                        audioBuffer.add(audioChunk)
+                        if (audioBuffer.size >= batchSize) {
+                            // Combine chunks into one message
+                            val totalSize = audioBuffer.sumOf { it.size }
+                            val merged = ByteArray(totalSize)
+                            var offset = 0
+                            for (chunk in audioBuffer) {
+                                chunk.copyInto(merged, offset)
+                                offset += chunk.size
+                            }
+                            audioBuffer.clear()
+                            webSocketClient.sendAudioChunk(merged)
+                        }
+                    }
+                } else {
+                    Logger.error("MonitoringManager", "Audio recording permission not granted")
+                    // Disconnect WS cleanly so it stops emitting ERROR state
+                    webSocketClient.disconnect()
+                    webSocketClient.reset()
+                    // Go back to armed mode, not full stop
+                    _isActiveCall.value = false
+                    _connectionState.value = ConnectionState.DISCONNECTED
+                    _detectionMode.value = DetectionMode.REAL_METADATA_ONLY
+                    _transcription.value = "⚠️ Mic permission needed. Local AI protection still active. Grant mic in Settings > Apps > MACHER."
+                }
+            } else {
+                // Guard: stop was called while we were waiting for connection
+                if (!_isMonitoring.value) return@launch
+                Logger.error("MonitoringManager", "Failed to connect to backend (state=${_connectionState.value})")
+                // Disconnect WS cleanly so it stops emitting ERROR state
+                webSocketClient.disconnect()
+                webSocketClient.reset()
+                // Go back to armed mode instead of full stop
+                _isActiveCall.value = false
+                _connectionState.value = ConnectionState.DISCONNECTED
+                // Switch to local-only detection; app continues protecting with ManipulationDetector
+                _detectionMode.value = DetectionMode.REAL_METADATA_ONLY
+                val errDetail = webSocketClient.lastConnectionError.value ?: "timeout"
+                _transcription.value = "⚠️ Cloud server unreachable ($errDetail). Local AI protection active. Will retry on next call."
+                fallbackManager.stopHealthChecks()
             }
         }
     }
     
     /**
-     * Stop monitoring
+     * Stop monitoring completely (UI button pressed).
+     * Resets everything — armed state, active call, backend connections.
      */
     fun stopMonitoring() {
         if (!_isMonitoring.value) {
@@ -325,6 +510,7 @@ class MonitoringManager(private val context: Context) {
         webSocketClient.disconnect()
         webSocketClient.reset()
         
+        _isActiveCall.value = false
         _isMonitoring.value = false
         _transcription.value = ""
         _threatLevel.value = ThreatLevel.SAFE
@@ -338,7 +524,61 @@ class MonitoringManager(private val context: Context) {
         _scenarioProgress.value = null
         _detectionMode.value = DetectionMode.REAL_FULL
         
+        // Reset call context
+        currentCallPhoneNumber = ""
+        currentCallStartTime = System.currentTimeMillis()
+        currentCallSessionId = ""
+        
         Logger.info("MonitoringManager", "Monitoring stopped")
+    }
+    
+    /**
+     * Stop monitoring the current call but stay in armed/listening mode.
+     * Called when a phone call ends while monitoring is still enabled.
+     * The app returns to the armed state, ready for the next call.
+     */
+    fun stopCallMonitoring() {
+        if (!_isActiveCall.value) return
+        
+        Logger.info("MonitoringManager", "Call ended — returning to armed mode")
+        
+        // Flush pending database writes
+        scope.launch(Dispatchers.IO) {
+            try {
+                flushDatabaseWrites()
+            } catch (e: Exception) {
+                Logger.error("MonitoringManager", "Failed to flush database writes: ${e.message}")
+            }
+        }
+        
+        // Stop fallback health checks
+        fallbackManager.stopHealthChecks()
+        
+        // Stop audio capture
+        audioCaptureService.stopCapture()
+        
+        // Disconnect WebSocket
+        webSocketClient.disconnect()
+        webSocketClient.reset()
+        
+        _isActiveCall.value = false
+        
+        // Reset detection state but keep monitoring (armed) active
+        // No WebSocket is open in armed mode — show DISCONNECTED accurately
+        _transcription.value = "🛡️ Protection active. Monitoring incoming calls..."
+        _threatLevel.value = ThreatLevel.SAFE
+        _threatConfidence.value = 0f
+        _threatType.value = ""
+        _connectionState.value = ConnectionState.DISCONNECTED
+        _detectionMode.value = DetectionMode.REAL_FULL
+        _detectionState.value = null
+        _riskBreakdown.value = null
+        
+        // Reset call context
+        currentCallPhoneNumber = ""
+        currentCallSessionId = ""
+        
+        Logger.info("MonitoringManager", "Returned to armed mode — listening for next call")
     }
     
     /**
@@ -346,6 +586,7 @@ class MonitoringManager(private val context: Context) {
      * CAUTION: two short pulses. DANGER: three strong pulses.
      */
     private fun triggerHapticFeedback(level: ThreatLevel) {
+        if (!settingHapticEnabled) return
         try {
             val vibrator: Vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 val vm = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
@@ -611,11 +852,17 @@ class MonitoringManager(private val context: Context) {
             try {
                 if (fusedRisk.riskLevel == RiskLevel.HIGH && fusedRisk.confidence >= 0.7f) {
                     interventionEngine.triggerIntervention(ThreatLevel.DANGER, fusedRisk.confidence)
-                    familyLoopService.sendAlert(
-                        ThreatLevel.DANGER,
-                        fusedRisk.getPrimaryThreat(),
-                        fusedRisk.confidence
-                    )
+                    if (settingAlertGuardian && settingNotificationsEnabled) {
+                        scope.launch(Dispatchers.IO) {
+                            val guardianPhone = getGuardianPhoneNumber()
+                            familyLoopService.sendAlert(
+                                ThreatLevel.DANGER,
+                                fusedRisk.getPrimaryThreat(),
+                                fusedRisk.confidence,
+                                guardianPhone
+                            )
+                        }
+                    }
                 } else if (fusedRisk.riskLevel == RiskLevel.MEDIUM && fusedRisk.confidence >= 0.5f) {
                     interventionEngine.triggerIntervention(ThreatLevel.CAUTION, fusedRisk.confidence)
                 }
@@ -850,7 +1097,10 @@ class MonitoringManager(private val context: Context) {
                     _threatType.value = "OTP/Password Request"
                     _transcription.value = "Please provide your online banking password and the OTP sent to your phone..."
                     interventionEngine.triggerIntervention(ThreatLevel.DANGER, 0.88f)
-                    familyLoopService.sendAlert(ThreatLevel.DANGER, "OTP/Password Request", 0.88f)
+                    scope.launch(Dispatchers.IO) {
+                        val guardianPhone = getGuardianPhoneNumber()
+                        familyLoopService.sendAlert(ThreatLevel.DANGER, "OTP/Password Request", 0.88f, guardianPhone)
+                    }
                 }
             }
         }
@@ -868,11 +1118,28 @@ class MonitoringManager(private val context: Context) {
      */
     fun disconnectCall() {
         Logger.info("MonitoringManager", "User requested call disconnect")
+        
+        // Actually disconnect the call via TelecomManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as? android.telecom.TelecomManager
+            if (telecomManager != null) {
+                val hasPermission = androidx.core.content.ContextCompat.checkSelfPermission(
+                    context, android.Manifest.permission.ANSWER_PHONE_CALLS
+                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                if (hasPermission) {
+                    try {
+                        @Suppress("DEPRECATION")
+                        telecomManager.endCall()
+                        Logger.info("MonitoringManager", "Call disconnected via TelecomManager")
+                    } catch (e: Exception) {
+                        Logger.error("MonitoringManager", "Failed to disconnect call: ${e.message}")
+                    }
+                }
+            }
+        }
+        
         interventionEngine.dismissOverlay()
         stopMonitoring()
-        
-        // TODO: Use Telecom API to actually disconnect the call
-        // For now, just stop monitoring
     }
     
     /**
@@ -913,6 +1180,7 @@ class MonitoringManager(private val context: Context) {
         audioCaptureService.cleanup()
         demoController.cleanup()
         fallbackManager.stopHealthChecks()
+        scope.coroutineContext[Job]?.cancel()
     }
     
     // ========== Fallback Management (Task 4.4) ==========
@@ -1164,8 +1432,8 @@ class MonitoringManager(private val context: Context) {
     /**
      * Flush pending database writes (Task 10.2)
      * 
-     * Writes all queued call records to the database in a single transaction.
-     * This is more efficient than individual writes and reduces battery drain.
+     * Writes all queued call records to the database individually.
+     * Uses suspend functions to avoid runBlocking deadlocks inside transactions.
      */
     private suspend fun flushDatabaseWrites() = withContext(Dispatchers.IO) {
         val writes = synchronized(pendingDatabaseWrites) {
@@ -1180,41 +1448,35 @@ class MonitoringManager(private val context: Context) {
         
         Logger.info("MonitoringManager", "Flushing ${writes.size} database writes")
         
-        // Process all writes in a single transaction for efficiency
-        try {
-            database.runInTransaction {
-                writes.forEach { (metadata, fusedRisk) ->
-                    try {
-                        // Use blocking version inside transaction
-                        persistCallRecordBlocking(metadata, fusedRisk)
-                    } catch (e: Exception) {
-                        Logger.error("MonitoringManager", "Failed to persist call in batch: ${e.message}")
-                        // Continue with other writes
-                    }
-                }
+        val failed = mutableListOf<Pair<CallMetadata, FusedRiskResult>>()
+        
+        for ((metadata, fusedRisk) in writes) {
+            try {
+                persistCallRecordSuspend(metadata, fusedRisk)
+            } catch (e: Exception) {
+                Logger.error("MonitoringManager", "Failed to persist call in batch: ${e.message}")
+                failed.add(metadata to fusedRisk)
             }
-            Logger.info("MonitoringManager", "Successfully flushed ${writes.size} database writes")
-        } catch (e: Exception) {
-            Logger.error("MonitoringManager", "Batch database write failed: ${e.message}", e)
-            // Re-queue failed writes for retry
+        }
+        
+        if (failed.isNotEmpty()) {
             synchronized(pendingDatabaseWrites) {
-                pendingDatabaseWrites.addAll(0, writes)
+                pendingDatabaseWrites.addAll(0, failed)
             }
+            Logger.warn("MonitoringManager", "${failed.size} database writes failed, re-queued")
+        } else {
+            Logger.info("MonitoringManager", "Successfully flushed ${writes.size} database writes")
         }
     }
     
     /**
-     * Blocking version of persistCallRecord for use in transactions (Task 10.2)
+     * Suspend version of persistCallRecord — safe to call from coroutines
      */
-    private fun persistCallRecordBlocking(metadata: CallMetadata, fusedRisk: FusedRiskResult): String? {
+    private suspend fun persistCallRecordSuspend(metadata: CallMetadata, fusedRisk: FusedRiskResult): String? {
         try {
-            // Generate unique call ID
             val callId = UUID.randomUUID().toString()
-            
-            // Determine if call should be blocked
             val wasBlocked = fusedRisk.riskLevel == RiskLevel.HIGH && fusedRisk.confidence >= 0.7f
             
-            // Create call record entity
             val callRecord = CallRecordEntity(
                 id = callId,
                 phoneNumber = metadata.phoneNumber,
@@ -1225,32 +1487,10 @@ class MonitoringManager(private val context: Context) {
                 userReported = false
             )
             
-            // Insert call record (blocking)
-            kotlinx.coroutines.runBlocking {
-                callHistoryDao.insertCall(callRecord)
-            }
+            callHistoryDao.insertCall(callRecord)
             
-            // Persist risk assessment with triggers
-            persistRiskAssessmentBlocking(callId, fusedRisk)
-            
-            // Update historical risk
-            updateHistoricalRiskBlocking(metadata.phoneNumber, fusedRisk)
-            
-            return callId
-            
-        } catch (e: Exception) {
-            Logger.error("MonitoringManager", "Failed to persist call record: ${e.message}")
-            return null
-        }
-    }
-    
-    /**
-     * Blocking version of persistRiskAssessment for use in transactions (Task 10.2)
-     */
-    private fun persistRiskAssessmentBlocking(callId: String, fusedRisk: FusedRiskResult) {
-        try {
+            // Persist risk assessment
             val riskId = UUID.randomUUID().toString()
-            
             val riskAssessment = RiskAssessmentEntity(
                 id = riskId,
                 callId = callId,
@@ -1264,70 +1504,49 @@ class MonitoringManager(private val context: Context) {
                 explanation = fusedRisk.explanation,
                 timestamp = System.currentTimeMillis()
             )
-            
-            kotlinx.coroutines.runBlocking {
-                riskAssessmentDao.insertRisk(riskAssessment)
-            }
+            riskAssessmentDao.insertRisk(riskAssessment)
             
             // Persist triggers
             val riskBreakdown = _riskBreakdown.value
             if (riskBreakdown != null && riskBreakdown.triggers.isNotEmpty()) {
-                persistTriggersBlocking(riskId, riskBreakdown.triggers)
-            }
-            
-        } catch (e: Exception) {
-            Logger.error("MonitoringManager", "Failed to persist risk assessment: ${e.message}")
-            throw e
-        }
-    }
-    
-    /**
-     * Blocking version of persistTriggers for use in transactions (Task 10.2)
-     */
-    private fun persistTriggersBlocking(riskAssessmentId: String, triggers: List<TriggerInfo>) {
-        try {
-            if (triggers.isEmpty()) return
-            
-            val triggerEntities = triggers.mapNotNull { trigger ->
-                try {
-                    RiskTriggerEntity(
-                        id = 0,
-                        riskAssessmentId = riskAssessmentId,
-                        category = trigger.category.name,
-                        description = trigger.description,
-                        score = trigger.score,
-                        severity = trigger.severity.name,
-                        timestamp = trigger.timestamp
-                    )
-                } catch (e: Exception) {
-                    Logger.warn("MonitoringManager", "Failed to convert trigger: ${e.message}")
-                    null
+                val triggerEntities = riskBreakdown.triggers.mapNotNull { trigger ->
+                    try {
+                        RiskTriggerEntity(
+                            id = 0,
+                            riskAssessmentId = riskId,
+                            category = trigger.category.name,
+                            description = trigger.description,
+                            score = trigger.score,
+                            severity = trigger.severity.name,
+                            timestamp = trigger.timestamp
+                        )
+                    } catch (e: Exception) {
+                        null
+                    }
                 }
-            }
-            
-            if (triggerEntities.isNotEmpty()) {
-                kotlinx.coroutines.runBlocking {
+                if (triggerEntities.isNotEmpty()) {
                     riskTriggerDao.insertTriggers(triggerEntities)
                 }
             }
             
+            // Update historical risk
+            updateHistoricalRiskSuspend(metadata.phoneNumber, fusedRisk)
+            
+            return callId
         } catch (e: Exception) {
-            Logger.error("MonitoringManager", "Failed to persist triggers: ${e.message}")
-            throw e
+            Logger.error("MonitoringManager", "Failed to persist call record: ${e.message}")
+            return null
         }
     }
     
     /**
-     * Blocking version of updateHistoricalRisk for use in transactions (Task 10.2)
+     * Suspend version of updateHistoricalRisk
      */
-    private fun updateHistoricalRiskBlocking(phoneNumber: String, fusedRisk: FusedRiskResult) {
+    private suspend fun updateHistoricalRiskSuspend(phoneNumber: String, fusedRisk: FusedRiskResult) {
+        if (phoneNumber.isBlank()) return
+        
         try {
-            if (phoneNumber.isBlank()) return
-            
-            val existing = kotlinx.coroutines.runBlocking {
-                historicalRiskDao.getHistoricalRisk(phoneNumber)
-            }
-            
+            val existing = historicalRiskDao.getHistoricalRisk(phoneNumber)
             val isScamCall = fusedRisk.riskLevel == RiskLevel.HIGH
             
             val updated = if (existing != null) {
@@ -1338,14 +1557,8 @@ class MonitoringManager(private val context: Context) {
                 } else {
                     fusedRisk.riskScore
                 }
-                
-                val scamRate = if (newTotalCalls > 0) {
-                    newScamCalls.toFloat() / newTotalCalls.toFloat()
-                } else {
-                    0f
-                }
-                val isBlacklisted = scamRate >= 0.5f || 
-                    (scamRate >= 0.33f && fusedRisk.confidence >= 0.8f)
+                val scamRate = if (newTotalCalls > 0) newScamCalls.toFloat() / newTotalCalls.toFloat() else 0f
+                val isBlacklisted = scamRate >= 0.5f || (scamRate >= 0.33f && fusedRisk.confidence >= 0.8f)
                 
                 HistoricalRiskEntity(
                     phoneNumber = phoneNumber,
@@ -1368,13 +1581,9 @@ class MonitoringManager(private val context: Context) {
                 )
             }
             
-            kotlinx.coroutines.runBlocking {
-                historicalRiskDao.insertOrUpdateHistoricalRisk(updated)
-            }
-            
+            historicalRiskDao.insertOrUpdateHistoricalRisk(updated)
         } catch (e: Exception) {
             Logger.error("MonitoringManager", "Failed to update historical risk: ${e.message}")
-            // Non-critical - don't throw
         }
     }
     

@@ -65,17 +65,22 @@ object KeyManager {
      * Uses MasterKey with AES256_GCM encryption for maximum security.
      */
     private fun getEncryptedPreferences(context: Context): android.content.SharedPreferences {
-        val masterKey = MasterKey.Builder(context)
-            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-            .build()
-        
-        return EncryptedSharedPreferences.create(
-            context,
-            PREFS_NAME,
-            masterKey,
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-        )
+        return try {
+            val masterKey = MasterKey.Builder(context)
+                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                .build()
+            
+            EncryptedSharedPreferences.create(
+                context,
+                PREFS_NAME,
+                masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+        } catch (e: Exception) {
+            Logger.error("KeyManager", "EncryptedSharedPreferences failed, using fallback", e)
+            context.getSharedPreferences(PREFS_NAME + "_fallback", Context.MODE_PRIVATE)
+        }
     }
     
     /**

@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -15,8 +16,9 @@ import com.macher.android.data.preferences.AppPreferences
 import com.macher.android.service.MonitoringManager
 import com.macher.android.ui.screens.onboarding.OnboardingScreen
 import com.macher.android.ui.screens.onboarding.RoleSelectionScreen
+import com.macher.android.ui.screens.onboarding.ProfileSetupScreen
 import com.macher.android.ui.screens.protected.ProtectedHomeScreen
-import com.macher.android.ui.screens.protected.CallHistoryScreen
+import com.macher.android.ui.screens.protected.EnhancedCallHistoryScreen
 import com.macher.android.ui.screens.protected.ProtectedSettingsScreen
 import com.macher.android.ui.screens.guardian.GuardianDashboardScreen
 import com.macher.android.ui.screens.guardian.TrustedContactsScreen
@@ -31,6 +33,10 @@ import kotlinx.coroutines.launch
 object Routes {
     const val ONBOARDING = "onboarding"
     const val ROLE_SELECTION = "role_selection"
+    /** Route pattern for the one-time onboarding profile setup step. */
+    const val PROFILE_SETUP = "profile_setup/{role}"
+    /** Base path used when building the nav destination (without the {role} token). */
+    const val PROFILE_SETUP_BASE = "profile_setup"
     const val PROTECTED_HOME = "protected_home"
     const val PROTECTED_HISTORY = "protected_history"
     const val PROTECTED_SETTINGS = "protected_settings"
@@ -90,13 +96,38 @@ fun MacherNavGraph(
             RoleSelectionScreen(
                 onRoleSelected = { role ->
                     scope.launch {
-                        val userRole = if (role == "PROTECTED") UserRole.PROTECTED else UserRole.GUARDIAN
-                        userPreferences.updateUserRole(userRole)
-                        userPreferences.completeOnboarding()
+                        try {
+                            val userRole = if (role == "PROTECTED") UserRole.PROTECTED else UserRole.GUARDIAN
+                            userPreferences.updateUserRole(userRole)
+                            userPreferences.completeOnboarding()
+                        } catch (_: Exception) {}
                     }
-                    val destination = if (role == "PROTECTED") Routes.PROTECTED_HOME else Routes.GUARDIAN_DASHBOARD
-                    navController.navigate(destination) {
+                    // Go to profile setup before the home screen so the user can enter their name
+                    navController.navigate("${Routes.PROFILE_SETUP_BASE}/$role") {
                         popUpTo(Routes.ROLE_SELECTION) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Routes.PROFILE_SETUP) { backStackEntry ->
+            val scope = rememberCoroutineScope()
+            val roleStr = backStackEntry.arguments?.getString("role") ?: "PROTECTED"
+            val role = if (roleStr == "GUARDIAN") UserRole.GUARDIAN else UserRole.PROTECTED
+            ProfileSetupScreen(
+                role = role,
+                onComplete = { name, phone ->
+                    scope.launch {
+                        try {
+                            if (name.isNotBlank()) {
+                                userPreferences.saveProfileForRole(name, phone, role)
+                            }
+                        } catch (_: Exception) {}
+                    }
+                    val destination = if (role == UserRole.GUARDIAN)
+                        Routes.GUARDIAN_DASHBOARD else Routes.PROTECTED_HOME
+                    navController.navigate(destination) {
+                        popUpTo(0) { inclusive = true }
                     }
                 }
             )
@@ -112,7 +143,10 @@ fun MacherNavGraph(
         }
 
         composable(Routes.PROTECTED_HISTORY) {
-            CallHistoryScreen(onNavigateBack = { navController.popBackStack() })
+            EnhancedCallHistoryScreen(
+                monitoringManager = monitoringManager,
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
 
         composable(Routes.PROTECTED_SETTINGS) {
@@ -123,7 +157,11 @@ fun MacherNavGraph(
         }
 
         composable(Routes.GUARDIAN_DASHBOARD) {
+            val guardianName by remember(UserRole.GUARDIAN) {
+                userPreferences.userNameForRole(UserRole.GUARDIAN)
+            }.collectAsState(initial = "")
             GuardianDashboardScreen(
+                userName = guardianName ?: "",
                 onNavigateToContacts = { navController.navigate(Routes.GUARDIAN_CONTACTS) },
                 onNavigateToAlerts = { navController.navigate(Routes.GUARDIAN_ALERTS) },
                 onNavigateToSettings = { navController.navigate(Routes.GUARDIAN_SETTINGS) },
@@ -162,8 +200,13 @@ fun MacherNavGraph(
         composable(Routes.PROFILE) {
             val scope = rememberCoroutineScope()
             val userRole by userPreferences.userRole.collectAsState(initial = UserRole.NOT_SET)
-            val userName by userPreferences.userName.collectAsState(initial = "")
-            val userPhone by userPreferences.userPhone.collectAsState(initial = "")
+            // Use role-specific name/phone so Guardian and Protected profiles are independent
+            val userName by remember(userRole) {
+                userPreferences.userNameForRole(userRole)
+            }.collectAsState(initial = "")
+            val userPhone by remember(userRole) {
+                userPreferences.userPhoneForRole(userRole)
+            }.collectAsState(initial = "")
 
             ProfileScreen(
                 userRole = userRole,
@@ -173,7 +216,7 @@ fun MacherNavGraph(
                 onNavigateBack = { navController.popBackStack() },
                 onThemeToggle = { dark -> onThemeToggle(dark) },
                 onRoleSwitch = { newRole ->
-                    scope.launch { userPreferences.updateUserRole(newRole) }
+                    scope.launch { try { userPreferences.updateUserRole(newRole) } catch (_: Exception) {} }
                     val destination = if (newRole == UserRole.GUARDIAN)
                         Routes.GUARDIAN_DASHBOARD else Routes.PROTECTED_HOME
                     navController.navigate(destination) {
@@ -181,13 +224,13 @@ fun MacherNavGraph(
                     }
                 },
                 onSaveProfile = { name, phone ->
+                    // Save to role-specific keys so each role keeps its own identity
                     scope.launch {
-                        userPreferences.updateUserName(name)
-                        userPreferences.updateUserPhone(phone)
+                        try { userPreferences.saveProfileForRole(name, phone, userRole) } catch (_: Exception) {}
                     }
                 },
                 onResetApp = {
-                    scope.launch { userPreferences.clear() }
+                    scope.launch { try { userPreferences.clear() } catch (_: Exception) {} }
                     navController.navigate(Routes.ONBOARDING) {
                         popUpTo(0) { inclusive = true }
                     }

@@ -48,14 +48,17 @@ class RiskFusionEngine {
             else -> RiskLevel.LOW
         }
         
-        // Calculate confidence (average of component confidences)
-        val confidences = listOfNotNull(
+        // Calculate confidence (weighted by layer availability)
+        val layersAvailable = listOfNotNull(
             metadataRisk?.confidence,
             manipulationRisk?.confidence,
             historicalRisk?.confidence
         )
-        val averageConfidence = if (confidences.isNotEmpty()) {
-            confidences.average().toFloat()
+        val averageConfidence = if (layersAvailable.isNotEmpty()) {
+            // Scale down confidence if not all layers contributed
+            val rawAvg = layersAvailable.average().toFloat()
+            val completeness = layersAvailable.size / 3f  // 3 possible layers
+            (rawAvg * (0.5f + 0.5f * completeness)).coerceIn(0f, 1f)
         } else {
             0f
         }

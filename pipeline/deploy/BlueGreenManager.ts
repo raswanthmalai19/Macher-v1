@@ -1,5 +1,5 @@
 /**
- * Blue-Green Deployment Manager for VocalShield CI/CD Pipeline
+ * Blue-Green Deployment Manager for MACHER CI/CD Pipeline
  * 
  * This module manages blue-green deployments for zero-downtime production updates,
  * including traffic switching, monitoring, and automatic rollback.
@@ -270,7 +270,7 @@ export class BlueGreenManager {
 
       // Update Route53 weighted routing or API Gateway stage variables
       const command = `aws apigateway update-stage \
-        --rest-api-id $(aws apigateway get-rest-apis --query "items[?name=='VocalShield'].id" --output text) \
+        --rest-api-id $(aws apigateway get-rest-apis --query "items[?name=='MACHER'].id" --output text) \
         --stage-name prod \
         --patch-operations op=replace,path=/variables/activeStack,value=${greenStack}`;
 
@@ -313,7 +313,7 @@ export class BlueGreenManager {
       const errorRateCommand = `aws cloudwatch get-metric-statistics \
         --namespace AWS/ApiGateway \
         --metric-name 5XXError \
-        --dimensions Name=ApiName,Value=VocalShield \
+        --dimensions Name=ApiName,Value=MACHER \
         --start-time ${startTime.toISOString()} \
         --end-time ${endTime.toISOString()} \
         --period 300 \
@@ -331,7 +331,7 @@ export class BlueGreenManager {
       const latencyCommand = `aws cloudwatch get-metric-statistics \
         --namespace AWS/ApiGateway \
         --metric-name Latency \
-        --dimensions Name=ApiName,Value=VocalShield \
+        --dimensions Name=ApiName,Value=MACHER \
         --start-time ${startTime.toISOString()} \
         --end-time ${endTime.toISOString()} \
         --period 300 \
@@ -349,7 +349,7 @@ export class BlueGreenManager {
       const requestCountCommand = `aws cloudwatch get-metric-statistics \
         --namespace AWS/ApiGateway \
         --metric-name Count \
-        --dimensions Name=ApiName,Value=VocalShield \
+        --dimensions Name=ApiName,Value=MACHER \
         --start-time ${startTime.toISOString()} \
         --end-time ${endTime.toISOString()} \
         --period 300 \

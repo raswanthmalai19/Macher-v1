@@ -1,5 +1,5 @@
 /**
- * Test Executor for VocalShield CI/CD Pipeline
+ * Test Executor for MACHER CI/CD Pipeline
  * 
  * This module handles execution of unit tests, property-based tests,
  * integration tests, and smoke tests with coverage reporting.

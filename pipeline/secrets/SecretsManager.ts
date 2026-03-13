@@ -1,5 +1,5 @@
 /**
- * Secrets Management System for VocalShield CI/CD Pipeline
+ * Secrets Management System for MACHER CI/CD Pipeline
  * 
  * This module provides secure secrets handling for the pipeline, including:
  * - Retrieval of secrets from GitHub Secrets and environment variables

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# VocalShield - Secrets Manager Setup Script
+# MACHER - Secrets Manager Setup Script
 # This script initializes AWS Secrets Manager with placeholder secrets
 
 set -e
@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 ENVIRONMENT="${ENVIRONMENT:-dev}"
 REGION="${AWS_REGION:-us-east-1}"
 
-echo -e "${GREEN}VocalShield Secrets Manager Setup${NC}"
+echo -e "${GREEN}MACHER Secrets Manager Setup${NC}"
 echo "Environment: $ENVIRONMENT"
 echo "Region: $REGION"
 echo ""
@@ -56,7 +56,7 @@ create_secret() {
             --description "$description" \
             --secret-string "$value" \
             --region "$REGION" \
-            --tags "Key=Project,Value=VocalShield" "Key=Environment,Value=$ENVIRONMENT" "Key=ManagedBy,Value=Script" \
+            --tags "Key=Project,Value=MACHER" "Key=Environment,Value=$ENVIRONMENT" "Key=ManagedBy,Value=Script" \
             > /dev/null
     fi
 }
@@ -88,7 +88,7 @@ EOF
 )
 
 create_secret \
-    "vocalshield/$ENVIRONMENT/config" \
+    "macher/$ENVIRONMENT/config" \
     "$CONFIG_JSON" \
     "Sensitive configuration values"
 
@@ -104,7 +104,7 @@ EOF
 )
 
 create_secret \
-    "vocalshield/$ENVIRONMENT/database" \
+    "macher/$ENVIRONMENT/database" \
     "$DB_CREDENTIALS_JSON" \
     "Database connection credentials"
 
@@ -127,7 +127,7 @@ echo ""
 echo "Created secrets:"
 aws secretsmanager list-secrets \
     --region "$REGION" \
-    --filters "Key=name,Values=vocalshield/$ENVIRONMENT" \
+    --filters "Key=name,Values=macher/$ENVIRONMENT" \
     --query 'SecretList[*].[Name,Description]' \
     --output table
 

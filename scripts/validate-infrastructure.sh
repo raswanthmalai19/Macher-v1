@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# VocalShield - Infrastructure Validation Script
+# MACHER - Infrastructure Validation Script
 # Comprehensive validation of deployed infrastructure
 
 set -e
@@ -15,11 +15,11 @@ NC='\033[0m'
 # Configuration
 ENVIRONMENT="${1:-dev}"
 AWS_REGION="${AWS_REGION:-us-east-1}"
-STACK_NAME="VocalShield-$ENVIRONMENT"
+STACK_NAME="MACHER-$ENVIRONMENT"
 
 echo -e "${BLUE}"
 echo "╔═══════════════════════════════════════════════════════════╗"
-echo "║      VocalShield Infrastructure Validation               ║"
+echo "║      MACHER Infrastructure Validation               ║"
 echo "╚═══════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 echo "Environment: $ENVIRONMENT"
@@ -203,7 +203,7 @@ if aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region "$AWS_
     
     LAMBDA_FUNCTIONS=$(aws lambda list-functions \
         --region "$AWS_REGION" \
-        --query "Functions[?starts_with(FunctionName, 'VocalShield')].FunctionName" \
+        --query "Functions[?starts_with(FunctionName, 'MACHER')].FunctionName" \
         --output text)
     
     if [ -n "$LAMBDA_FUNCTIONS" ]; then
@@ -239,7 +239,7 @@ if aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region "$AWS_
         echo -e "  ${GREEN}✓${NC} Found $ALARM_COUNT CloudWatch alarm(s)"
         
         ALARM_STATE=$(aws cloudwatch describe-alarms \
-            --alarm-name-prefix "VocalShield" \
+            --alarm-name-prefix "MACHER" \
             --state-value ALARM \
             --region "$AWS_REGION" \
             --query 'length(MetricAlarms)' \

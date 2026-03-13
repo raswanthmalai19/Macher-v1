@@ -257,7 +257,7 @@ export class NotificationManager {
         {
           color,
           fields,
-          footer: 'VocalShield CI/CD Pipeline',
+          footer: 'MACHER CI/CD Pipeline',
           ts: Math.floor(payload.timestamp.getTime() / 1000)
         }
       ]
@@ -272,7 +272,7 @@ export class NotificationManager {
    */
   private formatEmailSubject(payload: NotificationPayload): string {
     const prefix = this.getTypeLabel(payload.type);
-    return `[VocalShield ${payload.environment.toUpperCase()}] ${prefix}: ${payload.message}`;
+    return `[MACHER ${payload.environment.toUpperCase()}] ${prefix}: ${payload.message}`;
   }
 
   /**
@@ -326,7 +326,7 @@ export class NotificationManager {
   </div>
   
   <div class="footer">
-    <p>VocalShield CI/CD Pipeline - Automated Deployment Notification</p>
+    <p>MACHER CI/CD Pipeline - Automated Deployment Notification</p>
   </div>
 </body>
 </html>

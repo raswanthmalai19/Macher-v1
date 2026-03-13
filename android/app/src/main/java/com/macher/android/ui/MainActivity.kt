@@ -1,9 +1,14 @@
 package com.macher.android.ui
 
 import android.Manifest
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.telephony.TelephonyManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -68,11 +73,22 @@ import kotlin.math.sin
 class MainActivity : ComponentActivity() {
     
     private lateinit var monitoringManager: MonitoringManager
+    private var callDetectionReceiver: BroadcastReceiver? = null
+    private var phoneStateReceiver: BroadcastReceiver? = null
     
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        // Handle permission results
+        val denied = permissions.filter { !it.value }.keys
+        if (denied.isNotEmpty()) {
+            com.macher.android.util.Logger.warn("MainActivity", "Permissions denied: $denied")
+            // Critical permission: RECORD_AUDIO is required for monitoring
+            if (denied.contains(Manifest.permission.RECORD_AUDIO)) {
+                com.macher.android.util.Logger.error("MainActivity", "RECORD_AUDIO denied — monitoring will not work")
+            }
+        } else {
+            com.macher.android.util.Logger.info("MainActivity", "All permissions granted")
+        }
     }
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -82,6 +98,7 @@ class MainActivity : ComponentActivity() {
         val userPreferences = UserPreferences(this)
         val appPreferences = AppPreferences(this)
         requestPermissions()
+        registerCallDetectionReceiver()
         
         setContent {
             // Read theme preference from DataStore — recompose when it changes
@@ -113,12 +130,13 @@ class MainActivity : ComponentActivity() {
                             }
                     }
                     
-                    if (startDestination == null) {
+                    val resolvedStart = startDestination
+                    if (resolvedStart == null) {
                         SplashScreen()
                     } else {
                         MacherNavGraph(
                             navController = navController,
-                            startDestination = startDestination!!,
+                            startDestination = resolvedStart,
                             monitoringManager = monitoringManager,
                             userPreferences = userPreferences,
                             appPreferences = appPreferences,
@@ -135,13 +153,87 @@ class MainActivity : ComponentActivity() {
     
     override fun onDestroy() {
         super.onDestroy()
+        callDetectionReceiver?.let {
+            try { unregisterReceiver(it) } catch (_: Exception) {}
+        }
+        callDetectionReceiver = null
+        phoneStateReceiver?.let {
+            try { unregisterReceiver(it) } catch (_: Exception) {}
+        }
+        phoneStateReceiver = null
         monitoringManager.cleanup()
+    }
+    
+    private fun registerCallDetectionReceiver() {
+        // Receiver for MACHER's own CallScreeningService broadcast (API 29+)
+        callDetectionReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                val phoneNumber = intent?.getStringExtra("phone_number") ?: ""
+                com.macher.android.util.Logger.info("MainActivity", "Call detected broadcast received for monitoring")
+                // Start real monitoring if armed (isMonitoring=true) but no active call yet
+                if (monitoringManager.isMonitoring.value && !monitoringManager.isActiveCall.value) {
+                    monitoringManager.startMonitoring(phoneNumber)
+                }
+            }
+        }
+        val filter = IntentFilter("com.macher.android.CALL_DETECTED")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(callDetectionReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(callDetectionReceiver, filter)
+        }
+        
+        // PhoneStateReceiver: Detects incoming/outgoing calls on ALL API levels.
+        // This is the primary trigger for auto-starting monitoring when a call arrives.
+        phoneStateReceiver = object : BroadcastReceiver() {
+            private var lastState = TelephonyManager.CALL_STATE_IDLE
+            
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if (intent?.action != TelephonyManager.ACTION_PHONE_STATE_CHANGED) return
+                
+                val stateStr = intent.getStringExtra(TelephonyManager.EXTRA_STATE) ?: return
+                val phoneNumber = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER) ?: ""
+                
+                val state = when (stateStr) {
+                    TelephonyManager.EXTRA_STATE_RINGING -> TelephonyManager.CALL_STATE_RINGING
+                    TelephonyManager.EXTRA_STATE_OFFHOOK -> TelephonyManager.CALL_STATE_OFFHOOK
+                    else -> TelephonyManager.CALL_STATE_IDLE
+                }
+                
+                when {
+                    // Call answered / outgoing call started → start real monitoring
+                    // Only if armed (isMonitoring=true) and no active call yet
+                    state == TelephonyManager.CALL_STATE_OFFHOOK && lastState != TelephonyManager.CALL_STATE_OFFHOOK -> {
+                        com.macher.android.util.Logger.info("MainActivity", "Call offhook — starting real monitoring")
+                        if (monitoringManager.isMonitoring.value && !monitoringManager.isActiveCall.value) {
+                            monitoringManager.startMonitoring(phoneNumber)
+                        }
+                    }
+                    // Call ended → return to armed mode (not full stop)
+                    state == TelephonyManager.CALL_STATE_IDLE && lastState != TelephonyManager.CALL_STATE_IDLE -> {
+                        com.macher.android.util.Logger.info("MainActivity", "Call ended — returning to armed mode")
+                        if (monitoringManager.isActiveCall.value) {
+                            monitoringManager.stopCallMonitoring()
+                        }
+                    }
+                }
+                lastState = state
+            }
+        }
+        val phoneFilter = IntentFilter(TelephonyManager.ACTION_PHONE_STATE_CHANGED)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(phoneStateReceiver, phoneFilter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(phoneStateReceiver, phoneFilter)
+        }
     }
     
     private fun requestPermissions() {
         val permissions = mutableListOf(
             Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.READ_PHONE_STATE
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.ANSWER_PHONE_CALLS,
+            Manifest.permission.SEND_SMS
         )
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
             permissions.add(Manifest.permission.POST_NOTIFICATIONS)
@@ -166,6 +258,7 @@ fun MacherApp(monitoringManager: MonitoringManager) {
     val riskBreakdown by monitoringManager.riskBreakdown.collectAsState()
     val scenarioProgress by monitoringManager.scenarioProgress.collectAsState()
     val detectionMode by monitoringManager.detectionMode.collectAsState()
+    val isActiveCall by monitoringManager.isActiveCall.collectAsState()
     
     // Task 12.2: TalkBack announcements for threat level and detection mode changes
     AnnounceThreatLevel(threatLevel = threatLevel.name)
@@ -209,6 +302,7 @@ fun MacherApp(monitoringManager: MonitoringManager) {
                 detectionMode = detectionMode,
                 riskBreakdown = riskBreakdown,
                 scenarioProgress = scenarioProgress,
+                isActiveCall = isActiveCall,
                 monitoringManager = monitoringManager,
                 onMonitoringToggle = {
                     if (isMonitoring) monitoringManager.stopMonitoring()
@@ -409,6 +503,7 @@ fun MainContent(
     detectionMode: DetectionMode,
     riskBreakdown: RiskBreakdown?,
     scenarioProgress: ScenarioProgress?,
+    isActiveCall: Boolean = false,
     monitoringManager: MonitoringManager,
     onMonitoringToggle: () -> Unit,
     onThreatLevelChange: (ThreatLevel) -> Unit
@@ -506,11 +601,22 @@ fun MainContent(
                             ThreatLevel.CAUTION -> CautionYellow
                             ThreatLevel.DANGER -> DangerRed
                         })
-                        HeroMiniStat(value = when(connectionState) {
-                            ConnectionState.CONNECTED -> "Online"
+                        HeroMiniStat(value = when {
+                            Config.DEMO_MODE -> "Demo"
+                            connectionState == ConnectionState.CONNECTED -> "Online"
+                            connectionState == ConnectionState.CONNECTING -> "Connecting"
+                            // Armed = monitoring but no active WS yet
+                            isMonitoring && !isActiveCall && connectionState == ConnectionState.DISCONNECTED -> "Armed"
+                            connectionState == ConnectionState.ERROR -> "Offline"
                             else -> "Offline"
                         }, label = "Backend",
-                            color = if (connectionState == ConnectionState.CONNECTED) SafeGreen else MaterialTheme.colorScheme.onSurfaceVariant)
+                            color = when {
+                                connectionState == ConnectionState.CONNECTED -> SafeGreen
+                                connectionState == ConnectionState.CONNECTING -> CautionYellow
+                                Config.DEMO_MODE -> MacherElectricCyan
+                                isMonitoring && !isActiveCall -> MacherElectricCyan
+                                else -> MaterialTheme.colorScheme.onSurfaceVariant
+                            })
                     }
                 }
             }
@@ -521,6 +627,7 @@ fun MainContent(
         // ── Detection Mode Indicator (Task 8.1) ──
         DetectionModeIndicator(
             mode = detectionMode,
+            isActiveCall = isActiveCall,
             modifier = Modifier.fillMaxWidth()
         )
         
@@ -615,36 +722,58 @@ fun MainContent(
             // Backend Status
             StatusMiniCard(
                 modifier = Modifier.weight(1f),
-                icon = when (connectionState) {
-                    ConnectionState.CONNECTED -> "⚡"
-                    ConnectionState.CONNECTING -> "◎"
-                    ConnectionState.DISCONNECTED -> "○"
-                    ConnectionState.DISCONNECTING -> "◎"
-                    ConnectionState.ERROR -> "✗"
+                icon = when {
+                    Config.DEMO_MODE -> "🧪"
+                    connectionState == ConnectionState.CONNECTED -> "⚡"
+                    connectionState == ConnectionState.CONNECTING -> "◎"
+                    connectionState == ConnectionState.DISCONNECTING -> "◎"
+                    // Armed: monitoring is ON but no active call yet — no WS open, not an error
+                    isMonitoring && !isActiveCall && connectionState == ConnectionState.DISCONNECTED -> "🛡"
+                    connectionState == ConnectionState.ERROR && !monitoringManager.webSocketClient.isReconnecting.value -> "⚠"
+                    connectionState == ConnectionState.ERROR -> "◌"  // spinning retry
+                    else -> "○"
                 },
                 label = "Backend",
-                value = when (connectionState) {
-                    ConnectionState.CONNECTED -> "Connected"
-                    ConnectionState.CONNECTING -> "Connecting..."
-                    ConnectionState.DISCONNECTED -> "Offline"
-                    ConnectionState.DISCONNECTING -> "Closing..."
-                    ConnectionState.ERROR -> "Error"
+                value = when {
+                    Config.DEMO_MODE -> "Demo Mode"
+                    connectionState == ConnectionState.CONNECTED -> "Connected"
+                    connectionState == ConnectionState.CONNECTING -> "Connecting..."
+                    connectionState == ConnectionState.DISCONNECTING -> "Closing..."
+                    // Armed: show "Armed" — backend will connect when a call arrives
+                    isMonitoring && !isActiveCall && connectionState == ConnectionState.DISCONNECTED -> "Armed"
+                    // ERROR while retrying — show Connecting, not Cloud Offline
+                    connectionState == ConnectionState.ERROR && monitoringManager.webSocketClient.isReconnecting.value -> "Connecting..."
+                    connectionState == ConnectionState.ERROR -> "Cloud Offline"
+                    else -> "Offline"
                 },
-                accentColor = when (connectionState) {
-                    ConnectionState.CONNECTED -> SafeGreen
-                    ConnectionState.CONNECTING -> CautionYellow
-                    ConnectionState.DISCONNECTED -> MaterialTheme.colorScheme.onSurfaceVariant
-                    ConnectionState.DISCONNECTING -> CautionYellow
-                    ConnectionState.ERROR -> DangerRed
+                accentColor = when {
+                    Config.DEMO_MODE -> MacherElectricCyan
+                    connectionState == ConnectionState.CONNECTED -> SafeGreen
+                    connectionState == ConnectionState.CONNECTING -> CautionYellow
+                    connectionState == ConnectionState.DISCONNECTING -> CautionYellow
+                    // Armed: neutral cyan — app is ready, not broken
+                    isMonitoring && !isActiveCall && connectionState == ConnectionState.DISCONNECTED -> MacherElectricCyan
+                    // Retrying — yellow like connecting, not alarming red/warning
+                    connectionState == ConnectionState.ERROR && monitoringManager.webSocketClient.isReconnecting.value -> CautionYellow
+                    connectionState == ConnectionState.ERROR -> CautionYellow
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
                 }
             )
             
             // Monitoring Status
             StatusMiniCard(
                 modifier = Modifier.weight(1f),
-                icon = if (isMonitoring) "🔴" else "⏸",
+                icon = when {
+                    !isMonitoring -> "⏸"
+                    isActiveCall -> "🔴"  // Active call in progress
+                    else -> "🛡"           // Armed and listening
+                },
                 label = "Monitor",
-                value = if (isMonitoring) "Active" else "Standby",
+                value = when {
+                    !isMonitoring -> "Standby"
+                    isActiveCall -> "In Call"
+                    else -> "Armed"
+                },
                 accentColor = if (isMonitoring) SafeGreen else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -663,11 +792,11 @@ fun MainContent(
                         Box(
                             modifier = Modifier
                                 .size(8.dp)
-                                .background(DangerRed, CircleShape)
+                                .background(if (isActiveCall || detectionMode == DetectionMode.DEMO) SafeGreen else MacherElectricCyan, CircleShape)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = "LIVE TRANSCRIPTION",
+                            text = if (isActiveCall || detectionMode == DetectionMode.DEMO) "LIVE TRANSCRIPTION" else "STATUS",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = MacherElectricCyan,
@@ -719,7 +848,7 @@ fun MainContent(
                             color = MacherVioletGlow
                         )
                         Text(
-                            text = "Connect your AWS backend to go live",
+                            text = "All features are fully functional in demo simulation",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 2.dp)
@@ -729,9 +858,9 @@ fun MainContent(
             }
         }
         
-        // ── Demo Threat Controls ──
+        // ── Demo Threat Controls (only visible in demo mode) ──
         AnimatedVisibility(
-            visible = isMonitoring,
+            visible = isMonitoring && detectionMode == DetectionMode.DEMO,
             enter = expandVertically(animationSpec = spring(stiffness = Spring.StiffnessLow)) + fadeIn(),
             exit = shrinkVertically() + fadeOut()
         ) {

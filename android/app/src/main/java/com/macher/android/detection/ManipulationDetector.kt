@@ -70,15 +70,16 @@ class ManipulationDetector {
         var totalScore = 0
         val detectedPatterns = mutableListOf<ManipulationPattern>()
         
-        // Check urgency patterns
+        // Check urgency patterns — cap score per category to prevent inflation
         val urgencyMatches = URGENCY_PATTERNS.filter { lowerText.contains(it) }
         if (urgencyMatches.isNotEmpty()) {
-            totalScore += URGENCY_SCORE * urgencyMatches.size
+            val categoryScore = URGENCY_SCORE * urgencyMatches.size.coerceAtMost(3)
+            totalScore += categoryScore
             detectedPatterns.add(
                 ManipulationPattern(
                     category = ManipulationCategory.URGENCY,
                     matches = urgencyMatches,
-                    score = URGENCY_SCORE * urgencyMatches.size,
+                    score = categoryScore,
                     description = "Urgency pressure detected"
                 )
             )
@@ -87,12 +88,13 @@ class ManipulationDetector {
         // Check authority patterns
         val authorityMatches = AUTHORITY_PATTERNS.filter { lowerText.contains(it) }
         if (authorityMatches.isNotEmpty()) {
-            totalScore += AUTHORITY_SCORE * authorityMatches.size
+            val categoryScore = AUTHORITY_SCORE * authorityMatches.size.coerceAtMost(3)
+            totalScore += categoryScore
             detectedPatterns.add(
                 ManipulationPattern(
                     category = ManipulationCategory.AUTHORITY,
                     matches = authorityMatches,
-                    score = AUTHORITY_SCORE * authorityMatches.size,
+                    score = categoryScore,
                     description = "Authority impersonation detected"
                 )
             )
@@ -101,12 +103,13 @@ class ManipulationDetector {
         // Check emotional patterns
         val emotionalMatches = EMOTIONAL_PATTERNS.filter { lowerText.contains(it) }
         if (emotionalMatches.isNotEmpty()) {
-            totalScore += EMOTIONAL_SCORE * emotionalMatches.size
+            val categoryScore = EMOTIONAL_SCORE * emotionalMatches.size.coerceAtMost(3)
+            totalScore += categoryScore
             detectedPatterns.add(
                 ManipulationPattern(
                     category = ManipulationCategory.EMOTIONAL,
                     matches = emotionalMatches,
-                    score = EMOTIONAL_SCORE * emotionalMatches.size,
+                    score = categoryScore,
                     description = "Emotional manipulation detected"
                 )
             )
@@ -115,12 +118,13 @@ class ManipulationDetector {
         // Check financial patterns
         val financialMatches = FINANCIAL_PATTERNS.filter { lowerText.contains(it) }
         if (financialMatches.isNotEmpty()) {
-            totalScore += FINANCIAL_SCORE * financialMatches.size
+            val categoryScore = FINANCIAL_SCORE * financialMatches.size.coerceAtMost(3)
+            totalScore += categoryScore
             detectedPatterns.add(
                 ManipulationPattern(
                     category = ManipulationCategory.FINANCIAL,
                     matches = financialMatches,
-                    score = FINANCIAL_SCORE * financialMatches.size,
+                    score = categoryScore,
                     description = "Financial coercion detected"
                 )
             )
@@ -129,12 +133,13 @@ class ManipulationDetector {
         // Check information extraction patterns
         val infoMatches = INFORMATION_PATTERNS.filter { lowerText.contains(it) }
         if (infoMatches.isNotEmpty()) {
-            totalScore += INFORMATION_SCORE * infoMatches.size
+            val categoryScore = INFORMATION_SCORE * infoMatches.size.coerceAtMost(3)
+            totalScore += categoryScore
             detectedPatterns.add(
                 ManipulationPattern(
                     category = ManipulationCategory.INFORMATION,
                     matches = infoMatches,
-                    score = INFORMATION_SCORE * infoMatches.size,
+                    score = categoryScore,
                     description = "Information extraction attempt"
                 )
             )

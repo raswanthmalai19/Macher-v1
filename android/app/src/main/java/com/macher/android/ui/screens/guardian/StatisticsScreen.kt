@@ -22,10 +22,16 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import android.content.Context
+import android.content.Intent
+import androidx.compose.ui.platform.LocalContext
 import com.macher.android.data.database.CallRecordWithRisk
 import com.macher.android.service.MonitoringManager
 import com.macher.android.ui.theme.*
 import kotlinx.coroutines.launch
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 /**
@@ -49,6 +55,7 @@ fun StatisticsScreen(
     monitoringManager: MonitoringManager,
     onNavigateBack: () -> Unit
 ) {
+    val context = LocalContext.current
     var selectedPeriod by remember { mutableStateOf("Week") }
     var statistics by remember { mutableStateOf(CallStatistics()) }
     var isLoading by remember { mutableStateOf(true) }
@@ -80,7 +87,7 @@ fun StatisticsScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* TODO: Export */ }) {
+                    IconButton(onClick = { exportStatistics(context, statistics, selectedPeriod) }) {
                         Icon(Icons.Default.Download, "Export")
                     }
                 },
@@ -768,4 +775,50 @@ private fun formatTriggerCategory(category: String): String {
         .lowercase()
         .split(" ")
         .joinToString(" ") { it.replaceFirstChar { char -> char.uppercase() } }
+}
+
+private fun exportStatistics(context: Context, statistics: CallStatistics, period: String) {
+    try {
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd_HH-mm", Locale.getDefault())
+        val timestamp = dateFormat.format(System.currentTimeMillis())
+
+        val csv = buildString {
+            appendLine("MACHER Statistics Report - $period")
+            appendLine("Generated: $timestamp")
+            appendLine()
+            appendLine("Metric,Value")
+            appendLine("Total Calls,${statistics.totalCalls}")
+            appendLine("Scam Calls,${statistics.scamCalls}")
+            appendLine("Blocked Calls,${statistics.blockedCalls}")
+            appendLine("Safe Calls,${statistics.safeCalls}")
+            appendLine("Protection Rate,${String.format(Locale.US, "%.1f", statistics.protectionRate)}%")
+            appendLine("Avg Detection Latency,${String.format(Locale.US, "%.0f", statistics.averageDetectionLatency)}ms")
+            appendLine()
+            appendLine("Threat Category,Count")
+            statistics.threatCategories.forEach { (category, count) ->
+                appendLine("$category,$count")
+            }
+            appendLine()
+            appendLine("Time Period,Count")
+            statistics.timeDistribution.forEach { (timePeriod, count) ->
+                appendLine("$timePeriod,$count")
+            }
+        }
+
+        val file = File(context.cacheDir, "macher_stats_$timestamp.csv")
+        file.writeText(csv)
+
+        val uri = androidx.core.content.FileProvider.getUriForFile(
+            context, "${context.packageName}.fileprovider", file
+        )
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/csv"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            putExtra(Intent.EXTRA_SUBJECT, "MACHER Statistics - $period")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        context.startActivity(Intent.createChooser(shareIntent, "Export Statistics"))
+    } catch (_: Exception) {
+        android.widget.Toast.makeText(context, "Unable to export statistics", android.widget.Toast.LENGTH_SHORT).show()
+    }
 }

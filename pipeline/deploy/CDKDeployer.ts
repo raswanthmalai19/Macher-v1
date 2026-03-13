@@ -1,5 +1,5 @@
 /**
- * CDK Deployment Engine for VocalShield CI/CD Pipeline
+ * CDK Deployment Engine for MACHER CI/CD Pipeline
  * 
  * This module handles CDK bootstrap, synthesis, deployment, rollback,
  * and drift detection operations.

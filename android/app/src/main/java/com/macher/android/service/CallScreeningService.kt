@@ -4,7 +4,11 @@ import android.os.Build
 import android.telecom.Call
 import android.telecom.CallScreeningService
 import androidx.annotation.RequiresApi
+import com.macher.android.data.database.MacherDatabase
 import com.macher.android.util.Logger
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
  * Call Screening Service for OS-level call integration.
@@ -18,65 +22,99 @@ class MacherCallScreeningService : CallScreeningService() {
     override fun onScreenCall(callDetails: Call.Details) {
         Logger.info("CallScreening", "Incoming call detected: ${callDetails.handle}")
         
-        // Check if monitoring is enabled
-        val shouldMonitor = shouldMonitorCall(callDetails)
-        
-        if (shouldMonitor) {
-            // Start monitoring this call
-            startCallMonitoring(callDetails)
-            
-            // Allow the call to proceed (we'll monitor it)
-            val response = CallResponse.Builder()
-                .setDisallowCall(false)
-                .setRejectCall(false)
-                .setSkipCallLog(false)
-                .setSkipNotification(false)
-                .build()
-            
-            respondToCall(callDetails, response)
-        } else {
-            // Not monitoring - allow call normally
-            val response = CallResponse.Builder()
-                .setDisallowCall(false)
-                .setRejectCall(false)
-                .setSkipCallLog(false)
-                .setSkipNotification(false)
-                .build()
-            
-            respondToCall(callDetails, response)
-        }
-    }
-    
-    /**
-     * Check if we should monitor this call
-     */
-    private fun shouldMonitorCall(callDetails: Call.Details): Boolean {
-        // Check if app is enabled
-        // Check if number is in trusted contacts whitelist
-        // Check if user has monitoring enabled
-        
         val phoneNumber = callDetails.handle?.schemeSpecificPart
-        val phoneHash = if (phoneNumber != null) {
-            Logger.hashPhoneNumber(phoneNumber).take(8)
-        } else {
-            "unknown"
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val shouldMonitor = shouldMonitorCall(phoneNumber)
+
+                if (shouldMonitor) {
+                    startCallMonitoring(callDetails)
+                }
+
+                // Always allow the call to proceed — we only monitor
+                val response = CallResponse.Builder()
+                    .setDisallowCall(false)
+                    .setRejectCall(false)
+                    .setSkipCallLog(false)
+                    .setSkipNotification(false)
+                    .build()
+
+                respondToCall(callDetails, response)
+            } catch (e: Exception) {
+                Logger.error("CallScreening", "Error processing call, allowing through", e)
+                try {
+                    val response = CallResponse.Builder()
+                        .setDisallowCall(false)
+                        .setRejectCall(false)
+                        .setSkipCallLog(false)
+                        .setSkipNotification(false)
+                        .build()
+                    respondToCall(callDetails, response)
+                } catch (_: Exception) {}
+            }
         }
-        Logger.debug("CallScreening", "Checking if should monitor: hash=$phoneHash...")
-        
-        // TODO: Check against trusted contacts whitelist
-        // TODO: Check user preferences
-        
-        return true // For now, monitor all calls
     }
     
     /**
-     * Start monitoring the call
+     * Check if we should monitor this call by querying the trusted contacts
+     * whitelist and historical blacklist from the local Room database.
+     */
+    private suspend fun shouldMonitorCall(phoneNumber: String?): Boolean {
+        if (phoneNumber == null) return true  // Monitor unknown numbers
+
+        val phoneHash = Logger.hashPhoneNumber(phoneNumber).take(8)
+        Logger.debug("CallScreening", "Checking if should monitor: hash=$phoneHash...")
+
+        try {
+            val db = MacherDatabase.getDatabase(applicationContext)
+            val trustedDao = db.trustedContactDao()
+            val historicalDao = db.historicalRiskDao()
+
+            // Check blacklist first — always monitor blacklisted numbers
+            val historicalData = historicalDao.getHistoricalRisk(phoneNumber)
+            if (historicalData?.isBlacklisted == true) {
+                Logger.info("CallScreening", "Blacklisted number detected, monitoring")
+                return true
+            }
+
+            // Check trusted contacts whitelist — skip monitoring for trusted numbers
+            val normalizedPhone = phoneNumber.replace(Regex("[^0-9+]"), "")
+            val trustedContact = trustedDao.findByPhone(phoneNumber)
+                ?: trustedDao.findByPhone(normalizedPhone)
+            if (trustedContact != null) {
+                Logger.info("CallScreening", "Trusted contact detected, skipping monitoring")
+                return false
+            }
+
+        } catch (e: Exception) {
+            Logger.error("CallScreening", "DB check failed, defaulting to monitor", e)
+        }
+
+        return true // Default: monitor all calls
+    }
+    
+    /**
+     * Start monitoring the call by notifying the MonitoringManager singleton.
      */
     private fun startCallMonitoring(callDetails: Call.Details) {
         Logger.info("CallScreening", "Starting call monitoring")
         
-        // TODO: Notify MonitoringManager to start audio capture
-        // TODO: Connect to WebSocket
-        // TODO: Start transcription
+        val phoneNumber = callDetails.handle?.schemeSpecificPart ?: "unknown"
+
+        // MonitoringManager is initialized by MainActivity and persists via the Application lifecycle.
+        // The CallScreeningService can signal that a call started via a broadcast or shared state.
+        // Since MonitoringManager is instantiated in the Activity, we send a broadcast intent
+        // that the Activity can receive to trigger startMonitoring().
+        try {
+            val intent = android.content.Intent("com.macher.android.CALL_DETECTED").apply {
+                putExtra("phone_number", phoneNumber)
+                setPackage(packageName)
+            }
+            sendBroadcast(intent)
+            Logger.info("CallScreening", "Broadcast sent to start monitoring for $phoneNumber")
+        } catch (e: Exception) {
+            Logger.error("CallScreening", "Failed to send monitoring broadcast", e)
+        }
     }
 }

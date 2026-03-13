@@ -19,7 +19,16 @@ module.exports = {
     '!**/node_modules/**'
   ],
   coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'lcov', 'html'],
+  coverageReporters: ['text', 'lcov', 'html', 'json'],
+  coverageThreshold: {
+    global: {
+      lines: 80,
+      branches: 75,
+      functions: 90,
+      statements: 80
+    }
+  },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-  testTimeout: 30000
+  testTimeout: 30000,
+  verbose: true
 };

@@ -3,6 +3,7 @@ package com.macher.android.service
 import android.content.Context
 import com.macher.android.detection.DetectionMode
 import com.macher.android.network.RealWebSocketClient
+import com.macher.android.util.Config
 import com.macher.android.util.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -45,6 +46,8 @@ class FallbackManager(
     val awsAvailable: StateFlow<Boolean> = _awsAvailable
     
     private var healthCheckJob: Job? = null
+    private var consecutiveFailures = 0
+    private var consecutiveSuccesses = 0
     
     /**
      * Check AWS backend availability.
@@ -137,11 +140,11 @@ class FallbackManager(
         // Cancel any existing health check job
         healthCheckJob?.cancel()
         
-        Logger.info("FallbackManager", "Starting periodic health checks (30s interval)")
+        Logger.info("FallbackManager", "Starting periodic health checks (${Config.CreditSaver.HEALTH_CHECK_INTERVAL_MS / 1000}s interval)")
         
         healthCheckJob = CoroutineScope(Dispatchers.IO).launch {
             while (isActive) {
-                delay(30000L) // Check every 30 seconds
+                delay(Config.CreditSaver.HEALTH_CHECK_INTERVAL_MS)
                 
                 // Skip health checks in demo mode
                 if (_currentMode.value == DetectionMode.DEMO) {
@@ -150,11 +153,22 @@ class FallbackManager(
                 
                 val available = checkAWSAvailability()
                 
-                // Auto-switch modes based on availability
-                if (!available && _currentMode.value == DetectionMode.REAL_FULL) {
+                // Use stability threshold: require 2 consecutive same-results before switching
+                if (available) {
+                    consecutiveSuccesses++
+                    consecutiveFailures = 0
+                } else {
+                    consecutiveFailures++
+                    consecutiveSuccesses = 0
+                }
+                
+                // Auto-switch modes based on stable availability
+                if (consecutiveFailures >= 2 && _currentMode.value == DetectionMode.REAL_FULL) {
                     switchToMetadataOnly()
-                } else if (available && _currentMode.value == DetectionMode.REAL_METADATA_ONLY) {
+                    consecutiveFailures = 0
+                } else if (consecutiveSuccesses >= 2 && _currentMode.value == DetectionMode.REAL_METADATA_ONLY) {
                     switchToFullDetection()
+                    consecutiveSuccesses = 0
                 }
             }
         }
@@ -185,9 +199,29 @@ class FallbackManager(
     private fun showFallbackNotification() {
         val notification = "⚠️ AWS backend unavailable. Using metadata-only detection."
         Logger.info("FallbackManager", "Notification: $notification")
-        
-        // TODO: Trigger UI notification through MonitoringManager
-        // This will be implemented when UI notification system is added
+
+        try {
+            val channelId = "macher_system"
+            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                val channel = android.app.NotificationChannel(
+                    channelId, "MACHER System", android.app.NotificationManager.IMPORTANCE_DEFAULT
+                ).apply { description = "System status notifications" }
+                notificationManager.createNotificationChannel(channel)
+            }
+
+            val builder = androidx.core.app.NotificationCompat.Builder(context, channelId)
+                .setSmallIcon(android.R.drawable.ic_dialog_alert)
+                .setContentTitle("Reduced Protection Mode")
+                .setContentText(notification)
+                .setPriority(androidx.core.app.NotificationCompat.PRIORITY_DEFAULT)
+                .setAutoCancel(true)
+
+            notificationManager.notify(3001, builder.build())
+        } catch (e: Exception) {
+            Logger.error("FallbackManager", "Failed to show fallback notification", e)
+        }
     }
     
     /**
@@ -201,8 +235,28 @@ class FallbackManager(
     private fun showFullModeNotification() {
         val notification = "✅ AWS backend reconnected. Full detection restored."
         Logger.info("FallbackManager", "Notification: $notification")
-        
-        // TODO: Trigger UI notification through MonitoringManager
-        // This will be implemented when UI notification system is added
+
+        try {
+            val channelId = "macher_system"
+            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                val channel = android.app.NotificationChannel(
+                    channelId, "MACHER System", android.app.NotificationManager.IMPORTANCE_DEFAULT
+                ).apply { description = "System status notifications" }
+                notificationManager.createNotificationChannel(channel)
+            }
+
+            val builder = androidx.core.app.NotificationCompat.Builder(context, channelId)
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
+                .setContentTitle("Full Protection Restored")
+                .setContentText(notification)
+                .setPriority(androidx.core.app.NotificationCompat.PRIORITY_DEFAULT)
+                .setAutoCancel(true)
+
+            notificationManager.notify(3002, builder.build())
+        } catch (e: Exception) {
+            Logger.error("FallbackManager", "Failed to show full mode notification", e)
+        }
     }
 }

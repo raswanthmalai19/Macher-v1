@@ -16,13 +16,27 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.telecom.TelecomManager
+import android.widget.Toast
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import com.macher.android.data.database.CallRecordEntity
 import com.macher.android.data.database.CallRecordWithRisk
+import com.macher.android.data.database.HistoricalRiskEntity
+import com.macher.android.data.database.MacherDatabase
 import com.macher.android.detection.RiskBreakdown
 import com.macher.android.detection.RiskLevel
 import com.macher.android.detection.TriggerCategory
 import com.macher.android.detection.TriggerInfo
 import com.macher.android.ui.theme.VibrantRed
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
  * Risk Detail Modal
@@ -96,14 +110,18 @@ fun RiskDetailModal(
                             metadataContribution = record.risk.metadataScore,
                             manipulationContribution = record.risk.manipulationScore,
                             historicalContribution = record.risk.historicalScore,
-                            triggers = record.triggers.map { trigger ->
+                            triggers = record.triggers.mapNotNull { trigger ->
+                            try {
                                 TriggerInfo(
-                                    category = TriggerCategory.valueOf(trigger.category),
+                                    category = runCatching { TriggerCategory.valueOf(trigger.category) }.getOrDefault(TriggerCategory.HISTORICAL_KNOWN_SCAMMER),
                                     description = trigger.description,
                                     score = trigger.score,
                                     timestamp = trigger.timestamp,
-                                    severity = RiskLevel.valueOf(trigger.severity)
+                                    severity = runCatching { RiskLevel.valueOf(trigger.severity) }.getOrDefault(RiskLevel.LOW)
                                 )
+                            } catch (_: Exception) {
+                                null
+                            }
                             },
                             confidence = record.risk.confidence,
                             primaryThreat = record.risk.primaryThreat,
@@ -114,24 +132,32 @@ fun RiskDetailModal(
                     }
                     
                     // Action buttons
+                    val context = LocalContext.current
+                    var reported = remember { mutableStateOf(false) }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         OutlinedButton(
-                            onClick = { /* TODO: Implement report scam functionality */ },
-                            modifier = Modifier.weight(1f)
+                            onClick = {
+                                if (!reported.value) {
+                                    reported.value = true
+                                    reportScam(context, record)
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            enabled = !reported.value
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Report,
                                 contentDescription = null
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Report Scam")
+                            Text(if (reported.value) "Reported" else "Report Scam")
                         }
                         
                         OutlinedButton(
-                            onClick = { /* TODO: Implement block number functionality */ },
+                            onClick = { blockNumber(context, record.call.phoneNumber) },
                             modifier = Modifier.weight(1f)
                         ) {
                             Icon(
@@ -283,4 +309,59 @@ private fun formatDuration(durationSeconds: Int): String {
     val minutes = durationSeconds / 60
     val seconds = durationSeconds % 60
     return String.format(java.util.Locale.getDefault(), "%02d:%02d", minutes, seconds)
+}
+
+/**
+ * Report a scam call — blacklists the phone number in the local database.
+ */
+private fun reportScam(context: Context, record: CallRecordWithRisk) {
+    CoroutineScope(Dispatchers.IO).launch {
+        try {
+            val db = MacherDatabase.getDatabase(context)
+            val dao = db.historicalRiskDao()
+            val existing = dao.getHistoricalRisk(record.call.phoneNumber)
+            if (existing != null) {
+                dao.insertOrUpdateHistoricalRisk(existing.copy(isBlacklisted = true, scamCalls = existing.scamCalls + 1))
+            } else {
+                dao.insertOrUpdateHistoricalRisk(
+                    HistoricalRiskEntity(
+                        phoneNumber = record.call.phoneNumber,
+                        totalCalls = 1,
+                        scamCalls = 1,
+                        averageRiskScore = record.risk?.totalScore?.toFloat() ?: 80f,
+                        lastCallTime = System.currentTimeMillis(),
+                        lastRiskLevel = record.getRiskLevel(),
+                        isBlacklisted = true
+                    )
+                )
+            }
+        } catch (_: Exception) {
+            // Silently log — don't crash the UI
+        }
+    }
+    CoroutineScope(Dispatchers.Main).launch {
+        Toast.makeText(context, "Number reported as scam", Toast.LENGTH_SHORT).show()
+    }
+}
+
+/**
+ * Block a phone number — opens the system blocked numbers manager.
+ */
+private fun blockNumber(context: Context, phoneNumber: String) {
+    try {
+        val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager
+        if (telecomManager != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            try {
+                val intent = telecomManager.createManageBlockedNumbersIntent()
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(intent)
+            } catch (e: Exception) {
+                Toast.makeText(context, "Block feature not available on this device", Toast.LENGTH_LONG).show()
+            }
+        } else {
+            Toast.makeText(context, "Open Phone app settings to block this number", Toast.LENGTH_LONG).show()
+        }
+    } catch (e: Exception) {
+        Toast.makeText(context, "Unable to open block settings", Toast.LENGTH_SHORT).show()
+    }
 }

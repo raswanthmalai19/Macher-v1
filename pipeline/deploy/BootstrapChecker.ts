@@ -1,5 +1,5 @@
 /**
- * CDK Bootstrap Checker for VocalShield CI/CD Pipeline
+ * CDK Bootstrap Checker for MACHER CI/CD Pipeline
  * 
  * This module checks if an AWS account/region is bootstrapped for CDK deployments
  * and determines if bootstrap is required before deployment.

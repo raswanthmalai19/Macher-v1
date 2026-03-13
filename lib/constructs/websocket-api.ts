@@ -26,8 +26,9 @@ export interface WebSocketApiConstructProps {
  * - Route selection expression: $request.body.action
  * - Connection idle timeout: 10 minutes (API Gateway default)
  * - API Gateway execution role with Lambda invoke permissions
+ * - API key authentication enforced on $connect route
  * 
- * Requirements: 2.1, 2.2, 2.3, 2.6
+ * Requirements: 1.1, 1.4, 1.5, 12.1, 12.2
  */
 export class WebSocketApiConstruct extends Construct {
   public readonly webSocketApi: apigatewayv2.WebSocketApi;
@@ -67,11 +68,11 @@ export class WebSocketApiConstruct extends Construct {
     });
 
     // Create $default route for unmatched messages
-    // For now, use the connect handler as a placeholder
-    // In production, this would have its own handler
+    // Route unmatched messages to the audio processor so clients that
+    // don't set action: "audio" still get their audio processed
     const defaultIntegration = new WebSocketLambdaIntegration(
       'DefaultIntegration',
-      connectHandler
+      audioProcessor
     );
 
     this.webSocketApi.addRoute('$default', {
@@ -89,11 +90,18 @@ export class WebSocketApiConstruct extends Construct {
       integration: audioIntegration,
     });
 
-    // Create WebSocket stage with 10-minute connection idle timeout
+    // Create WebSocket stage with 10-minute connection idle timeout and throttling
     this.webSocketStage = new apigatewayv2.WebSocketStage(this, 'WebSocketStage', {
       webSocketApi: this.webSocketApi,
       stageName: config.tags.Environment,
       autoDeploy: true,
+      throttle: {
+        // Rate limiting: 100 requests per minute per API key (Requirement 12.4)
+        // API Gateway throttling is per second, so 100/60 ≈ 1.67 requests/second
+        // We'll use 2 requests/second with burst of 10 to allow for short bursts
+        rateLimit: 100, // requests per second (this is actually total, not per key)
+        burstLimit: 200, // maximum concurrent requests
+      },
     });
 
     // Store the API endpoint for outputs

@@ -1,14 +1,21 @@
 /**
  * Unit tests for Audio Processor Lambda function
  * 
+ * Task 5.1: Create audio message handler and validation
+ * Requirements 2.2, 2.5, 10.1, 10.2, 12.6
+ * 
  * Tests the Audio Processor Lambda to ensure it properly:
- * - Decodes and validates audio data
+ * - Parses WebSocket audio message (action, callSessionId, timestamp, audioData, sequenceNumber)
+ * - Validates message format (required fields, valid types)
+ * - Decodes Base64 audioData to Buffer
+ * - Validates audio format (PCM, 16kHz, 16-bit, mono)
+ * - Returns error message for invalid format or malformed message
+ * - Logs audio receipt with structured JSON (connectionId, callSessionId, sequenceNumber, audioSize)
  * - Stores metadata in DynamoDB (without audio data)
  * - Publishes fraud alerts to SNS
  * - Publishes events to EventBridge
  * - Retrieves secrets from Secrets Manager with caching
  * - Retrieves configuration from Parameter Store with caching
- * - Logs structured JSON with sessionId and connectionId
  */
 
 import { APIGatewayProxyWebsocketEventV2 } from 'aws-lambda';
@@ -70,8 +77,25 @@ jest.mock('aws-xray-sdk-core', () => ({
 // Now import the handler after mocks are set up
 import { handler } from '../../lambda/audio-processor/index';
 
+// Helper function to create valid audio message
+function createValidAudioMessage(callSessionId: string = 'test-call-123', sequenceNumber: number = 1): any {
+  // Create PCM audio buffer (16kHz, 16-bit, mono, 0.5 seconds = 16000 bytes)
+  const audioBuffer = Buffer.alloc(16000);
+  return {
+    action: 'audio',
+    callSessionId,
+    timestamp: Date.now(),
+    audioData: audioBuffer.toString('base64'),
+    sequenceNumber,
+  };
+}
+
 // Helper function to create audio processing event
-function createAudioEvent(connectionId: string, audioData?: string): APIGatewayProxyWebsocketEventV2 {
+function createAudioEvent(connectionId: string, messageBody?: any): APIGatewayProxyWebsocketEventV2 {
+  const body = messageBody !== undefined 
+    ? (typeof messageBody === 'string' ? messageBody : JSON.stringify(messageBody))
+    : JSON.stringify(createValidAudioMessage());
+    
   return {
     requestContext: {
       routeKey: 'audio',
@@ -88,7 +112,7 @@ function createAudioEvent(connectionId: string, audioData?: string): APIGatewayP
       extendedRequestId: 'test-extended-request-id',
       messageDirection: 'IN',
     },
-    body: audioData !== undefined ? audioData : Buffer.from('test audio data').toString('base64'),
+    body,
     isBase64Encoded: false,
   };
 }
@@ -116,9 +140,376 @@ describe('Audio Processor Lambda', () => {
     });
   });
 
+  describe('Task 5.1: Audio Message Parsing and Validation', () => {
+    describe('Message Format Validation (Requirement 12.6)', () => {
+      it('should successfully parse valid audio message', async () => {
+        const validMessage = createValidAudioMessage();
+        const event = createAudioEvent('test-connection-123', validMessage);
+        
+        const response = await handler(event);
+
+        expect((response as any).statusCode).toBe(200);
+        expect(mockDynamoDBSend).toHaveBeenCalled();
+      });
+
+      it('should reject message with missing body', async () => {
+        const event = createAudioEvent('test-connection-123', undefined);
+        event.body = undefined;
+        
+        const response = await handler(event);
+
+        expect((response as any).statusCode).toBe(400);
+        const body = JSON.parse((response as any).body!);
+        expect(body.code).toBe('MALFORMED_MESSAGE');
+        expect(body.message).toContain('Missing message body');
+      });
+
+      it('should reject message with invalid JSON', async () => {
+        const event = createAudioEvent('test-connection-123', 'invalid json {{{');
+        
+        const response = await handler(event);
+
+        expect((response as any).statusCode).toBe(400);
+        const body = JSON.parse((response as any).body!);
+        expect(body.code).toBe('MALFORMED_MESSAGE');
+        expect(body.message).toContain('Invalid JSON format');
+      });
+
+      it('should reject message missing required field: action', async () => {
+        const invalidMessage = createValidAudioMessage();
+        delete invalidMessage.action;
+        const event = createAudioEvent('test-connection-123', invalidMessage);
+        
+        const response = await handler(event);
+
+        expect((response as any).statusCode).toBe(400);
+        const body = JSON.parse((response as any).body!);
+        expect(body.code).toBe('MALFORMED_MESSAGE');
+        expect(body.message).toContain('Missing required fields');
+        expect(body.message).toContain('action');
+      });
+
+      it('should reject message missing required field: callSessionId', async () => {
+        const invalidMessage = createValidAudioMessage();
+        delete invalidMessage.callSessionId;
+        const event = createAudioEvent('test-connection-123', invalidMessage);
+        
+        const response = await handler(event);
+
+        expect((response as any).statusCode).toBe(400);
+        const body = JSON.parse((response as any).body!);
+        expect(body.message).toContain('callSessionId');
+      });
+
+      it('should reject message missing required field: timestamp', async () => {
+        const invalidMessage = createValidAudioMessage();
+        delete invalidMessage.timestamp;
+        const event = createAudioEvent('test-connection-123', invalidMessage);
+        
+        const response = await handler(event);
+
+        expect((response as any).statusCode).toBe(400);
+        const body = JSON.parse((response as any).body!);
+        expect(body.message).toContain('timestamp');
+      });
+
+      it('should reject message missing required field: audioData', async () => {
+        const invalidMessage = createValidAudioMessage();
+        delete invalidMessage.audioData;
+        const event = createAudioEvent('test-connection-123', invalidMessage);
+        
+        const response = await handler(event);
+
+        expect((response as any).statusCode).toBe(400);
+        const body = JSON.parse((response as any).body!);
+        expect(body.message).toContain('audioData');
+      });
+
+      it('should reject message missing required field: sequenceNumber', async () => {
+        const invalidMessage = createValidAudioMessage();
+        delete invalidMessage.sequenceNumber;
+        const event = createAudioEvent('test-connection-123', invalidMessage);
+        
+        const response = await handler(event);
+
+        expect((response as any).statusCode).toBe(400);
+        const body = JSON.parse((response as any).body!);
+        expect(body.message).toContain('sequenceNumber');
+      });
+
+      it('should reject message with invalid action type (not string)', async () => {
+        const invalidMessage = createValidAudioMessage();
+        invalidMessage.action = 123;
+        const event = createAudioEvent('test-connection-123', invalidMessage);
+        
+        const response = await handler(event);
+
+        expect((response as any).statusCode).toBe(400);
+        const body = JSON.parse((response as any).body!);
+        expect(body.message).toContain('action');
+        expect(body.message).toContain('string');
+      });
+
+      it('should reject message with invalid callSessionId type (not string)', async () => {
+        const invalidMessage = createValidAudioMessage();
+        invalidMessage.callSessionId = 123;
+        const event = createAudioEvent('test-connection-123', invalidMessage);
+        
+        const response = await handler(event);
+
+        expect((response as any).statusCode).toBe(400);
+        const body = JSON.parse((response as any).body!);
+        expect(body.message).toContain('callSessionId');
+        expect(body.message).toContain('string');
+      });
+
+      it('should reject message with invalid timestamp type (not number)', async () => {
+        const invalidMessage = createValidAudioMessage();
+        invalidMessage.timestamp = 'not-a-number';
+        const event = createAudioEvent('test-connection-123', invalidMessage);
+        
+        const response = await handler(event);
+
+        expect((response as any).statusCode).toBe(400);
+        const body = JSON.parse((response as any).body!);
+        expect(body.message).toContain('timestamp');
+        expect(body.message).toContain('number');
+      });
+
+      it('should reject message with invalid audioData type (not string)', async () => {
+        const invalidMessage = createValidAudioMessage();
+        invalidMessage.audioData = 123;
+        const event = createAudioEvent('test-connection-123', invalidMessage);
+        
+        const response = await handler(event);
+
+        expect((response as any).statusCode).toBe(400);
+        const body = JSON.parse((response as any).body!);
+        expect(body.message).toContain('audioData');
+        expect(body.message).toContain('string');
+      });
+
+      it('should reject message with invalid sequenceNumber type (not number)', async () => {
+        const invalidMessage = createValidAudioMessage();
+        invalidMessage.sequenceNumber = 'not-a-number';
+        const event = createAudioEvent('test-connection-123', invalidMessage);
+        
+        const response = await handler(event);
+
+        expect((response as any).statusCode).toBe(400);
+        const body = JSON.parse((response as any).body!);
+        expect(body.message).toContain('sequenceNumber');
+        expect(body.message).toContain('number');
+      });
+
+      it('should reject message with invalid action value', async () => {
+        const invalidMessage = createValidAudioMessage();
+        invalidMessage.action = 'invalid-action';
+        const event = createAudioEvent('test-connection-123', invalidMessage);
+        
+        const response = await handler(event);
+
+        expect((response as any).statusCode).toBe(400);
+        const body = JSON.parse((response as any).body!);
+        expect(body.message).toContain('Invalid action');
+        expect(body.message).toContain('audio');
+      });
+
+      it('should reject message with timestamp too far in past', async () => {
+        const invalidMessage = createValidAudioMessage();
+        invalidMessage.timestamp = Date.now() - (120 * 1000); // 2 minutes ago
+        const event = createAudioEvent('test-connection-123', invalidMessage);
+        
+        const response = await handler(event);
+
+        expect((response as any).statusCode).toBe(400);
+        const body = JSON.parse((response as any).body!);
+        expect(body.message).toContain('Timestamp is too far from current time');
+      });
+
+      it('should reject message with timestamp too far in future', async () => {
+        const invalidMessage = createValidAudioMessage();
+        invalidMessage.timestamp = Date.now() + (120 * 1000); // 2 minutes in future
+        const event = createAudioEvent('test-connection-123', invalidMessage);
+        
+        const response = await handler(event);
+
+        expect((response as any).statusCode).toBe(400);
+        const body = JSON.parse((response as any).body!);
+        expect(body.message).toContain('Timestamp is too far from current time');
+      });
+
+      it('should reject message with negative sequence number', async () => {
+        const invalidMessage = createValidAudioMessage();
+        invalidMessage.sequenceNumber = -1;
+        const event = createAudioEvent('test-connection-123', invalidMessage);
+        
+        const response = await handler(event);
+
+        expect((response as any).statusCode).toBe(400);
+        const body = JSON.parse((response as any).body!);
+        expect(body.message).toContain('Sequence number must be non-negative');
+      });
+    });
+
+    describe('Base64 Audio Decoding (Requirements 2.2, 2.5)', () => {
+      it('should successfully decode valid Base64 audio data', async () => {
+        const validMessage = createValidAudioMessage();
+        const event = createAudioEvent('test-connection-123', validMessage);
+        
+        const response = await handler(event);
+
+        expect((response as any).statusCode).toBe(200);
+        expect(mockDynamoDBSend).toHaveBeenCalled();
+      });
+
+      it('should reject invalid Base64 encoding', async () => {
+        const invalidMessage = createValidAudioMessage();
+        invalidMessage.audioData = 'invalid-base64!!!@@@';
+        const event = createAudioEvent('test-connection-123', invalidMessage);
+        
+        const response = await handler(event);
+
+        expect((response as any).statusCode).toBe(400);
+        const body = JSON.parse((response as any).body!);
+        expect(body.code).toBe('INVALID_AUDIO_FORMAT');
+        expect(body.message).toContain('Invalid Base64 encoding');
+      });
+
+      it('should reject empty audio data after decoding', async () => {
+        const invalidMessage = createValidAudioMessage();
+        invalidMessage.audioData = Buffer.alloc(0).toString('base64');
+        const event = createAudioEvent('test-connection-123', invalidMessage);
+        
+        const response = await handler(event);
+
+        expect((response as any).statusCode).toBe(400);
+        const body = JSON.parse((response as any).body!);
+        expect(body.message).toContain('empty');
+      });
+
+      it('should reject audio data exceeding 128 KB limit', async () => {
+        const invalidMessage = createValidAudioMessage();
+        // Create buffer larger than 128 KB
+        const largeBuffer = Buffer.alloc(129 * 1024);
+        invalidMessage.audioData = largeBuffer.toString('base64');
+        const event = createAudioEvent('test-connection-123', invalidMessage);
+        
+        const response = await handler(event);
+
+        expect((response as any).statusCode).toBe(400);
+        const body = JSON.parse((response as any).body!);
+        expect(body.message).toContain('exceeds maximum size');
+        expect(body.message).toContain('128 KB');
+      });
+    });
+
+    describe('Audio Format Validation (Requirements 2.2, 2.5)', () => {
+      it('should accept valid PCM 16kHz 16-bit mono audio (0.5 seconds)', async () => {
+        const validMessage = createValidAudioMessage();
+        // 16kHz * 2 bytes * 1 channel * 0.5 seconds = 16000 bytes
+        const audioBuffer = Buffer.alloc(16000);
+        validMessage.audioData = audioBuffer.toString('base64');
+        const event = createAudioEvent('test-connection-123', validMessage);
+        
+        const response = await handler(event);
+
+        expect((response as any).statusCode).toBe(200);
+      });
+
+      it('should accept valid PCM 16kHz 16-bit mono audio (1 second)', async () => {
+        const validMessage = createValidAudioMessage();
+        // 16kHz * 2 bytes * 1 channel * 1 second = 32000 bytes
+        const audioBuffer = Buffer.alloc(32000);
+        validMessage.audioData = audioBuffer.toString('base64');
+        const event = createAudioEvent('test-connection-123', validMessage);
+        
+        const response = await handler(event);
+
+        expect((response as any).statusCode).toBe(200);
+      });
+
+      it('should reject audio buffer that is too small', async () => {
+        const invalidMessage = createValidAudioMessage();
+        // Less than 0.1 seconds (3200 bytes minimum)
+        const tooSmallBuffer = Buffer.alloc(1000);
+        invalidMessage.audioData = tooSmallBuffer.toString('base64');
+        const event = createAudioEvent('test-connection-123', invalidMessage);
+        
+        const response = await handler(event);
+
+        expect((response as any).statusCode).toBe(400);
+        const body = JSON.parse((response as any).body!);
+        expect(body.code).toBe('INVALID_AUDIO_FORMAT');
+        expect(body.message).toContain('too small');
+      });
+
+      it('should reject audio buffer that is too large', async () => {
+        const invalidMessage = createValidAudioMessage();
+        // More than 2 seconds (64000 bytes maximum)
+        const tooLargeBuffer = Buffer.alloc(70000);
+        invalidMessage.audioData = tooLargeBuffer.toString('base64');
+        const event = createAudioEvent('test-connection-123', invalidMessage);
+        
+        const response = await handler(event);
+
+        expect((response as any).statusCode).toBe(400);
+        const body = JSON.parse((response as any).body!);
+        expect(body.code).toBe('INVALID_AUDIO_FORMAT');
+        expect(body.message).toContain('too large');
+      });
+
+      it('should reject audio buffer with odd size (not 16-bit aligned)', async () => {
+        const invalidMessage = createValidAudioMessage();
+        // Odd number of bytes (not valid for 16-bit samples)
+        const oddBuffer = Buffer.alloc(16001);
+        invalidMessage.audioData = oddBuffer.toString('base64');
+        const event = createAudioEvent('test-connection-123', invalidMessage);
+        
+        const response = await handler(event);
+
+        expect((response as any).statusCode).toBe(400);
+        const body = JSON.parse((response as any).body!);
+        expect(body.code).toBe('INVALID_AUDIO_FORMAT');
+        expect(body.message).toContain('must be even');
+        expect(body.message).toContain('16-bit');
+      });
+    });
+
+    describe('Structured Logging (Requirements 10.1, 10.2)', () => {
+      it('should log audio receipt with all required fields', async () => {
+        const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+        
+        const validMessage = createValidAudioMessage('test-call-456', 42);
+        const event = createAudioEvent('test-connection-789', validMessage);
+        await handler(event);
+
+        expect(consoleSpy).toHaveBeenCalled();
+        
+        // Find the log entry for audio receipt
+        const audioReceiptLog = consoleSpy.mock.calls
+          .map(call => JSON.parse(call[0]))
+          .find(log => log.message === 'Audio chunk received and validated');
+
+        expect(audioReceiptLog).toBeDefined();
+        expect(audioReceiptLog).toHaveProperty('timestamp');
+        expect(audioReceiptLog).toHaveProperty('level', 'INFO');
+        expect(audioReceiptLog).toHaveProperty('component', 'AudioProcessor');
+        expect(audioReceiptLog).toHaveProperty('connectionId', 'test-connection-789');
+        expect(audioReceiptLog).toHaveProperty('callSessionId', 'test-call-456');
+        expect(audioReceiptLog).toHaveProperty('sequenceNumber', 42);
+        expect(audioReceiptLog).toHaveProperty('audioSize');
+        expect(audioReceiptLog.audioSize).toBe(16000);
+
+        consoleSpy.mockRestore();
+      });
+    });
+  });
+
   describe('Audio Processing', () => {
-    it('should process audio data and store metadata', async () => {
-      const event = createAudioEvent('test-connection-123');
+    it('should process valid audio data and store metadata', async () => {
+      const validMessage = createValidAudioMessage();
+      const event = createAudioEvent('test-connection-123', validMessage);
       const response = await handler(event);
 
       expect(typeof response).toBe('object');
@@ -131,41 +522,23 @@ describe('Audio Processor Lambda', () => {
       expect(body).toHaveProperty('fraudScore');
       expect(body).toHaveProperty('fraudDetected');
     });
-
-    it('should decode base64 audio data correctly', async () => {
-      const testAudio = 'test audio content';
-      const base64Audio = Buffer.from(testAudio).toString('base64');
-      const event = createAudioEvent('test-connection-123', base64Audio);
-      
-      const response = await handler(event);
-
-      expect((response as any).statusCode).toBe(200);
-      expect(mockDynamoDBSend).toHaveBeenCalled();
-    });
-
-    it('should return 500 if audio data is missing', async () => {
-      const event = createAudioEvent('test-connection-123', '');
-      const response = await handler(event);
-
-      expect((response as any).statusCode).toBe(500);
-      const body = JSON.parse((response as any).body!);
-      expect(body.error).toBe(true);
-      expect(body.code).toBe('ERROR_PROCESSING_FAILED');
-    });
-
-    it('should return 500 if audio data is invalid base64', async () => {
-      const event = createAudioEvent('test-connection-123', 'invalid-base64!!!');
-      const response = await handler(event);
-
-      expect((response as any).statusCode).toBe(500);
-      const body = JSON.parse((response as any).body!);
-      expect(body.error).toBe(true);
-    });
   });
 
   describe('Metadata Storage', () => {
+    it('should store metadata with callSessionId and sequenceNumber', async () => {
+      const validMessage = createValidAudioMessage('test-call-999', 55);
+      const event = createAudioEvent('test-connection-123', validMessage);
+      await handler(event);
+
+      expect(mockDynamoDBSend).toHaveBeenCalled();
+      const putCommand = mockDynamoDBSend.mock.calls[0][0];
+      expect(putCommand.input.Item).toHaveProperty('callSessionId', 'test-call-999');
+      expect(putCommand.input.Item).toHaveProperty('sequenceNumber', 55);
+    });
+
     it('should store metadata with TTL for 30 days', async () => {
-      const event = createAudioEvent('test-connection-123');
+      const validMessage = createValidAudioMessage();
+      const event = createAudioEvent('test-connection-123', validMessage);
       await handler(event);
 
       expect(mockDynamoDBSend).toHaveBeenCalled();
@@ -180,7 +553,8 @@ describe('Audio Processor Lambda', () => {
     });
 
     it('should NOT store audio data in DynamoDB (privacy requirement)', async () => {
-      const event = createAudioEvent('test-connection-123');
+      const validMessage = createValidAudioMessage();
+      const event = createAudioEvent('test-connection-123', validMessage);
       await handler(event);
 
       expect(mockDynamoDBSend).toHaveBeenCalled();
@@ -193,7 +567,7 @@ describe('Audio Processor Lambda', () => {
       expect(putCommand.input.Item).not.toHaveProperty('body');
       
       // Only metadata should be stored
-      expect(putCommand.input.Item).toHaveProperty('sessionId');
+      expect(putCommand.input.Item).toHaveProperty('callSessionId');
       expect(putCommand.input.Item).toHaveProperty('fraudScore');
       expect(putCommand.input.Item).toHaveProperty('processingDuration');
       expect(putCommand.input.Item).toHaveProperty('audioChunkSize');
@@ -201,10 +575,11 @@ describe('Audio Processor Lambda', () => {
   });
 
   describe('Logging', () => {
-    it('should log structured JSON with sessionId and connectionId', async () => {
+    it('should log structured JSON with all required fields', async () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
       
-      const event = createAudioEvent('test-connection-123');
+      const validMessage = createValidAudioMessage();
+      const event = createAudioEvent('test-connection-123', validMessage);
       await handler(event);
 
       expect(consoleSpy).toHaveBeenCalled();
@@ -216,13 +591,14 @@ describe('Audio Processor Lambda', () => {
         expect(logEntry).toHaveProperty('timestamp');
         expect(logEntry).toHaveProperty('level');
         expect(logEntry).toHaveProperty('message');
+        expect(logEntry).toHaveProperty('component', 'AudioProcessor');
         expect(['INFO', 'WARN', 'ERROR']).toContain(logEntry.level);
       });
 
-      // Verify at least one log has sessionId and connectionId
+      // Verify at least one log has callSessionId and connectionId
       const logsWithContext = logCalls
         .map(call => JSON.parse(call[0]))
-        .filter(log => log.sessionId && log.connectionId);
+        .filter(log => log.callSessionId && log.connectionId);
       expect(logsWithContext.length).toBeGreaterThan(0);
 
       consoleSpy.mockRestore();
@@ -233,13 +609,14 @@ describe('Audio Processor Lambda', () => {
     it('should handle DynamoDB errors gracefully', async () => {
       mockDynamoDBSend.mockRejectedValue(new Error('DynamoDB error'));
 
-      const event = createAudioEvent('test-connection-123');
+      const validMessage = createValidAudioMessage();
+      const event = createAudioEvent('test-connection-123', validMessage);
       const response = await handler(event);
 
       expect((response as any).statusCode).toBe(500);
       const body = JSON.parse((response as any).body!);
-      expect(body.error).toBe(true);
-      expect(body.code).toBe('ERROR_PROCESSING_FAILED');
+      expect(body.type).toBe('error');
+      expect(body.code).toBe('INTERNAL_ERROR');
     });
 
     it('should continue processing if SNS publish fails', async () => {
@@ -248,7 +625,8 @@ describe('Audio Processor Lambda', () => {
         Parameter: { Value: '0' }, // Low threshold to trigger fraud detection
       });
 
-      const event = createAudioEvent('test-connection-123');
+      const validMessage = createValidAudioMessage();
+      const event = createAudioEvent('test-connection-123', validMessage);
       const response = await handler(event);
 
       // Should still return 200 even if SNS fails
@@ -259,7 +637,8 @@ describe('Audio Processor Lambda', () => {
     it('should continue processing if EventBridge publish fails', async () => {
       mockEventBridgeSend.mockRejectedValue(new Error('EventBridge error'));
 
-      const event = createAudioEvent('test-connection-123');
+      const validMessage = createValidAudioMessage();
+      const event = createAudioEvent('test-connection-123', validMessage);
       const response = await handler(event);
 
       // Should still return 200 even if EventBridge fails
@@ -270,7 +649,8 @@ describe('Audio Processor Lambda', () => {
     it('should use default configuration if Parameter Store fails', async () => {
       mockSSMSend.mockRejectedValue(new Error('Parameter Store error'));
 
-      const event = createAudioEvent('test-connection-123');
+      const validMessage = createValidAudioMessage();
+      const event = createAudioEvent('test-connection-123', validMessage);
       const response = await handler(event);
 
       // Should still process with default config
@@ -281,7 +661,8 @@ describe('Audio Processor Lambda', () => {
     it('should use default secrets if Secrets Manager fails', async () => {
       mockSecretsManagerSend.mockRejectedValue(new Error('Secrets Manager error'));
 
-      const event = createAudioEvent('test-connection-123');
+      const validMessage = createValidAudioMessage();
+      const event = createAudioEvent('test-connection-123', validMessage);
       const response = await handler(event);
 
       // Should still process with default secrets

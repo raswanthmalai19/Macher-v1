@@ -5,6 +5,8 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.telecom.TelecomManager
+import androidx.core.content.ContextCompat
 import com.macher.android.util.Config
 import com.macher.android.util.Logger
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -126,10 +128,30 @@ class InterventionEngine(private val context: Context) {
             triggerLevel1Haptic()
         }
         
-        // TODO: Check if user has granted "Protector" permission
-        // TODO: Use Telecom API to disconnect call
-        // For now, just log
-        Logger.warn("InterventionEngine", "Autonomous disconnect requested but not yet implemented")
+        // Disconnect the call via TelecomManager (API 28+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager
+            if (telecomManager != null) {
+                val hasPermission = ContextCompat.checkSelfPermission(
+                    context, android.Manifest.permission.ANSWER_PHONE_CALLS
+                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                if (hasPermission) {
+                    try {
+                        @Suppress("DEPRECATION")
+                        telecomManager.endCall()
+                        Logger.info("InterventionEngine", "Call disconnected via TelecomManager")
+                    } catch (e: Exception) {
+                        Logger.error("InterventionEngine", "Failed to disconnect call", e)
+                    }
+                } else {
+                    Logger.warn("InterventionEngine", "ANSWER_PHONE_CALLS permission not granted, cannot auto-disconnect")
+                }
+            }
+        } else {
+            // Pre-API 28 fallback: overlay stays visible telling user to hang up manually.
+            // The overlay with the "Hang Up" button is already shown above.
+            Logger.warn("InterventionEngine", "Auto-disconnect not available on API ${Build.VERSION.SDK_INT}; overlay shown to user")
+        }
     }
     
     /**

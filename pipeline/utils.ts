@@ -1,5 +1,5 @@
 /**
- * Utility functions for VocalShield CI/CD Pipeline
+ * Utility functions for MACHER CI/CD Pipeline
  * 
  * This module provides common utility functions used across pipeline components.
  */

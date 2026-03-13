@@ -2,7 +2,7 @@
  * Secrets Management Module
  * 
  * Exports the SecretsManager class and related utilities for secure
- * secrets handling in the VocalShield CI/CD pipeline.
+ * secrets handling in the MACHER CI/CD pipeline.
  */
 
 export {

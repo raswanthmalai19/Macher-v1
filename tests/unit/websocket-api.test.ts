@@ -29,7 +29,7 @@ describe('WebSocket API Configuration', () => {
     template.resourceCountIs('AWS::ApiGatewayV2::Api', 1);
     
     template.hasResourceProperties('AWS::ApiGatewayV2::Api', {
-      Name: 'VocalShield-WebSocket-dev',
+      Name: 'MACHER-WebSocket-dev',
       ProtocolType: 'WEBSOCKET',
       RouteSelectionExpression: '$request.body.action',
     });

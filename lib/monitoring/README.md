@@ -1,6 +1,6 @@
-# VocalShield Monitoring and Observability
+# MACHER Monitoring and Observability
 
-Complete monitoring and observability system for VocalShield, built with AWS CloudWatch, X-Ray, and Synthetics.
+Complete monitoring and observability system for MACHER, built with AWS CloudWatch, X-Ray, and Synthetics.
 
 ## Overview
 
