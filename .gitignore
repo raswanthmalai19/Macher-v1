@@ -27,6 +27,7 @@ cdk.out/
 
 # IDE
 .vscode/
+.kiro/
 .idea/
 *.swp
 *.swo
