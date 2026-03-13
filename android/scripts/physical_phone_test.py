@@ -11,6 +11,14 @@ OUT = Path("/tmp/macher_phone_full")
 OUT.mkdir(parents=True, exist_ok=True)
 
 
+def get_display_size():
+    r = adb("shell wm size")
+    m = re.search(r"Physical size:\s*(\d+)x(\d+)", r.stdout or "")
+    if m:
+        return int(m.group(1)), int(m.group(2))
+    return 1080, 2400
+
+
 def run(cmd: str, timeout: int = 30):
     return subprocess.run(cmd, shell=True, text=True, capture_output=True, timeout=timeout)
 
@@ -89,6 +97,15 @@ def tap_text(text_variants, sleep_s=1.5):
     adb(f"shell input tap {c[0]} {c[1]}")
     time.sleep(sleep_s)
     return True
+
+
+def tap_bottom_nav(index, sleep_s=1.5):
+    """Tap bottom nav by index: 0 Monitor, 1 History, 2 Settings, 3 Profile."""
+    w, h = get_display_size()
+    x = int(((2 * index + 1) * w) / 8)
+    for y in (h - 220, h - 300):
+        adb(f"shell input tap {x} {y}")
+        time.sleep(sleep_s)
 
 
 def find_edit_text_centers(root):
@@ -217,19 +234,23 @@ record("monitor_stop", stopped and monitor_stopped, "Stop toggles back to start"
 
 # Settings
 opened_settings = tap_text(["Settings"])
+if not opened_settings:
+    tap_bottom_nav(2)
 root = evaluate_screen()
 screenshot("settings")
 settings_ok = any(
     has_text(root, x) for x in ["Enable Monitoring", "Auto-Start", "Screen Overlay", "Alerts", "Privacy"]
 )
-record("settings_screen", opened_settings and settings_ok, "Settings options visible")
+record("settings_screen", settings_ok, "Settings options visible")
 
 # Profile
 opened_profile = tap_text(["Profile"])
+if not opened_profile:
+    tap_bottom_nav(3)
 root = evaluate_screen()
 screenshot("profile")
 profile_ok = any(has_text(root, x) for x in ["YOUR ROLE", "IDENTITY", "Dark Mode", "Switch to Guardian"])
-record("profile_screen", opened_profile and profile_ok, "Profile sections visible")
+record("profile_screen", profile_ok, "Profile sections visible")
 
 # Guardian dialog
 if not has_text(root, "Switch to Guardian"):
@@ -245,7 +266,8 @@ if has_text(root, "Cancel"):
     tap_text(["Cancel"])
 
 # History
-tap_text(["History"])
+if not tap_text(["History"]):
+    tap_bottom_nav(1)
 root = evaluate_screen()
 screenshot("history")
 history_ok = has_text(root, "History") or has_text(root, "No calls") or has_text(root, "call")
