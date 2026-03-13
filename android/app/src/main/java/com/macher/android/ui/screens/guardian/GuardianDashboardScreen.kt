@@ -101,10 +101,30 @@ fun GuardianDashboardScreen(
         drawerContent = {
             GuardianDrawerContent(
                 userName = userName,
-                onNavigateToContacts = onNavigateToContacts,
-                onNavigateToAlerts = onNavigateToAlerts,
-                onNavigateToSettings = onNavigateToSettings,
-                onNavigateToProtectedUsers = onNavigateToProtectedUsers,
+                onNavigateToContacts = {
+                    scope.launch {
+                        try { drawerState.close() } catch (_: Exception) {}
+                    }
+                    onNavigateToContacts()
+                },
+                onNavigateToAlerts = {
+                    scope.launch {
+                        try { drawerState.close() } catch (_: Exception) {}
+                    }
+                    onNavigateToAlerts()
+                },
+                onNavigateToSettings = {
+                    scope.launch {
+                        try { drawerState.close() } catch (_: Exception) {}
+                    }
+                    onNavigateToSettings()
+                },
+                onNavigateToProtectedUsers = {
+                    scope.launch {
+                        try { drawerState.close() } catch (_: Exception) {}
+                    }
+                    onNavigateToProtectedUsers()
+                },
                 onCloseDrawer = { scope.launch { try { drawerState.close() } catch (_: Exception) {} } }
             )
         }
