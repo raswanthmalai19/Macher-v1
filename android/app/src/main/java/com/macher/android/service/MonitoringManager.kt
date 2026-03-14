@@ -155,6 +155,8 @@ class MonitoringManager(private val context: Context) {
     private var currentCallPhoneNumber: String = ""
     private var currentCallStartTime: Long = System.currentTimeMillis()
     private var currentCallSessionId: String = ""
+    private var lowAudioSinceMs: Long? = null
+    private var noAudioHintShown: Boolean = false
     
     /**
      * Look up the first active guardian's phone number from the DB.
@@ -299,6 +301,23 @@ class MonitoringManager(private val context: Context) {
         scope.launch {
             audioCaptureService.audioLevel.collect { level ->
                 _audioLevel.value = level
+
+                if (_isActiveCall.value && _isMonitoring.value) {
+                    if (level < 0.008f) {
+                        if (lowAudioSinceMs == null) {
+                            lowAudioSinceMs = System.currentTimeMillis()
+                        }
+                        val silentDuration = System.currentTimeMillis() - (lowAudioSinceMs ?: System.currentTimeMillis())
+                        if (!noAudioHintShown && silentDuration >= 8000L) {
+                            noAudioHintShown = true
+                            _transcription.value = "⚠️ No call voice detected. Turn on speakerphone and keep caller audio audible for transcription."
+                            Logger.warn("MonitoringManager", "No audible call voice detected for 8s")
+                        }
+                    } else {
+                        lowAudioSinceMs = null
+                        noAudioHintShown = false
+                    }
+                }
             }
         }
         
@@ -441,6 +460,10 @@ class MonitoringManager(private val context: Context) {
                 }
                 Logger.info("MonitoringManager", "Audio capture active ✅ (pre-buffering)")
 
+                // Start on-device speech recognition immediately so local transcription
+                // and local detection keep working even if backend connection/transcribe is delayed.
+                startSpeechRecognitionPipeline()
+
                 // ── STEP 2: Wait for WebSocket ────────────────────────────────────────────
                 withTimeoutOrNull(20_000L) {
                     webSocketClient.connectionState.first { s ->
@@ -485,19 +508,7 @@ class MonitoringManager(private val context: Context) {
                     }
                     Logger.info("MonitoringManager", "Live audio streaming to AWS ✅")
 
-                    // Start on-device speech recognition as the primary transcription method.
-                    // Amazon Transcribe (server-side) requires a separate subscription.
-                    // SpeechHelper sends transcript messages to Lambda, which runs fraud analysis.
-                    speechHelper.onResult = { text, isFinal ->
-                        webSocketClient.sendTranscript(text, isFinal)
-                        if (isFinal && text.isNotBlank()) {
-                            _transcription.value = (_transcription.value.let {
-                                if (it.startsWith("🎙️") || it.isEmpty()) text else "$it $text"
-                            })
-                        }
-                    }
-                    speechHelper.start()
-                    Logger.info("MonitoringManager", "On-device speech recognition started ✅")
+                    Logger.info("MonitoringManager", "On-device speech recognition running ✅")
                     _transcription.value = "🎙️ Listening for call audio..."
                 } else {
                     // WS failed — keep audio running for local analysis, but stop sending
@@ -525,6 +536,43 @@ class MonitoringManager(private val context: Context) {
         for (chunk in chunks) { chunk.copyInto(merged, offset); offset += chunk.size }
         chunks.clear()
         webSocketClient.sendAudioChunk(merged)
+    }
+
+    private fun startSpeechRecognitionPipeline() {
+        speechHelper.onResult = { text, isFinal ->
+            if (text.isNotBlank()) {
+                // Always show live transcription locally.
+                if (isFinal) {
+                    _transcription.value = _transcription.value.let {
+                        if (it.startsWith("🎙️") || it.startsWith("⚠️") || it.isEmpty()) text else "$it $text"
+                    }
+                }
+
+                val wsConnected = _connectionState.value == ConnectionState.CONNECTED
+                if (wsConnected) {
+                    webSocketClient.sendTranscript(text, isFinal)
+                } else if (isFinal && _isActiveCall.value) {
+                    // Fallback: run local detection from on-device transcript when backend is unavailable.
+                    scope.launch {
+                        try {
+                            val metadata = CallMetadata(
+                                phoneNumber = currentCallPhoneNumber,
+                                callTime = currentCallStartTime,
+                                isInContacts = false,
+                                recentCallCount = 0,
+                                averageCallDuration = 0
+                            )
+                            performDetection(metadata, _transcription.value)
+                        } catch (e: Exception) {
+                            Logger.error("MonitoringManager", "Local speech detection fallback failed: ${e.message}", e)
+                        }
+                    }
+                }
+            }
+        }
+
+        speechHelper.start()
+        Logger.info("MonitoringManager", "On-device speech recognition started")
     }
     
     /**
@@ -583,6 +631,8 @@ class MonitoringManager(private val context: Context) {
         
         _isActiveCall.value = false
         _isMonitoring.value = false
+        lowAudioSinceMs = null
+        noAudioHintShown = false
         _transcription.value = ""
         _threatLevel.value = ThreatLevel.SAFE
         _threatConfidence.value = 0f
@@ -643,6 +693,8 @@ class MonitoringManager(private val context: Context) {
         webSocketClient.reset()
         
         _isActiveCall.value = false
+        lowAudioSinceMs = null
+        noAudioHintShown = false
         
         // Reset detection state but keep monitoring (armed) active
         // No WebSocket is open in armed mode — show DISCONNECTED accurately
